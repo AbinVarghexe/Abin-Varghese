@@ -44,14 +44,14 @@ const AboutHero = () => {
               DESIGNER
             </h2>
 
-            {/* Image: Centered and Overlapping */}
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-[-10%] md:bottom-[-5%] w-[300px] md:w-[450px] lg:w-[600px] xl:w-[700px] h-[450px] md:h-[650px] lg:h-[800px] xl:h-[900px] z-20 pointer-events-none">
+            {/* Image: Centered, aligned to top, bottom clips */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 w-[300px] md:w-[450px] lg:w-[600px] xl:w-[700px] h-[500px] md:h-[700px] lg:h-[850px] xl:h-[950px] z-20 pointer-events-none overflow-hidden">
               <Image
                 src="/about/abin-varghese.png"
                 alt="Abin Varghese"
                 fill
                 sizes="(max-width: 768px) 300px, (max-width: 1024px) 450px, (max-width: 1280px) 600px, 700px"
-                className="object-contain object-bottom"
+                className="object-cover object-top"
                 priority
               />
             </div>

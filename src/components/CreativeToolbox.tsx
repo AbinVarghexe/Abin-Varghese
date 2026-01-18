@@ -24,7 +24,7 @@ const tools: Tool[] = [
     id: "framer",
     name: "Framer",
     description: "Interactive Website Builder",
-    icon: "https://skillicons.dev/icons?i=framer",
+    icon: "https://cdn.simpleicons.org/framer",
     category: "design",
   },
   {
