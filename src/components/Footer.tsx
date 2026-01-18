@@ -54,16 +54,21 @@ export default function Footer() {
         {/* Middle Section - Navigation */}
         <div className="lg:col-span-4 border-t lg:border-t-0 lg:border-l lg:border-r border-black/20 dark:border-white/20">
           <div className="flex flex-col h-full">
-            {navLinks.map((link, idx) => (
-              <Link 
-                key={idx} 
-                href={link.href}
-                className="group flex items-center justify-between p-6 border-b border-black/20 dark:border-white/20 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-              >
-                <span className="font-bold text-lg tracking-wider">{link.name}</span>
-                <ArrowUpRight className="w-5 h-5 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-              </Link>
-            ))}
+              {navLinks.map((link, idx) => (
+                <Link 
+                  key={idx} 
+                  href={link.href}
+                  className="group relative flex items-center justify-between p-6 border-b border-black/20 dark:border-white/20 overflow-hidden transition-colors duration-300"
+                >
+                  {/* Hover background slide effect */}
+                  <div className="absolute inset-0 bg-black dark:bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                  
+                  <span className="relative z-10 font-bold text-lg tracking-wider group-hover:text-white dark:group-hover:text-black transition-colors duration-300">
+                    {link.name}
+                  </span>
+                  <ArrowUpRight className="relative z-10 w-5 h-5 transform group-hover:translate-x-1 group-hover:-translate-y-1 group-hover:text-white dark:group-hover:text-black transition-all duration-300" />
+                </Link>
+              ))}
           </div>
         </div>
 
