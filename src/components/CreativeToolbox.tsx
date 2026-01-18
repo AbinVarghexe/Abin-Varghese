@@ -34,7 +34,7 @@ const CreativeToolbox = () => {
   return (
     <div className="pt-[140px] md:pt-[180px] px-4 md:px-8 lg:px-16 xl:px-32 py-4">
       <div className="w-full mb-8">
-        <h2 className="text-3xl md:text-4xl font-bold pb-2 text-black">
+        <h2 className="text-3xl md:text-4xl font-bold pb-2 text-black mt-12">
           My Creative <span className="text-blue">Toolbox</span>
         </h2>
         <p className="text-black/70">
