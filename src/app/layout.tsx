@@ -63,7 +63,7 @@ export default function RootLayout({
           <MobileNav />
           <MobileDock />
         </div>
-        <div className="pt-16 pb-24 md:pb-16">{children}</div>
+        <div className="">{children}</div>
         <Footer />
       </body>
     </html>
