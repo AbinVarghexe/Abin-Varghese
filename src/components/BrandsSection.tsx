@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
+import Image from "next/image";
 
 const brands = [
   { name: "BLAUPUNKT", logo: "●" },
@@ -32,19 +33,31 @@ const BrandsSection = () => {
   return (
     <section className="w-full px-4 md:px-8 lg:px-16 py-8">
       <div
-        className="relative w-full rounded-[32px] px-6 md:px-12 py-10 md:py-14 overflow-hidden"
-        style={{ backgroundColor: "#3B5BFF" }}
+        className="relative w-full rounded-[32px] px-6 md:px-12 py-20 md:py-32 overflow-hidden"
+        style={{
+          background: "linear-gradient(180deg, #7DA3F6 0%, #0020D7 100%)",
+        }}
       >
         <div
           className="absolute inset-0 pointer-events-none opacity-20"
           style={{
             backgroundImage: `
-              linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px)
+              linear-gradient(to right, rgba(255,255,255,0.5) 1.5px, transparent 2px),
+              linear-gradient(to bottom, rgba(255,255,255,0.5) 1.5px, transparent 2px)
             `,
             backgroundSize: "40px 40px",
           }}
         />
+
+        <div className="absolute -top-40 -left-35 w-32 h-32 md:w-100 md:h-100 pointer-events-none opacity-40 blur-xs">
+          <Image
+            src="/Home/icon.svg"
+            alt="Decorative Icon"
+            fill
+            className="object-contain blur-[2px] brightness-0"
+          />
+        </div>
+
         <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 pointer-events-none opacity-30">
           <svg viewBox="0 0 100 100" className="w-full h-full">
             <path
@@ -53,6 +66,15 @@ const BrandsSection = () => {
               className="text-black/20"
             />
           </svg>
+        </div>
+
+        <div className="absolute -bottom-50 -right-40 w-32 h-32 md:w-130 md:h-125 pointer-events-none opacity-70 blur-xs">
+          <Image
+            src="/Home/icon.svg"
+            alt="Decorative Icon"
+            fill
+            className="object-contain blur-[1px] brightness-0 invert"
+          />
         </div>
 
         <div className="text-center mb-8 md:mb-10 relative z-10">
