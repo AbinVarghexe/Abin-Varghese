@@ -4,6 +4,7 @@ import Herosection from '@/components/Herosection';
 import ScrollingBanner from '@/components/ui/ScrollingBanner';
 import SiteUnderDevelopment from '@/components/ui/SiteUnderDevelopment';
 import CreativeToolbox from '@/components/CreativeToolbox';
+import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: "Abin Varghese",
@@ -37,6 +38,8 @@ export default function Home() {
       </div>
 
       <CreativeToolbox />
+
+      <Footer />
     </main>
   );
 }
