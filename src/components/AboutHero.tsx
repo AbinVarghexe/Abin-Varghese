@@ -28,7 +28,7 @@ const AboutHero = () => {
       className="relative min-h-[600px] md:min-h-[700px] lg:min-h-[800px] xl:min-h-screen flex flex-col overflow-hidden"
       style={{ backgroundColor: "var(--color-bg-main)" }}
     >
-      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-24 pb-8 relative flex-1 flex flex-col">
+      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-24 pb-0 relative flex-1 flex flex-col">
         {/* Main Content Area */}
         <div className="relative w-full flex-1 flex items-center justify-center">
           {/* Background Text: DESIGNER - z-10 behind image */}
@@ -44,19 +44,19 @@ const AboutHero = () => {
           </h2>
 
           {/* Image - z-20 above DESIGNER text */}
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[300px] md:w-[450px] lg:w-[600px] xl:w-[700px] h-[80%] z-20 pointer-events-none">
+          <div className="absolute bottom-0 w-[300px] md:w-[650px] lg:w-[1000px] xl:w-[1500px] h-[100%] z-20 pointer-events-none">
             <Image
               src="/about/abin-varghese.png"
               alt="Abin Varghese"
               fill
-              sizes="(max-width: 768px) 300px, (max-width: 1024px) 450px, (max-width: 1280px) 600px, 700px"
+              // sizes="(max-width: 768px) 300px, (max-width: 1024px) 650px, (max-width: 1280px) 600px, 700px"
               className="object-contain object-bottom"
               priority
             />
           </div>
 
           {/* Foreground Text: I'm and ui/ux - z-30 above image */}
-          <div className="absolute top-[15%] left-0 right-0 z-30 flex items-center justify-between w-full max-w-6xl mx-auto px-4 pointer-events-none">
+          <div className="absolute top-[8%] left-0 right-0 z-30 flex items-center justify-between w-full max-w-6xl mx-auto px-4 pointer-events-none">
             <h1
               className="text-6xl md:text-8xl lg:text-9xl xl:text-[10rem] italic font-light whitespace-nowrap"
               style={{
