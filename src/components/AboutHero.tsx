@@ -25,66 +25,64 @@ const AboutHero = () => {
 
   return (
     <section
-      className="relative min-h-[600px] md:min-h-[700px] lg:min-h-[800px] xl:min-h-screen flex flex-col overflow-hidden"
+      className="relative h-screen w-full overflow-hidden"
       style={{ backgroundColor: "var(--color-bg-main)" }}
     >
-      <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-24 pb-0 relative flex-1 flex flex-col">
-        {/* Main Content Area */}
-        <div className="relative w-full flex-1 flex items-center justify-center">
-          {/* Background Text: DESIGNER - z-10 behind image */}
-          <h2
-            className="absolute left-1/2 -translate-x-1/2 bottom-0 text-[20vw] md:text-[18vw] font-bold uppercase tracking-tighter leading-none text-center z-10 select-none opacity-90"
+      {/* 1. Background Text: DESIGNER - Centered behind everything */}
+      <div className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none">
+        <h2
+          className="text-[20vw] md:text-[22vw] font-bold uppercase tracking-tighter leading-none text-center opacity-90 select-none translate-y-[20%]"
+          style={{
+            fontFamily: "var(--font-display), Vina, sans-serif",
+            color: "#0020d7",
+          }}
+        >
+          DESIGNER
+        </h2>
+      </div>
+
+      {/* 2. Top Text: I'm ui/ux - Positioned high up */}
+      <div className="absolute top-[18%] md:top-[22%] w-full z-10 pointer-events-none">
+        <div className="container mx-auto px-4 md:px-16 flex justify-between items-center max-w-[95%] md:max-w-7xl">
+          <h1
+            className="text-6xl md:text-8xl lg:text-9xl xl:text-[10rem] italic font-light"
             style={{
-              fontFamily: "var(--font-display), Vina, sans-serif",
-              color: "#0020d7",
-              width: "120%",
+              fontFamily: "Vina, sans-serif",
+              color: isLightMode ? "#111827" : "#ffffff",
             }}
           >
-            DESIGNER
-          </h2>
-
-          {/* Image - z-20 above DESIGNER text */}
-          <div className="absolute bottom-0 w-[300px] md:w-[650px] lg:w-[1000px] xl:w-[1500px] h-[100%] z-20 pointer-events-none">
-            <Image
-              src="/about/abin-varghese.png"
-              alt="Abin Varghese"
-              fill
-              // sizes="(max-width: 768px) 300px, (max-width: 1024px) 650px, (max-width: 1280px) 600px, 700px"
-              className="object-contain object-bottom"
-              priority
-            />
-          </div>
-
-          {/* Foreground Text: I'm and ui/ux - z-30 above image */}
-          <div className="absolute top-[8%] left-0 right-0 z-30 flex items-center justify-between w-full max-w-6xl mx-auto px-4 pointer-events-none">
-            <h1
-              className="text-6xl md:text-8xl lg:text-9xl xl:text-[10rem] italic font-light whitespace-nowrap"
-              style={{
-                fontFamily: "Times New Roman, serif",
-                color: isLightMode ? "#111827" : "#ffffff",
-              }}
-            >
-              I'm
-            </h1>
-
-            <h1
-              className="text-6xl md:text-8xl lg:text-9xl xl:text-[10rem] italic font-light whitespace-nowrap"
-              style={{
-                fontFamily: "Times New Roman, serif",
-                color: isLightMode ? "#111827" : "#ffffff",
-              }}
-            >
-              ui/ux
-            </h1>
-          </div>
+            I'm
+          </h1>
+          <h1
+            className="text-6xl md:text-8xl lg:text-9xl xl:text-[10rem] italic font-light"
+            style={{
+              fontFamily: "Vina, sans-serif",
+              color: isLightMode ? "#111827" : "#ffffff",
+            }}
+          >
+            Abin
+          </h1>
         </div>
+      </div>
 
-        {/* Bottom Footer Section */}
-        <div className="w-full flex flex-col md:flex-row items-end justify-between gap-8 px-0 md:px-4 z-40 pb-4">
-          <div className="flex flex-col gap-4">
+      {/* 3. Image - Anchored to bottom, in front of text, behind footer */}
+      <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-full max-w-[500px] md:max-w-[700px] lg:max-w-[900px] xl:max-w-[1000px] h-[80vh] md:h-[88vh] z-20 pointer-events-none">
+        <Image
+          src="/about/abin-varghese.png"
+          alt="Abin Varghese"
+          fill
+          className="object-contain object-bottom"
+          priority
+        />
+      </div>
+
+      {/* 4. Footer Content - Overlaying image */}
+      <div className="absolute bottom-8 w-full z-30">
+        <div className="container mx-auto px-4 md:px-12 flex flex-row items-end justify-between gap-4">
+          <div className="hidden md:flex flex-col gap-4">
             <div className="w-12 h-[1px] bg-current opacity-30" />
             <p
-              className="text-[10px] md:text-xs uppercase tracking-wider max-w-[180px] text-left leading-relaxed font-medium"
+              className="text-xs uppercase tracking-wider max-w-[180px] text-left leading-relaxed font-medium"
               style={{ color: isLightMode ? "#111827" : "#ffffff" }}
             >
               SPECIALIZED IN WEB DESIGN, UX/UI WEBFLOW, AND FRONT END
@@ -92,25 +90,30 @@ const AboutHero = () => {
             </p>
           </div>
 
-          <Link
-            href="/contact"
-            className="group relative px-10 py-4 rounded-full bg-[#0020d7] text-white font-bold hover:scale-105 transition-all text-sm md:text-base whitespace-nowrap overflow-hidden"
-          >
-            <span className="relative z-10">LET'S CHAT</span>
-            <div className="absolute inset-0 bg-blue-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-          </Link>
+          {/* Button - Centered relative to screen mostly, but part of flex */}
+          <div className="mx-auto md:mx-0">
+            <Link
+              href="/contact"
+              className="group relative px-10 py-5 rounded-full bg-[#0020d7] text-white font-bold hover:scale-105 transition-all text-sm md:text-lg whitespace-nowrap overflow-hidden inline-block shadow-xl"
+            >
+              <span className="relative z-10">LET'S CHAT</span>
+              <div className="absolute inset-0 bg-blue-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+            </Link>
+          </div>
 
-          <p
-            className="text-[10px] md:text-xs max-w-[220px] text-right leading-relaxed font-medium"
-            style={{
-              color: isLightMode
-                ? "rgba(0,0,0,0.7)"
-                : "rgba(255,255,255,0.7)",
-            }}
-          >
-            Build a credible, conversion-focused website that shows your ideal
-            client exactly how you can help them.
-          </p>
+          <div className="hidden md:block">
+            <p
+              className="text-xs max-w-[220px] text-right leading-relaxed font-medium"
+              style={{
+                color: isLightMode
+                  ? "rgba(0,0,0,0.7)"
+                  : "rgba(255,255,255,0.7)",
+              }}
+            >
+              Build a credible, conversion-focused website that shows your ideal
+              client exactly how you can help them.
+            </p>
+          </div>
         </div>
       </div>
     </section>

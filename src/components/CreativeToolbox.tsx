@@ -61,7 +61,7 @@ const tools: Tool[] = [
     id: "davinci",
     name: "DaVinci Resolve",
     description: "Color Correction & Editing",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/e/e4/DaVinci_Resolve_17_logo.svg",
+    icon: "https://cdn.simpleicons.org/davinciresolve",
     category: "video",
   },
 
