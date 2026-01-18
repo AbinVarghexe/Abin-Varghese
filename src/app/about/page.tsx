@@ -1,6 +1,5 @@
-import type { Metadata } from 'next';
-import AboutHero from '@/components/AboutHero';
-import BrandsSection from '@/components/BrandsSection';
+import type { Metadata } from "next";
+import AboutHero from "@/components/AboutHero";
 
 export const metadata: Metadata = {
   title: "About Me | Abin Varghese",
@@ -18,7 +17,6 @@ export default function AboutPage() {
   return (
     <main className="min-h-screen">
       <AboutHero />
-      <BrandsSection />
     </main>
   );
 }

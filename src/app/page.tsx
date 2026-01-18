@@ -1,10 +1,11 @@
 // Home Page
-import type { Metadata } from 'next';
-import Herosection from '@/components/Herosection';
-import ScrollingBanner from '@/components/ui/ScrollingBanner';
-import SiteUnderDevelopment from '@/components/ui/SiteUnderDevelopment';
-import CreativeToolbox from '@/components/CreativeToolbox';
-import Footer from '@/components/Footer';
+import type { Metadata } from "next";
+import Herosection from "@/components/Herosection";
+import ScrollingBanner from "@/components/ui/ScrollingBanner";
+import SiteUnderDevelopment from "@/components/ui/SiteUnderDevelopment";
+import CreativeToolbox from "@/components/CreativeToolbox";
+import Footer from "@/components/Footer";
+import BrandsSection from "@/components/BrandsSection";
 
 export const metadata: Metadata = {
   title: "Abin Varghese",
@@ -28,16 +29,17 @@ export default function Home() {
         {/* Scrolling Banner - overlaps at bottom of hero grid */}
         <ScrollingBanner
           items={[
-            'Web Developer',
-            'Graphic Designer',
-            'Video Editor',
-            'VFX Artist',
+            "Web Developer",
+            "Graphic Designer",
+            "Video Editor",
+            "VFX Artist",
           ]}
           speed={30}
         />
       </div>
 
       <CreativeToolbox />
+      <BrandsSection />
     </main>
   );
 }

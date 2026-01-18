@@ -35,6 +35,16 @@ const BrandsSection = () => {
         className="relative w-full rounded-[32px] px-6 md:px-12 py-10 md:py-14 overflow-hidden"
         style={{ backgroundColor: "#3B5BFF" }}
       >
+        <div
+          className="absolute inset-0 pointer-events-none opacity-20"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, rgba(255,255,255,0.3) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(255,255,255,0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: "40px 40px",
+          }}
+        />
         <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 pointer-events-none opacity-30">
           <svg viewBox="0 0 100 100" className="w-full h-full">
             <path
