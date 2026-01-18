@@ -43,8 +43,8 @@ const CreativeToolbox = () => {
         </p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="w-full lg:w-[280px] shrink-0">
+<div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:flex-1">
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -82,7 +82,7 @@ const CreativeToolbox = () => {
           </div>
         </div>
 
-        <div className="flex-1">
+        <div className="w-full lg:flex-1">
           <div className="grid grid-cols-1 gap-4">
             {tools.map((tool) => (
               <div
