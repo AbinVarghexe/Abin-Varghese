@@ -32,7 +32,7 @@ const CreativeToolbox = () => {
   const currentCategory = categories.find(c => c.id === selectedCategory) || categories[0];
 
   return (
-    <div className="pt-[100px] md:pt-[140px] px-4 md:px-8 lg:px-16 xl:px-32 py-4">
+    <div className="pt-[140px] md:pt-[180px] px-4 md:px-8 lg:px-16 xl:px-32 py-4">
       <div className="w-full mb-8">
         <h2 className="text-3xl md:text-4xl font-bold pb-2 text-black">
           My Creative <span className="text-blue">Toolbox</span>
