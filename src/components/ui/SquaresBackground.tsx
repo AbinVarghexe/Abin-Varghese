@@ -91,14 +91,14 @@ export default function SquaresBackground({
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
       const maxDistance = Math.sqrt(centerX * centerX + centerY * centerY);
-      
+
       // Determine stroke color based on theme if not provided
       let effectiveStrokeColor = strokeColor;
       if (!effectiveStrokeColor) {
         // Light mode: dark squares, Dark mode: light squares
         effectiveStrokeColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
       }
-      
+
       // Parse base RGB values from strokeColor
       let baseRgb = isDark ? '255, 255, 255' : '0, 0, 0';
       if (effectiveStrokeColor.startsWith('rgba')) {
@@ -114,31 +114,31 @@ export default function SquaresBackground({
         for (let j = 0; j < rows; j++) {
           const x = i * (effectiveSquareSize + gridGap);
           const y = j * (effectiveSquareSize + gridGap);
-          
+
           // Calculate center of square
           const squareCenterX = x + effectiveSquareSize / 2;
           const squareCenterY = y + effectiveSquareSize / 2;
-          
+
           // Calculate distance from center of canvas
           const dx = squareCenterX - centerX;
           const dy = squareCenterY - centerY;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          
+
           // Calculate radial fade factor (1.0 at center, 0.0 at edges)
           // Normalize distance to 0-1 range (0 = center, 1 = edge)
           const normalizedDistance = distance / maxDistance;
-          
+
           // Create subtle radial fade: center fully visible, edges fade slightly
           // Reduced fade effect for a more subtle vignette
           let radialFadeFactor = 1.0;
-          
+
           if (normalizedDistance > 0.6) {
             // Start fading at 60% from center (more subtle)
             // Smooth transition from 0.6 to 0.9 (where it becomes fully transparent)
             const fadeStart = 0.6;
             const fadeEnd = 0.9;
             const fadeRange = fadeEnd - fadeStart;
-            
+
             if (normalizedDistance < fadeEnd) {
               // Calculate fade progress (0 to 1)
               const fadeProgress = (normalizedDistance - fadeStart) / fadeRange;
@@ -149,21 +149,21 @@ export default function SquaresBackground({
               radialFadeFactor = 0;
             }
           }
-          
+
           // Calculate bottom fade factor
           // Distance from bottom of canvas
           const distanceFromBottom = canvas.height - squareCenterY;
           const normalizedBottomDistance = distanceFromBottom / canvas.height;
-          
+
           let bottomFadeFactor = 1.0;
-          
+
           // Start fading from bottom at 70% of canvas height
           if (normalizedBottomDistance < 0.3) {
             // Fade from 30% to 0% from bottom
             const bottomFadeStart = 0.3;
             const bottomFadeEnd = 0.0;
             const bottomFadeRange = bottomFadeStart - bottomFadeEnd;
-            
+
             if (normalizedBottomDistance > bottomFadeEnd) {
               const bottomFadeProgress = (bottomFadeStart - normalizedBottomDistance) / bottomFadeRange;
               // Use smooth easing for bottom fade
@@ -172,16 +172,16 @@ export default function SquaresBackground({
               bottomFadeFactor = 0;
             }
           }
-          
+
           // Combine both fade factors (multiply them)
           const combinedFadeFactor = radialFadeFactor * bottomFadeFactor;
-          
+
           // Apply combined fade to opacity
           const opacity = maxOpacity * combinedFadeFactor;
-          
+
           // Set stroke color with calculated opacity
           ctx.strokeStyle = `rgba(${baseRgb}, ${opacity})`;
-          
+
           ctx.strokeRect(x, y, effectiveSquareSize, effectiveSquareSize);
         }
       }
@@ -189,12 +189,12 @@ export default function SquaresBackground({
 
     // Initial draw
     resizeCanvas();
-    
+
     // Ensure canvas is redrawn after a brief delay to handle any layout issues
     const timeoutId = setTimeout(() => {
       resizeCanvas();
     }, 100);
-    
+
     window.addEventListener('resize', resizeCanvas);
 
     return () => {
