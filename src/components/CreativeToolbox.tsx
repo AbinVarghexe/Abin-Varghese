@@ -83,7 +83,7 @@ const CreativeToolbox = () => {
         </div>
 
         <div className="flex-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {tools.map((tool) => (
               <div
                 key={tool.id}
