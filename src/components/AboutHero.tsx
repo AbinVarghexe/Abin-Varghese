@@ -39,15 +39,15 @@ const AboutHero = () => {
                 I'm a
               </h1>
 
-              <div className="relative mx-4 md:mx-8 my-4 md:my-0 w-[200px] md:w-[280px] lg:w-[320px] h-[250px] md:h-[350px] lg:h-[400px] z-10">
-                <Image
-                  src="/profile.jpg"
-                  alt="Abin Varghese"
-                  fill
-                  className="object-cover rounded-b-full"
-                  priority
-                />
-              </div>
+                <div className="relative mx-4 md:mx-8 my-4 md:my-0 w-[200px] md:w-[320px] lg:w-[400px] h-[300px] md:h-[450px] lg:h-[550px] z-10">
+                  <Image
+                    src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/project-uploads/59ba775c-c89f-4d6a-afe4-b02b78f8cd82/Asset-3-1768752738755.png?width=8000&height=8000&resize=contain"
+                    alt="Abin Varghese"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
 
               <h1 
                 className="text-5xl md:text-7xl lg:text-8xl xl:text-9xl italic font-light"
