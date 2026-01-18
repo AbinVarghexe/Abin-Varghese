@@ -38,8 +38,6 @@ export default function Home() {
       </div>
 
       <CreativeToolbox />
-
-      <Footer />
     </main>
   );
 }
