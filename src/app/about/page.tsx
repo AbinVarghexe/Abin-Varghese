@@ -1,6 +1,5 @@
-// About Page - Site Under Development
 import type { Metadata } from 'next';
-import SiteUnderDevelopment from '@/components/ui/SiteUnderDevelopment';
+import AboutHero from '@/components/AboutHero';
 
 export const metadata: Metadata = {
   title: "About Me | Abin Varghese",
@@ -15,5 +14,9 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
-  return <SiteUnderDevelopment />;
+  return (
+    <main className="min-h-screen">
+      <AboutHero />
+    </main>
+  );
 }
