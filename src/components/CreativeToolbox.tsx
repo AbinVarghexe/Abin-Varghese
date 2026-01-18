@@ -1,34 +1,113 @@
-'use client';
+"use client";
 
-import { memo, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { memo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface Tool {
   id: string;
   name: string;
   description: string;
   icon: string;
+  category: string;
 }
 
 const tools: Tool[] = [
-  { id: 'figma', name: 'Design Tools', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing', icon: '/tools/figma.svg' },
-  { id: 'framer', name: 'Design Tools', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing', icon: '/tools/framer.svg' },
-  { id: 'photoshop', name: 'Design Tools', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing', icon: '/tools/photoshop.svg' },
-  { id: 'illustrator', name: 'Design Tools', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing', icon: '/tools/illustrator.svg' },
-  { id: 'aftereffects', name: 'Design Tools', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing', icon: '/tools/aftereffects.svg' },
+  // Design Tools
+  {
+    id: "figma",
+    name: "Figma",
+    description: "Interface Design & Prototyping",
+    icon: "https://skillicons.dev/icons?i=figma",
+    category: "design",
+  },
+  {
+    id: "framer",
+    name: "Framer",
+    description: "Interactive Website Builder",
+    icon: "https://skillicons.dev/icons?i=framer",
+    category: "design",
+  },
+  {
+    id: "photoshop",
+    name: "Photoshop",
+    description: "Image Manipulation & Editing",
+    icon: "https://skillicons.dev/icons?i=ps",
+    category: "design",
+  },
+  {
+    id: "illustrator",
+    name: "Illustrator",
+    description: "Vector Graphics Software",
+    icon: "https://skillicons.dev/icons?i=ai",
+    category: "design",
+  },
+
+  // Development Tools
+  {
+    id: "react",
+    name: "React",
+    description: "UI Library",
+    icon: "https://skillicons.dev/icons?i=react",
+    category: "development",
+  },
+  {
+    id: "vite",
+    name: "Vite",
+    description: "Frontend Build Tool",
+    icon: "https://skillicons.dev/icons?i=vite",
+    category: "development",
+  },
+  {
+    id: "tailwind",
+    name: "Tailwind CSS",
+    description: "Utility-first CSS Framework",
+    icon: "https://skillicons.dev/icons?i=tailwind",
+    category: "development",
+  },
+  {
+    id: "js",
+    name: "JavaScript",
+    description: "Programming Language",
+    icon: "https://skillicons.dev/icons?i=js",
+    category: "development",
+  },
+
+  // Video Tools
+  {
+    id: "aftereffects",
+    name: "After Effects",
+    description: "VFX & Motion Graphics",
+    icon: "https://skillicons.dev/icons?i=ae",
+    category: "video",
+  },
+  {
+    id: "premiere",
+    name: "Premiere Pro",
+    description: "Video Editing Software",
+    icon: "https://skillicons.dev/icons?i=pr",
+    category: "video",
+  },
 ];
 
 const categories = [
-  { id: 'design', name: 'Design Tools', description: 'Lorem ipsum dolor sit amet, consectetur adipiscing' },
-  { id: 'development', name: 'Development', description: 'Frontend & Creative Coding' },
-  { id: 'video', name: 'Video Editing', description: 'Motion Graphics & VFX' },
+  { id: "design", name: "Design Tools", description: "UI/UX & Prototyping" },
+  {
+    id: "development",
+    name: "Development",
+    description: "Frontend & Creative Coding",
+  },
+  { id: "video", name: "Video Editing", description: "Motion Graphics & VFX" },
 ];
 
 const CreativeToolbox = () => {
   const [selectedCategory, setSelectedCategory] = useState(categories[0].id);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const currentCategory = categories.find(c => c.id === selectedCategory) || categories[0];
+  const currentCategory =
+    categories.find((c) => c.id === selectedCategory) || categories[0];
+  const filteredTools = tools.filter(
+    (tool) => tool.category === selectedCategory,
+  );
 
   return (
     <div className="pt-[140px] md:pt-[180px] px-4 md:px-8 lg:px-16 xl:px-32 py-4">
@@ -37,25 +116,30 @@ const CreativeToolbox = () => {
           My Creative <span className="text-blue">Toolbox</span>
         </h2>
         <p className="text-black/70">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmo tempor
-          <br className="hidden md:block" /> incididunt ut labore et dolore magna aliqua.
+          A curated collection of tools and technologies I use to bring ideas to
+          life,
+          <br className="hidden md:block" /> from design to development.
         </p>
       </div>
 
-<div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:flex-1">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:flex-1">
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-zinc-200 hover:border-zinc-300 transition-colors"
             >
               <div className="text-left">
-                <span className="block font-semibold text-zinc-900">{currentCategory.name}</span>
-                <span className="block text-sm text-zinc-500">{currentCategory.description}</span>
+                <span className="block font-semibold text-zinc-900">
+                  {currentCategory.name}
+                </span>
+                <span className="block text-sm text-zinc-500">
+                  {currentCategory.description}
+                </span>
               </div>
               <ChevronDown
                 size={20}
-                className={`text-zinc-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                className={`text-zinc-500 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
               />
             </button>
 
@@ -69,11 +153,15 @@ const CreativeToolbox = () => {
                       setIsDropdownOpen(false);
                     }}
                     className={`w-full p-4 text-left hover:bg-zinc-50 transition-colors ${
-                      selectedCategory === category.id ? 'bg-zinc-50' : ''
+                      selectedCategory === category.id ? "bg-zinc-50" : ""
                     }`}
                   >
-                    <span className="block font-semibold text-zinc-900">{category.name}</span>
-                    <span className="block text-sm text-zinc-500">{category.description}</span>
+                    <span className="block font-semibold text-zinc-900">
+                      {category.name}
+                    </span>
+                    <span className="block text-sm text-zinc-500">
+                      {category.description}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -83,17 +171,23 @@ const CreativeToolbox = () => {
 
         <div className="w-full lg:flex-1">
           <div className="grid grid-cols-1 gap-4">
-            {tools.map((tool) => (
+            {filteredTools.map((tool) => (
               <div
                 key={tool.id}
                 className="flex items-center gap-4 p-4 bg-white rounded-xl border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all"
               >
-                <div className="w-10 h-10 bg-zinc-900 rounded-lg flex items-center justify-center shrink-0">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-400 to-purple-500 rounded" />
+                <div className="w-12 h-12 bg-zinc-50 rounded-lg flex items-center justify-center shrink-0 p-2">
+                  <img
+                    src={tool.icon}
+                    alt={tool.name}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div className="min-w-0">
                   <h4 className="font-semibold text-zinc-900">{tool.name}</h4>
-                  <p className="text-sm text-zinc-500 truncate">{tool.description}</p>
+                  <p className="text-sm text-zinc-500 truncate">
+                    {tool.description}
+                  </p>
                 </div>
               </div>
             ))}
