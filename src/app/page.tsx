@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Herosection from '@/components/Herosection';
 import ScrollingBanner from '@/components/ui/ScrollingBanner';
 import SiteUnderDevelopment from '@/components/ui/SiteUnderDevelopment';
+import CreativeToolbox from '@/components/CreativeToolbox';
 
 export const metadata: Metadata = {
   title: "Abin Varghese",
@@ -19,18 +20,23 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <main className="min-h-screen relative">
-      <Herosection />
-      <SiteUnderDevelopment />
-      {/* Scrolling Banner overlapping both sections */}
-      <ScrollingBanner 
-        items={[
-          'Web Developer',
-          'Graphic Designer',
-          'Video Editor',
-          'VFX Artist',
-        ]}
-        speed={30}
-      />
+      {/* Hero section with overlapping scrolling banner */}
+      <div className="relative">
+        <Herosection />
+
+        {/* Scrolling Banner - overlaps at bottom of hero grid */}
+        <ScrollingBanner
+          items={[
+            'Web Developer',
+            'Graphic Designer',
+            'Video Editor',
+            'VFX Artist',
+          ]}
+          speed={30}
+        />
+      </div>
+
+      <CreativeToolbox />
     </main>
   );
 }

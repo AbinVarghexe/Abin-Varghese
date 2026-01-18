@@ -33,7 +33,7 @@ export const ScrollingBanner = ({
   const bottomBannerRef = useRef<HTMLDivElement>(null);
   const topContentRef = useRef<HTMLDivElement>(null);
   const bottomContentRef = useRef<HTMLDivElement>(null);
-  
+
   // Add state to determine light/dark mode preference on client
   const [isLightMode, setIsLightMode] = useState<boolean>(true);
 
@@ -42,15 +42,15 @@ export const ScrollingBanner = ({
     const checkTheme = () => {
       setIsLightMode(!document.documentElement.classList.contains('dark'));
     };
-    
+
     checkTheme();
-    
+
     const observer = new MutationObserver(checkTheme);
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class'],
     });
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -100,7 +100,7 @@ export const ScrollingBanner = ({
         end: 'bottom bottom',
         scrub: 8, // Smooth scrubbing that reacts to scroll direction
       },
-      }
+    }
     );
 
     // Handle window resize to update rotation
@@ -123,16 +123,16 @@ export const ScrollingBanner = ({
   const duplicatedItems = [...items, ...items, ...items, ...items];
 
   return (
-    <div    
+    <div
       ref={bannerRef}
-      className={`absolute top-1/2 left-0 right-0 w-full pointer-events-none h-[120px] md:h-[200px] ${className}`}
+      className={`absolute bottom-0 left-0 right-0 w-full pointer-events-none h-[120px] md:h-[200px] ${className}`}
       style={{
         zIndex: 40,
-        transform: 'translateY(-50%)',
+        transform: 'translateY(50%)',
       }}
     >
       {/* Top Banner - Rotated +8deg - Scrolls Left to Right */}
-      <div 
+      <div
         ref={topBannerRef}
         className="absolute top-1/2 left-1/2 w-[150%] overflow-hidden backdrop-blur-md shadow-lg"
         style={{
@@ -157,7 +157,7 @@ export const ScrollingBanner = ({
       </div>
 
       {/* Bottom Banner - Rotated -8deg - Scrolls Right to Left */}
-      <div 
+      <div
         ref={bottomBannerRef}
         className="absolute top-1/2 left-1/2 w-[150%] overflow-hidden backdrop-blur-md shadow-lg"
         style={{
