@@ -30,7 +30,7 @@ const Herosection = () => {
   }, []);
 
   return (
-    <section className="relative min-h-screen overflow-hidden flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg-main)' }}>
+    <section className="pt-16 pb-24 md:pb-16 relative min-h-screen overflow-hidden flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg-main)' }}>
       {/* Squares Background - contained within hero section */}
       <div className="absolute inset-0">
         <SquaresBackground 
