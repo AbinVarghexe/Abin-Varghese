@@ -1,121 +1,96 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Instagram, Linkedin, Mail } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
   const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
-    { name: 'Services', href: '/services' },
-    { name: 'Projects', href: '/projects' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'HOME', href: '/' },
+    { name: 'PROJECTS', href: '/projects' },
+    { name: 'WHAT WE DO', href: '/services' },
+    { name: 'ABOUT ME', href: '/about' },
+    { name: 'GET IN TOUCH', href: '/contact' },
   ];
 
   const socialLinks = [
-    { name: 'Instagram', href: 'https://instagram.com/yourusername' },
-    { name: 'LinkedIn', href: 'https://linkedin.com/in/yourusername' },
-    { name: 'GitHub', href: 'https://github.com/yourusername' },
-    { name: 'Twitter', href: 'https://twitter.com/yourusername' },
+    { icon: <Instagram className="w-5 h-5" />, href: '#' },
+    { icon: <Linkedin className="w-5 h-5" />, href: '#' },
+    { icon: <Mail className="w-5 h-5" />, href: 'mailto:hello@abinvarghese.art' },
   ];
 
   return (
-    <footer className="bg-black text-white">
-      <div className="px-4 md:px-8 lg:px-16 xl:px-32 py-16 md:py-24">
-        <div className="mb-16 md:mb-24">
-          <h2 className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight">
-            Let's work
-            <br />
-            together
-          </h2>
-          <Link
-            href="/contact"
-            className="inline-flex items-center gap-2 mt-8 text-lg md:text-xl border-b border-white pb-1 hover:opacity-70 transition-opacity"
-          >
-            Get in touch
-            <ArrowUpRight className="w-5 h-5" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-8 mb-16 md:mb-24">
-          <div>
-            <h3 className="text-sm uppercase tracking-wider text-zinc-500 mb-6">Navigation</h3>
-            <ul className="space-y-3">
-              {navLinks.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="text-lg hover:opacity-70 transition-opacity"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+    <footer className="bg-black text-white pt-20 px-6 md:px-12 lg:px-20 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-0 border-t border-white/20 pt-12">
+        {/* Left Section */}
+        <div className="lg:col-span-4 flex flex-col space-y-8 lg:pr-12">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center font-bold text-2xl">
+              A
+            </div>
+            <div>
+              <p className="font-bold text-sm tracking-widest uppercase">UNIQUE DIGITAL EXPERIENCES</p>
+              <p className="font-bold text-sm tracking-widest uppercase text-white/50">// IMMERSIVE CRAFT</p>
+            </div>
           </div>
-
-          <div>
-            <h3 className="text-sm uppercase tracking-wider text-zinc-500 mb-6">Social</h3>
-            <ul className="space-y-3">
-              {socialLinks.map((link) => (
-                <li key={link.name}>
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-lg hover:opacity-70 transition-opacity inline-flex items-center gap-1"
-                  >
-                    {link.name}
-                    <ArrowUpRight className="w-4 h-4" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm uppercase tracking-wider text-zinc-500 mb-6">Contact</h3>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href="mailto:hello@abinvarghese.me"
-                  className="text-lg hover:opacity-70 transition-opacity"
-                >
-                  hello@abinvarghese.me
-                </a>
-              </li>
-              <li>
-                <span className="text-lg text-zinc-400">Kerala, India</span>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="text-sm uppercase tracking-wider text-zinc-500 mb-6">Services</h3>
-            <ul className="space-y-3">
-              <li className="text-lg text-zinc-300">Web Development</li>
-              <li className="text-lg text-zinc-300">Graphic Design</li>
-              <li className="text-lg text-zinc-300">Video Editing</li>
-              <li className="text-lg text-zinc-300">VFX & Motion</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="border-t border-zinc-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-zinc-500">
-            © {currentYear} Abin Varghese. All rights reserved.
+          
+          <p className="text-white/60 text-sm max-w-sm leading-relaxed">
+            Founded by Abin Varghese, we unite decades of technical expertise as visionary developers and practical creators, redefining possibilities in the digital environment.
           </p>
-          <div className="flex gap-6 text-sm text-zinc-500">
-            <Link href="/privacy" className="hover:text-white transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-white transition-colors">
-              Terms of Service
-            </Link>
+
+          <div className="space-y-4 pt-4">
+            <p className="text-white/80 text-sm">88 Digital Way, Kochi, India</p>
+            <p className="text-white/80 text-sm">hello@abinvarghese.art</p>
+            <div className="flex space-x-4 pt-2">
+              {socialLinks.map((link, idx) => (
+                <Link key={idx} href={link.href} className="text-white/60 hover:text-white transition-colors">
+                  {link.icon}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* Middle Section - Navigation */}
+        <div className="lg:col-span-4 border-t lg:border-t-0 lg:border-l lg:border-r border-white/20">
+          <div className="flex flex-col h-full">
+            {navLinks.map((link, idx) => (
+              <Link 
+                key={idx} 
+                href={link.href}
+                className="group flex items-center justify-between p-6 border-b border-white/20 hover:bg-white/5 transition-colors"
+              >
+                <span className="font-bold text-lg tracking-wider">{link.name}</span>
+                <ArrowUpRight className="w-5 h-5 transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Section - CTA */}
+        <div className="lg:col-span-4 flex flex-col justify-between lg:pl-12 pt-8 lg:pt-0">
+          <div className="space-y-6">
+            <h2 className="text-4xl md:text-5xl font-medium leading-tight">
+              Ready to kick start a discovery session?
+            </h2>
+            <p className="text-white/60 text-lg max-w-sm">
+              Share your ideas with us, and we'll begin turning your vision into reality today.
+            </p>
+          </div>
+
+          <div className="flex flex-col md:flex-row justify-between items-end mt-20 text-xs tracking-widest text-white/40 uppercase">
+            <p>ABIN VARGHESE ART LTD 2026 ©</p>
+            <p className="mt-4 md:mt-0">DESIGN BY ORCHIDS</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Large Text */}
+      <div className="mt-20 -mb-4 md:-mb-8 lg:-mb-12">
+        <h1 className="text-[12vw] font-bold tracking-tighter leading-none whitespace-nowrap overflow-hidden select-none font-vina uppercase">
+          Abin Varghese
+        </h1>
       </div>
     </footer>
   );
