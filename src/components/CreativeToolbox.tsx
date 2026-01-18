@@ -24,7 +24,7 @@ const tools: Tool[] = [
     id: "framer",
     name: "Framer",
     description: "Interactive Website Builder",
-    icon: "https://cdn.simpleicons.org/framer",
+    icon: "https://skills-icons.vercel.app/api/icons?i=framer&theme=dark",
     category: "design",
   },
   {

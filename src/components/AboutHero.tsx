@@ -28,6 +28,18 @@ const AboutHero = () => {
       className="relative min-h-[600px] md:min-h-[700px] lg:min-h-[800px] xl:min-h-screen flex items-center overflow-hidden"
       style={{ backgroundColor: "var(--color-bg-main)" }}
     >
+      {/* Image: Contained in main section, aligned to top, bottom clips */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-0 w-[300px] md:w-[450px] lg:w-[600px] xl:w-[700px] h-full z-20 pointer-events-none">
+        <Image
+          src="/about/abin-varghese.png"
+          alt="Abin Varghese"
+          fill
+          sizes="(max-width: 768px) 300px, (max-width: 1024px) 450px, (max-width: 1280px) 600px, 700px"
+          className="object-cover object-top"
+          priority
+        />
+      </div>
+
       <div className="container mx-auto px-4 md:px-8 lg:px-16 pt-24 pb-8 relative h-full flex flex-col justify-between">
         <div className="relative flex flex-col items-center justify-center flex-grow">
           {/* Main Content Area */}
@@ -43,18 +55,6 @@ const AboutHero = () => {
             >
               DESIGNER
             </h2>
-
-            {/* Image: Centered, aligned to top, bottom clips */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-0 w-[300px] md:w-[450px] lg:w-[600px] xl:w-[700px] h-[500px] md:h-[700px] lg:h-[850px] xl:h-[950px] z-20 pointer-events-none overflow-hidden">
-              <Image
-                src="/about/abin-varghese.png"
-                alt="Abin Varghese"
-                fill
-                sizes="(max-width: 768px) 300px, (max-width: 1024px) 450px, (max-width: 1280px) 600px, 700px"
-                className="object-cover object-top"
-                priority
-              />
-            </div>
 
             {/* Foreground Text: I'm and ui/ux */}
             <div className="relative z-30 flex items-center justify-between w-full max-w-6xl px-4 pointer-events-none">
