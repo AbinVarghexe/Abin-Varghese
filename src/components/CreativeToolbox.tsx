@@ -21,13 +21,6 @@ const tools: Tool[] = [
     category: "design",
   },
   {
-    id: "framer",
-    name: "Framer",
-    description: "Interactive Website Builder",
-    icon: "https://skills-icons.vercel.app/api/icons?i=framer&theme=dark",
-    category: "design",
-  },
-  {
     id: "photoshop",
     name: "Photoshop",
     description: "Image Manipulation & Editing",
@@ -42,6 +35,36 @@ const tools: Tool[] = [
     category: "design",
   },
 
+  // Motion/VideoEditing Tools
+  {
+    id: "aftereffects",
+    name: "After Effects",
+    description: "VFX & Motion Graphics",
+    icon: "https://skillicons.dev/icons?i=ae",
+    category: "video",
+  },
+  {
+    id: "premiere",
+    name: "Premiere Pro",
+    description: "Video Editing Software",
+    icon: "https://skillicons.dev/icons?i=pr",
+    category: "video",
+  },
+  {
+    id: "blender",
+    name: "Blender",
+    description: "3D Creation Suite",
+    icon: "https://skillicons.dev/icons?i=blender",
+    category: "video",
+  },
+  {
+    id: "davinci",
+    name: "DaVinci Resolve",
+    description: "Color Correction & Editing",
+    icon: "https://cdn.simpleicons.org/davinciresolve",
+    category: "video",
+  },
+
   // Development Tools
   {
     id: "react",
@@ -51,10 +74,10 @@ const tools: Tool[] = [
     category: "development",
   },
   {
-    id: "vite",
-    name: "Vite",
-    description: "Frontend Build Tool",
-    icon: "https://skillicons.dev/icons?i=vite",
+    id: "nextjs",
+    name: "Next.js",
+    description: "React Framework",
+    icon: "https://skillicons.dev/icons?i=nextjs",
     category: "development",
   },
   {
@@ -71,32 +94,20 @@ const tools: Tool[] = [
     icon: "https://skillicons.dev/icons?i=js",
     category: "development",
   },
-
-  // Video Tools
-  {
-    id: "aftereffects",
-    name: "After Effects",
-    description: "VFX & Motion Graphics",
-    icon: "https://skillicons.dev/icons?i=ae",
-    category: "video",
-  },
-  {
-    id: "premiere",
-    name: "Premiere Pro",
-    description: "Video Editing Software",
-    icon: "https://skillicons.dev/icons?i=pr",
-    category: "video",
-  },
 ];
 
 const categories = [
   { id: "design", name: "Design Tools", description: "UI/UX & Prototyping" },
   {
+    id: "video",
+    name: "Motion/VideoEditing",
+    description: "Motion Graphics & VFX",
+  },
+  {
     id: "development",
-    name: "Development",
+    name: "Development Tools",
     description: "Frontend & Creative Coding",
   },
-  { id: "video", name: "Video Editing", description: "Motion Graphics & VFX" },
 ];
 
 const CreativeToolbox = () => {
