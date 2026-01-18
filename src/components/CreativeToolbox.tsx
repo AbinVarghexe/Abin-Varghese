@@ -61,7 +61,7 @@ const tools: Tool[] = [
     id: "davinci",
     name: "DaVinci Resolve",
     description: "Color Correction & Editing",
-    icon: "https://cdn.simpleicons.org/davinciresolve",
+    icon: "https://skillicons.dev/icons?i=davinciresolve",
     category: "video",
   },
 
