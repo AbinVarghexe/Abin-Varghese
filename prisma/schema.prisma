@@ -29,7 +29,7 @@ model Project {
   @@index([createdAt])
 }
 
-// Admin model - for admin authentication
+// Admin model - for legacy custom admin authentication
 model Admin {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -39,14 +39,57 @@ model Admin {
   updatedAt DateTime @updatedAt
 }
 
-// Optional: User model for NextAuth (prepared but commented)
-// Uncomment when implementing authentication
-// model User {
-//   id            String    @id @default(cuid())
-//   name          String?
-//   email         String    @unique
-//   emailVerified DateTime?
-//   image         String?
-//   createdAt     DateTime  @default(now())
-//   updatedAt     DateTime  @updatedAt
-// }
+// NextAuth Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("USER") // "ADMIN" or "USER"
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Site Content Model - to store dynamic site settings, texts, etc.
+model SiteContent {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g., "hero_title", "about_text"
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}

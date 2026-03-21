@@ -1,29 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export default withAuth(
+  function middleware(req) {
+    const isAuth = !!req.nextauth.token;
+    const isAuthPage = req.nextUrl.pathname.startsWith("/admin/login");
 
-  // Protect admin routes
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    const session = await getSession();
-    
-    if (!session) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+    if (isAuthPage) {
+      if (isAuth) {
+        return NextResponse.redirect(new URL("/admin", req.url));
+      }
+      return null;
     }
-  }
 
-  // Redirect to dashboard if already logged in
-  if (pathname === '/admin/login') {
-    const session = await getSession();
-    if (session) {
-      return NextResponse.redirect(new URL('/admin', request.url));
+    if (!isAuth && req.nextUrl.pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
     }
+  },
+  {
+    callbacks: {
+      authorized: () => true, // Let the middleware function handle the logic
+    },
   }
-
-  return NextResponse.next();
-}
+);
 
 export const config = {
-  matcher: '/admin/:path*',
+  matcher: ["/admin/:path*"],
 };
+
