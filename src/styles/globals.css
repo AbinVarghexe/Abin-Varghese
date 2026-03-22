@@ -4,19 +4,6 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ================================
-   Local Font Declarations
-   ================================ */
-
-@font-face {
-  font-family: 'Vina';
-  src: url('/fonts/vina.woff2') format('woff2'),
-       url('/fonts/vina.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ================================
    Design System Variables (Figma)
    ================================ */
 
@@ -234,7 +221,6 @@ body {
   background: var(--color-bg-main);
   color: var(--color-primary);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   max-width: 100vw;
   position: relative;

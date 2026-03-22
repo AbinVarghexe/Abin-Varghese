@@ -3,12 +3,14 @@
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { LogOut, LayoutDashboard, Home, User, Briefcase, Mail, Settings, RefreshCw, Eye, EyeOff, Save, ShieldAlert } from "lucide-react";
+import { aboutContentDefaults } from "@/lib/about-content-defaults";
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("hero");
   const [showPreview, setShowPreview] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Example placeholder state for form
@@ -16,22 +18,116 @@ export default function AdminDashboard() {
     heroTitle: "ABIN'S ABODE",
     heroSubtitle: "Creative Developer & Designer",
     aboutText: "Welcome to my digital batcave.",
+    aboutImage: aboutContentDefaults.aboutImage,
+    aboutInstagramImage1: aboutContentDefaults.aboutInstagramImage1,
+    aboutInstagramImage2: aboutContentDefaults.aboutInstagramImage2,
+    aboutInstagramImage3: aboutContentDefaults.aboutInstagramImage3,
+    aboutInstagramImage4: aboutContentDefaults.aboutInstagramImage4,
+    aboutInstagramLink1: aboutContentDefaults.aboutInstagramLink1,
+    aboutInstagramLink2: aboutContentDefaults.aboutInstagramLink2,
+    aboutInstagramLink3: aboutContentDefaults.aboutInstagramLink3,
+    aboutInstagramLink4: aboutContentDefaults.aboutInstagramLink4,
   });
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+
+    const loadAboutContent = async () => {
+      try {
+        const response = await fetch("/api/admin/site-content");
+        if (!response.ok) return;
+
+        const data = await response.json();
+        setFormData((current) => ({
+          ...current,
+          ...data.about,
+        }));
+      } catch (error) {
+        console.error("Failed to load about content:", error);
+      }
+    };
+
+    loadAboutContent();
+  }, [status]);
 
   if (status === "loading") {
     return <div className="min-h-screen bg-black flex items-center justify-center text-green-500 font-mono">Initializing Batcomputer...</div>;
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    // TODO: Connect to Prisma API to save SiteContent
-    setTimeout(() => {
+
+    try {
+      if (activeTab === "about") {
+        const response = await fetch("/api/admin/site-content", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            aboutImage: formData.aboutImage,
+            aboutInstagramImage1: formData.aboutInstagramImage1,
+            aboutInstagramImage2: formData.aboutInstagramImage2,
+            aboutInstagramImage3: formData.aboutInstagramImage3,
+            aboutInstagramImage4: formData.aboutInstagramImage4,
+            aboutInstagramLink1: formData.aboutInstagramLink1,
+            aboutInstagramLink2: formData.aboutInstagramLink2,
+            aboutInstagramLink3: formData.aboutInstagramLink3,
+            aboutInstagramLink4: formData.aboutInstagramLink4,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to save about content");
+        }
+      }
+
       setIsSaving(false);
-      // Reload iframe
       if (iframeRef.current) {
         iframeRef.current.src = iframeRef.current.src;
       }
-    }, 1000);
+    } catch (error) {
+      console.error("Save failed:", error);
+      setIsSaving(false);
+    }
+  };
+
+  const handleAboutImageUpload = async (
+    field:
+      | "aboutImage"
+      | "aboutInstagramImage1"
+      | "aboutInstagramImage2"
+      | "aboutInstagramImage3"
+      | "aboutInstagramImage4",
+    file: File | null
+  ) => {
+    if (!file) return;
+
+    setUploadingField(field);
+
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const response = await fetch("/api/admin/upload/about-image", {
+        method: "POST",
+        body,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      setFormData((current) => ({
+        ...current,
+        [field]: data.url,
+      }));
+    } catch (error) {
+      console.error("Image upload failed:", error);
+    } finally {
+      setUploadingField(null);
+    }
   };
 
   const navItems = [
@@ -156,8 +252,101 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+
+            {activeTab === "about" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="space-y-2">
+                  <label className="text-xs font-mono text-neutral-500 uppercase">ABOUT_IMAGE</label>
+                  <input
+                    type="text"
+                    value={formData.aboutImage}
+                    onChange={(e) => setFormData({ ...formData, aboutImage: e.target.value })}
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                    placeholder="/about/abin-varghese.png or https://..."
+                  />
+                  <div className="flex items-center gap-3">
+                    <label className="inline-flex items-center px-4 py-2 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-sm cursor-pointer transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleAboutImageUpload("aboutImage", e.target.files?.[0] || null)}
+                      />
+                      Upload main image
+                    </label>
+                    {uploadingField === "aboutImage" && (
+                      <span className="text-xs font-mono text-neutral-500 uppercase">Uploading...</span>
+                    )}
+                  </div>
+                </div>
+
+                {[
+                  { imageKey: "aboutInstagramImage1", linkKey: "aboutInstagramLink1", label: "INSTAGRAM_CARD_1" },
+                  { imageKey: "aboutInstagramImage2", linkKey: "aboutInstagramLink2", label: "INSTAGRAM_CARD_2" },
+                  { imageKey: "aboutInstagramImage3", linkKey: "aboutInstagramLink3", label: "INSTAGRAM_CARD_3" },
+                  { imageKey: "aboutInstagramImage4", linkKey: "aboutInstagramLink4", label: "INSTAGRAM_CARD_4" },
+                ].map((field) => (
+                  <div key={field.label} className="rounded-2xl border border-neutral-800 bg-black/30 p-4 space-y-4">
+                    <p className="text-xs font-mono text-neutral-500 uppercase">{field.label}</p>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-neutral-600 uppercase">IMAGE_URL</label>
+                      <input
+                        type="text"
+                        value={formData[field.imageKey as keyof typeof formData] as string}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [field.imageKey]: e.target.value,
+                          })
+                        }
+                        className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                        placeholder="Direct image URL for the side photo"
+                      />
+                      <div className="flex items-center gap-3">
+                        <label className="inline-flex items-center px-4 py-2 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-sm cursor-pointer transition-colors">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) =>
+                              handleAboutImageUpload(
+                                field.imageKey as
+                                  | "aboutInstagramImage1"
+                                  | "aboutInstagramImage2"
+                                  | "aboutInstagramImage3"
+                                  | "aboutInstagramImage4",
+                                e.target.files?.[0] || null
+                              )
+                            }
+                          />
+                          Upload card image
+                        </label>
+                        {uploadingField === field.imageKey && (
+                          <span className="text-xs font-mono text-neutral-500 uppercase">Uploading...</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-neutral-600 uppercase">INSTAGRAM_LINK</label>
+                      <input
+                        type="text"
+                        value={formData[field.linkKey as keyof typeof formData] as string}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [field.linkKey]: e.target.value,
+                          })
+                        }
+                        className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                        placeholder="Instagram post/profile link for click-through"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             
-            {activeTab !== "hero" && (
+            {activeTab !== "hero" && activeTab !== "about" && (
               <div className="h-40 border border-dashed border-neutral-800 rounded-xl flex items-center justify-center text-neutral-500">
                 Data schema building for {activeTab}...
               </div>

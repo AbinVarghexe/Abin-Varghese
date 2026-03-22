@@ -13,6 +13,21 @@ const nextConfig: NextConfig = {
           hostname: 'images.unsplash.com',
           pathname: '/**',
         },
+        {
+          protocol: 'https',
+          hostname: 'instagram.fccu12-1.fna.fbcdn.net',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
+          hostname: 'scontent.cdninstagram.com',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
+          hostname: 'lookaside.instagram.com',
+          pathname: '/**',
+        },
       ],
     },
 };

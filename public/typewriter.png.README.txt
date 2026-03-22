@@ -1,1 +1,2 @@
-(Please add a realistic typewriter PNG image named 'typewriter.png' to your public/ folder for best results. You can use https://pngimg.com/d/typewriter_PNG65.png, download it, and place it at public/typewriter.png.)
+Typewriter media now uses `public/Typewritter-alpha.webm` as the primary asset, with `public/Typewritter.mp4` as a fallback.
+The transparent WebM was keyed from the original white-background MP4 so the About page can render the typewriter without a visible box behind it.

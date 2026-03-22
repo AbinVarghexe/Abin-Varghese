@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import KeyboardDemo from "@/components/keyboard-demo";
 
 export default function DeskBookSection() {
   // 0: Closed, 1: Opened Page 1, 2: Flipped to Page 2
@@ -9,13 +10,72 @@ export default function DeskBookSection() {
   const [mounted, setMounted] = useState(false);
   const [scrolled1, setScrolled1] = useState(false);
   const [scrolled2, setScrolled2] = useState(false);
+  const [keyboardEngaged, setKeyboardEngaged] = useState(false);
+  const keyboardRef = useRef<HTMLDivElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   
   useEffect(() => setMounted(true), []);
 
-  const closeBook = (e: React.MouseEvent) => { e.stopPropagation(); setPage(0); };
-  const openCover = (e: React.MouseEvent) => { e.stopPropagation(); setPage(1); };
-  const turnToPage2 = (e: React.MouseEvent) => { e.stopPropagation(); setPage(2); };
-  const turnToPage1 = (e: React.MouseEvent) => { e.stopPropagation(); setPage(1); };
+  const playBookSound = useCallback((type: "open" | "turn" | "close") => {
+    if (typeof window === "undefined") return;
+
+    const AudioCtx =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+    if (!AudioCtx) return;
+
+    const ctx = audioContextRef.current ?? new AudioCtx();
+    audioContextRef.current = ctx;
+
+    if (ctx.state === "suspended") {
+      void ctx.resume();
+    }
+
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.28, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < data.length; i += 1) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = noiseBuffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(type === "turn" ? 900 : 700, ctx.currentTime);
+    filter.Q.setValueAtTime(0.6, ctx.currentTime);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(type === "turn" ? 0.05 : 0.04, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (type === "turn" ? 0.22 : 0.26));
+
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+    source.stop(ctx.currentTime + 0.3);
+  }, []);
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!keyboardRef.current || (target && keyboardRef.current.contains(target))) {
+        return;
+      }
+
+      setKeyboardEngaged(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, []);
+
+  const closeBook = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("close"); setPage(0); };
+  const openCover = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("open"); setPage(1); };
+  const turnToPage2 = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("turn"); setPage(2); };
+  const turnToPage1 = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("turn"); setPage(1); };
 
   if (!mounted) return null;
 
@@ -46,6 +106,10 @@ export default function DeskBookSection() {
           0%, 100% { transform: rotateY(0deg); }
           50% { transform: rotateY(3deg); }
         }
+        @keyframes paperclipGlint {
+          0%, 100% { transform: translateX(-50%) rotate(7deg); }
+          50% { transform: translateX(-50%) rotate(11deg) translateY(-1px); }
+        }
       `}} />
       {/* Desk Lighting/Vignette */}
       <div className="absolute inset-0 pointer-events-none  z-0"></div>
@@ -53,22 +117,56 @@ export default function DeskBookSection() {
       {/* BACKGROUND PROPS (Hidden on smaller screens) */}
       
       {/* Right Glasses */}
-      <div className="absolute top-[8%] right-[8%] transform rotate-12 hidden lg:block z-0 opacity-80" style={{ filter: 'drop-shadow(8px 12px 10px rgba(0,0,0,0.2))' }}>
-         <svg width="180" height="80" viewBox="0 0 150 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="35" cy="30" r="23" stroke="#222" strokeWidth="4" />
-            <circle cx="115" cy="30" r="23" stroke="#222" strokeWidth="4" />
-            <path d="M58 30 Q75 22 92 30" stroke="#222" strokeWidth="4" fill="none" />
-            <path d="M12 25 L0 5" stroke="#222" strokeWidth="4" strokeLinecap="round" />
-            <path d="M138 25 L150 5" stroke="#222" strokeWidth="4" strokeLinecap="round" />
+      <div className="group absolute top-[8%] right-[8%] hidden lg:block z-0 opacity-90 transition-transform duration-500 hover:-translate-y-1 hover:rotate-[10deg]" style={{ transform: "rotate(12deg)", filter: 'drop-shadow(10px 16px 16px rgba(0,0,0,0.18))' }}>
+         <svg width="190" height="92" viewBox="0 0 190 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="frameMetal" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#655d58" />
+                <stop offset="28%" stopColor="#1f1b18" />
+                <stop offset="52%" stopColor="#8b8178" />
+                <stop offset="100%" stopColor="#241f1c" />
+              </linearGradient>
+              <linearGradient id="lensTint" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="rgba(210,220,226,0.42)" />
+                <stop offset="100%" stopColor="rgba(120,132,140,0.15)" />
+              </linearGradient>
+            </defs>
+            <ellipse cx="52" cy="44" rx="31" ry="27" fill="url(#lensTint)" stroke="url(#frameMetal)" strokeWidth="5"/>
+            <ellipse cx="138" cy="44" rx="31" ry="27" fill="url(#lensTint)" stroke="url(#frameMetal)" strokeWidth="5"/>
+            <path d="M82 43C89 38 101 38 108 43" stroke="url(#frameMetal)" strokeWidth="4.5" strokeLinecap="round"/>
+            <path d="M22 39L6 14" stroke="url(#frameMetal)" strokeWidth="5" strokeLinecap="round"/>
+            <path d="M168 39L184 14" stroke="url(#frameMetal)" strokeWidth="5" strokeLinecap="round"/>
+            <path d="M36 31C41 24 47 22 57 23" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" className="transition-opacity duration-300 group-hover:opacity-90" />
+            <path d="M122 31C127 24 133 22 143 23" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" className="transition-opacity duration-300 group-hover:opacity-90" />
          </svg>
       </div>
 
       {/* Left Keyboard Edge */}
-      <div className="absolute top-[30%] -left-16 lg:left-[-40px] w-[140px] h-[400px] bg-[#e8e8e8] rounded-3xl border-t-2 border-white shadow-[15px_15px_30px_rgba(0,0,0,0.15)] flex-col gap-3 p-4 transform rotate-[-1deg] hidden xl:flex z-0">
-        <div className="h-12 w-full bg-[#f8f8f8] rounded shadow-sm border-b-2 border-gray-300"></div>
-        <div className="h-12 w-full bg-[#f8f8f8] rounded shadow-sm border-b-2 border-gray-300"></div>
-        <div className="h-12 w-full bg-[#f8f8f8] rounded shadow-sm border-b-2 border-gray-300 flex items-center justify-center text-gray-400 text-xs">←</div>
-        <div className="h-20 w-full bg-[#f8f8f8] rounded shadow-sm border-b-2 border-gray-300 flex items-center justify-center text-gray-400 text-xs">↑</div>
+      <div
+        ref={keyboardRef}
+        className={`group absolute top-[31%] w-[820px] h-[380px] hidden xl:flex pointer-events-auto transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          keyboardEngaged
+            ? "left-1/2 z-30 -translate-x-1/2 translate-y-[34px] rotate-0"
+            : "left-[-190px] z-0 -translate-x-9 -rotate-[8deg]"
+        }`}
+      >
+        <div className="relative w-full h-full">
+          <div
+            className={`absolute bottom-3 h-12 rounded-full bg-black/15 blur-md transition-all duration-700 ${
+              keyboardEngaged ? "left-14 right-14 opacity-90" : "inset-x-24 opacity-100"
+            }`}
+          />
+          <div
+            className={`absolute inset-0 origin-center drop-shadow-[18px_22px_28px_rgba(0,0,0,0.16)] transition-transform duration-700 ${
+              keyboardEngaged ? "scale-[1.24]" : "scale-[0.98]"
+            }`}
+          >
+            <KeyboardDemo
+              className="h-full min-h-0 py-0 md:min-h-0"
+              onKeyInteraction={() => setKeyboardEngaged(true)}
+            />
+          </div>
+        </div>
       </div>
 
       <p className={`z-10 text-gray-500 font-mono tracking-widest text-[10px] mt-12 md:mt-0 md:text-sm uppercase mb-8 md:mb-12 transition-opacity duration-1000 ${page > 0 ? "opacity-100" : "opacity-80"}`}>
@@ -152,10 +250,21 @@ export default function DeskBookSection() {
                     {/* Attached Photo with Paperclip ON THE TOP */}
                     <div className="relative self-center md:self-end md:-mr-4 mb-8 transform rotate-3 mt-2 md:mt-0 z-20">
                         {/* Photo Border / Polaroid effect */}
-                        <div className="relative w-40 h-52 md:w-56 md:h-64 bg-[#fffcf5] p-2 md:p-3 shadow-[2px_6px_15px_rgba(0,0,0,0.15)] border border-[#e0cfa9]">
+                        <div className="group relative w-40 h-52 md:w-56 md:h-64 bg-[#fffcf5] p-2 md:p-3 shadow-[2px_6px_15px_rgba(0,0,0,0.15)] border border-[#e0cfa9] transition-transform duration-500 hover:-translate-y-1">
                             {/* Paperclip */}
-                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-6 h-12 bg-transparent border-[3px] border-[#9ca3af] rounded-full shadow-[1px_2px_3px_rgba(0,0,0,0.2)] z-30" style={{ backgroundImage: "linear-gradient(to right, #ccc, #eee, #ccc)" }}></div>
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-8 bg-transparent border-t-[3px] border-l-[3px] border-r-[3px] border-[#888] rounded-t-full z-10"></div>
+                            <div
+                              className="absolute -top-6 left-1/2 w-6 h-12 bg-transparent border-[3px] border-[#9ca3af] rounded-full shadow-[1px_2px_3px_rgba(0,0,0,0.2)] z-30 transition-transform duration-300 group-hover:scale-[1.04]"
+                              style={{
+                                transform: "translateX(-50%) rotate(7deg)",
+                                transformOrigin: "top center",
+                                backgroundImage: "linear-gradient(to right, #c9c9c9, #f3f3f3 45%, #a6a6a6)",
+                                animation: "paperclipGlint 3.2s ease-in-out infinite",
+                              }}
+                            ></div>
+                            <div
+                              className="absolute -top-3 left-1/2 w-3 h-8 bg-transparent border-t-[3px] border-l-[3px] border-r-[3px] border-[#7e7e7e] rounded-t-full z-10"
+                              style={{ transform: "translateX(-50%) rotate(7deg)" }}
+                            ></div>
                             
                             {/* Profile Image */}
                             <div className="relative w-full h-full overflow-hidden grayscale-[20%] sepia-[30%] contrast-[1.1]">
