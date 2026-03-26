@@ -2,6 +2,8 @@
 
 
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ThemeToggle } from '../common/Themetoggle';
 
@@ -12,7 +14,7 @@ interface MobileNavProps {
 export const MobileNav = ({ className = '' }: MobileNavProps) => {
   const [isLightMode, setIsLightMode] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const logoRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLAnchorElement>(null);
 
   // Check theme state
   useEffect(() => {
@@ -86,17 +88,21 @@ export const MobileNav = ({ className = '' }: MobileNavProps) => {
         }}
       >
         {/* Logo */}
-        <div
+        <Link
+          href="/"
           ref={logoRef}
           className="flex items-center"
+          aria-label="Abin Varghese Home"
         >
-          <span 
-            className="font-bold text-2xl font-['Vina'] tracking-wide"
-            style={{ color: isLightMode ? '#111827' : '#ffffff' }}
-          >
-            ABIN
-          </span>
-        </div>
+          <Image
+            src="/Logo.svg"
+            alt="Abin Varghese logo"
+            width={42}
+            height={37}
+            className="h-9 w-auto"
+            priority
+          />
+        </Link>
 
         {/* Theme Toggle Button */}
         <ThemeToggle className="p-2!" />

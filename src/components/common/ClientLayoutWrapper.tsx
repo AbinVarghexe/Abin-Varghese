@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import MouseTrail from "@/components/ui/MouseTrail";
 import { MobileNav } from "@/components/common/MobileNav";
 import { MobileDock } from "@/components/common/MobileDock";
+import Preloader from "@/components/Preloader";
 
 const FONT = {
   A: [[0, 1, 1, 0], [1, 0, 0, 1], [1, 1, 1, 1], [1, 0, 0, 1], [1, 0, 0, 1]],
@@ -147,6 +148,7 @@ export default function ClientLayoutWrapper({
 
   return (
     <>
+      <Preloader />
       <MouseTrail baseThickness={4} enableCustomCursor={true} enableFade={true} />
       <div className="hidden md:block">
         <Navbar />

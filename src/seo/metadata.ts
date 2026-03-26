@@ -38,6 +38,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: "/Logo.svg",
+    shortcut: "/Logo.svg",
+    apple: "/Logo.svg",
+  },
   openGraph: {
     title: "Abin Varghese | Front-End Developer & UI/UX Designer",
     description:
