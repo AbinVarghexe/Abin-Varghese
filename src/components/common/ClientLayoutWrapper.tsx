@@ -157,12 +157,16 @@ export default function ClientLayoutWrapper({
     <>
       <Preloader />
       <MouseTrail baseThickness={4} enableCustomCursor={true} enableFade={true} />
-      <JarvisAssistant />
       
-      {/* ── Global 3D Assistant Layer (Fixed, z-10) ──────────────── */}
-      <div className="fixed inset-0 z-10 pointer-events-none overflow-hidden h-screen w-screen hidden lg:block">
-        <Hero3DLayer />
-      </div>
+      {/* ── Home-Only Neural Interaction Layer ────────────────── */}
+      {pathname === "/" && (
+        <>
+          <JarvisAssistant />
+          <div className="fixed inset-0 z-10 pointer-events-none overflow-hidden h-screen w-screen hidden lg:block">
+            <Hero3DLayer />
+          </div>
+        </>
+      )}
 
       <div className="hidden md:block select-none">
         <Navbar />

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, Suspense, useEffect, useMemo, useState } from 'react';
+import { useRef, Suspense, useEffect, useMemo, useState, useLayoutEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Float, useGLTF, Environment, useAnimations, Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -139,6 +139,26 @@ function Model() {
     }
   };
 
+  const { setIsModelLoaded } = useJarvisStore(); // **New load signaling**
+
+  // **Neural Initialization: Zero-Latency Startup Positioning**
+  useLayoutEffect(() => {
+    if (!groupRef.current) return;
+    
+    // Approximate viewport dimensions to avoid [0,0,0] snap
+    const vfov = (35 * Math.PI) / 180;
+    const vh = 2 * Math.tan(vfov / 2) * 24;
+    const vw = vh * (window.innerWidth / window.innerHeight);
+    const startX = (vw * 0.35) * sideMultiplier.current;
+    
+    groupRef.current.position.set(startX, 0, 0);
+    
+    // Signal to preloader that model is ready
+    if (scene) {
+      setIsModelLoaded(true);
+    }
+  }, [scene, setIsModelLoaded]);
+
   const [scrollY, setScrollY] = useState(0);
 
   // Sync scroll for traveling & parallax
@@ -245,13 +265,17 @@ function Model() {
         return;
       }
 
+      // **Aero-Dynamic Heading (Facing User & Traveling)**
       if (isGreeting) {
+        // Face forward (PI) and pivot slightly toward mouse
+        const greetHeadingY = Math.PI + (mouse.x * 0.5);
         const waveAngle = Math.sin(time * 15) * 0.15;
         const waveHop = Math.sin(time * 8) * 0.3;
+        
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, greetHeadingY, 0.1);
         groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, waveAngle, 0.1);
         groupRef.current.position.y += waveHop * 0.05;
-        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, mouse.x * 0.4, 0.1);
-        return;
+        // CONTINUE PHYSICS (Do not return) to avoid warping
       }
 
       // **Neural Physics Engine (Viscous Liquid Momentum)**

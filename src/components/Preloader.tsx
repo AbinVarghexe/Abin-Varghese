@@ -20,21 +20,56 @@ const dotPositions = [
   "88% 68%",
 ];
 
+import { useJarvisStore } from "@/store/useJarvisStore";
+
 export default function Preloader() {
   const [isVisible, setIsVisible] = useState(true);
+  const { isModelLoaded } = useJarvisStore();
 
   useEffect(() => {
-    const hideTimer = window.setTimeout(() => {
+    let hideTimer: number;
+    let failSafeTimer: number;
+
+    const startHiding = () => {
+      hideTimer = window.setTimeout(() => {
+        setIsVisible(false);
+      }, 500); // Small buffer once ready
+    };
+
+    // Only hide if model is loaded AND at least 2.5s has passed for branding
+    if (isModelLoaded) {
+      const minDisplayTime = 2500;
+      const now = Date.now();
+      const startTime = (window as any)._preloaderStartTime || now;
+      const elapsed = now - startTime;
+
+      if (elapsed >= minDisplayTime) {
+        startHiding();
+      } else {
+        hideTimer = window.setTimeout(startHiding, minDisplayTime - elapsed);
+      }
+    }
+
+    // Fail-safe: hide after 8s regardless of model state
+    failSafeTimer = window.setTimeout(() => {
       setIsVisible(false);
-    }, 2500);
+    }, 8000);
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     return () => {
       window.clearTimeout(hideTimer);
+      window.clearTimeout(failSafeTimer);
       document.body.style.overflow = previousOverflow;
     };
+  }, [isModelLoaded]);
+
+  // Set start time on first mount if not exists
+  useEffect(() => {
+    if (!(window as any)._preloaderStartTime) {
+      (window as any)._preloaderStartTime = Date.now();
+    }
   }, []);
 
   useEffect(() => {
