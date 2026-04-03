@@ -188,17 +188,17 @@ function Model() {
       // **AI Dynamic Milestone Generation** (Mirrored by sideMultiplier)
       const baseSideOffset = visibleWidth * 0.35 * sideMultiplier.current;
       let targetX = baseSideOffset; 
-      let targetY = visibleHeight * 0.15; 
+      let targetY = 0; // **CENTERED INITIAL POSITION**
       
       if (s < vh * 1.0) {
         targetX = baseSideOffset;
-        targetY = visibleHeight * 0.15;
+        targetY = 0; // Stay centered in Hero
       } else if (s < vh * 2.2) {
         const rawT = (s - (vh * 1.0)) / (vh * 0.7);
         const t = THREE.MathUtils.smoothstep(rawT, 0, 1); 
         // Mirror the Hero -> About path
         targetX = THREE.MathUtils.lerp(baseSideOffset, -baseSideOffset, t);
-        targetY = THREE.MathUtils.lerp(visibleHeight * 0.15, 0, t); 
+        targetY = THREE.MathUtils.lerp(0, 0, t); // Transitions from center to center (left side)
       } else {
         const rawT = (s - (vh * 2.2)) / (vh * 0.7);
         const t = THREE.MathUtils.smoothstep(rawT, 0, 1);
