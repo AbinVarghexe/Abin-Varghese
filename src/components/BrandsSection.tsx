@@ -33,19 +33,20 @@ const BrandsSection = () => {
   return (
     <section className="w-full px-4 md:px-8 lg:px-16 py-8">
       <div
-        className="relative w-full rounded-[32px] px-6 md:px-12 py-20 md:py-32 overflow-hidden"
+        className="relative w-full rounded-[32px] px-6 md:px-12 py-20 md:py-32 overflow-hidden z-20"
         style={{
-          background: "linear-gradient(180deg, #7DA3F6 0%, #0020D7 100%)",
+          background: "linear-gradient(180deg, rgba(125,163,246,0.85) 0%, rgba(0,32,215,0.85) 100%)",
+          backdropFilter: 'blur(8px)',
         }}
       >
         <div
-          className="absolute inset-0 pointer-events-none opacity-20"
+          className="absolute inset-0 pointer-events-none opacity-40"
           style={{
             backgroundImage: `
               linear-gradient(to right, rgba(255,255,255,0.5) 1.5px, transparent 2px),
               linear-gradient(to bottom, rgba(255,255,255,0.5) 1.5px, transparent 2px)
             `,
-            backgroundSize: "40px 40px",
+            backgroundSize: "80px 80px",
           }}
         />
 

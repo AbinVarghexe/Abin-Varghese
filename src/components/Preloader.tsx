@@ -57,17 +57,17 @@ export default function Preloader() {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, scale: 1.02 }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[120] overflow-hidden"
+          className="fixed inset-0 z-120 overflow-hidden"
           aria-hidden="true"
         >
           <div
             className="absolute inset-0"
             style={{
               backgroundImage: `
-                radial-gradient(circle at 20% 20%, rgba(129, 167, 255, 0.22), transparent 28%),
-                radial-gradient(circle at 80% 25%, rgba(74, 113, 255, 0.26), transparent 30%),
-                radial-gradient(circle at 50% 78%, rgba(16, 52, 212, 0.34), transparent 36%),
-                linear-gradient(145deg, #0a1fb8 0%, #1234e3 42%, #08126d 100%)
+                radial-gradient(circle at 20% 20%, rgba(0, 0, 0, 0.05), transparent 28%),
+                radial-gradient(circle at 80% 25%, rgba(0, 0, 0, 0.08), transparent 30%),
+                radial-gradient(circle at 50% 78%, rgba(0, 0, 0, 0.06), transparent 36%),
+                linear-gradient(145deg, #ffffff 0%, #fdfdfd 42%, #f0f0f0 100%)
               `,
             }}
           />
@@ -76,8 +76,8 @@ export default function Preloader() {
             className="absolute inset-0 opacity-20"
             style={{
               backgroundImage: `
-                linear-gradient(rgba(255,255,255,0.16) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.16) 1px, transparent 1px)
+                linear-gradient(rgba(0,0,0,0.16) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.16) 1px, transparent 1px)
               `,
               backgroundSize: "42px 42px",
             }}
@@ -87,12 +87,12 @@ export default function Preloader() {
             className="absolute inset-0 opacity-60"
             style={{
               backgroundImage: dotPositions
-                .map((position) => `radial-gradient(circle at ${position}, rgba(255,255,255,0.85) 0 1.5px, transparent 2.5px)`)
+                .map((position) => `radial-gradient(circle at ${position}, rgba(0,0,0,0.85) 0 1.5px, transparent 2.5px)`)
                 .join(", "),
             }}
           />
 
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.16),_transparent_38%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.08),transparent_38%)]" />
 
           <div className="relative flex h-full items-center justify-center px-6">
             <div className="flex flex-col items-center gap-8">
@@ -102,7 +102,7 @@ export default function Preloader() {
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                 className="relative"
               >
-                <div className="absolute inset-[-34px] rounded-full bg-[radial-gradient(circle,_rgba(255,255,255,0.22),_transparent_62%)] blur-3xl" />
+                <div className="absolute inset-[-34px] rounded-full bg-[radial-gradient(circle,rgba(0,0,0,0.1),transparent_62%)] blur-3xl" />
                 <motion.svg
                   viewBox="0 0 208.42 184.75"
                   className="relative h-28 w-28 md:h-36 md:w-36"
@@ -110,7 +110,7 @@ export default function Preloader() {
                 >
                   <motion.path
                     d={LOGO_PATH}
-                    stroke="#ffffff"
+                    stroke="#000000"
                     strokeWidth="4.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -121,7 +121,7 @@ export default function Preloader() {
                       fillOpacity: { delay: 0.95, duration: 0.6, ease: "easeOut" },
                       strokeOpacity: { delay: 1.15, duration: 0.32, ease: "easeOut" },
                     }}
-                    fill="#ffffff"
+                    fill="#000000"
                   />
                 </motion.svg>
               </motion.div>
@@ -132,14 +132,14 @@ export default function Preloader() {
                 transition={{ delay: 0.35, duration: 0.65 }}
                 className="space-y-4 text-center"
               >
-                <p className="text-xs font-medium uppercase tracking-[0.6em] text-white/70">
+                <p className="text-xs font-medium uppercase tracking-[0.6em] text-black/70">
                   Abin Varghese
                 </p>
                 <div className="flex items-center justify-center gap-2">
                   {[0, 1, 2].map((index) => (
                     <motion.span
                       key={index}
-                      className="h-2.5 w-2.5 rounded-full bg-white"
+                      className="h-2.5 w-2.5 rounded-full bg-black"
                       animate={{ y: [0, -8, 0], opacity: [0.35, 1, 0.35] }}
                       transition={{
                         duration: 0.9,

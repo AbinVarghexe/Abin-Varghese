@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { authOptions } from "@/lib/auth-options";
 import { getInstagramMediaUrl, isInstagramUrl, resolveInstagramPreview } from "@/lib/instagram";
-import { getAboutContent, upsertAboutContent } from "@/lib/site-content";
+import { getAboutContent, upsertAboutContent, getHeroContent, upsertHeroContent, getHomeContent, upsertHomeContent } from "@/lib/site-content";
 
 const aboutContentSchema = z.object({
   aboutImage: z.string(),
@@ -18,6 +18,22 @@ const aboutContentSchema = z.object({
   aboutInstagramLink4: z.string(),
 });
 
+const heroContentSchema = z.object({
+  heroGreeting: z.string(),
+  heroName: z.string(),
+  heroSubcopy: z.string(),
+  heroAudienceTags: z.string(),
+  heroAvailabilityText: z.string(),
+  heroCtaPrimaryLabel: z.string(),
+  heroCtaPrimaryUrl: z.string(),
+  heroCtaSecondaryLabel: z.string(),
+  heroCtaSecondaryUrl: z.string(),
+});
+
+const homeContentSchema = z.object({
+  scrollingBannerItems: z.string(),
+});
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -25,7 +41,9 @@ export async function GET() {
   }
 
   const about = await getAboutContent();
-  return NextResponse.json({ about });
+  const hero = await getHeroContent();
+  const home = await getHomeContent();
+  return NextResponse.json({ about, hero, home });
 }
 
 export async function PUT(request: NextRequest) {
@@ -36,39 +54,59 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const about = aboutContentSchema.parse(body);
-    const resolvedAbout = { ...about };
-    const mappings = [
-      ["aboutInstagramImage1", "aboutInstagramLink1"],
-      ["aboutInstagramImage2", "aboutInstagramLink2"],
-      ["aboutInstagramImage3", "aboutInstagramLink3"],
-      ["aboutInstagramImage4", "aboutInstagramLink4"],
-    ] as const;
+    
+    // Legacy support: if type is missing, we assume it's about
+    const type = body.type || 'about';
+    const data = body.data || body; // Legacy body had data at root
 
-    for (const [imageKey, linkKey] of mappings) {
-      const imageValue = resolvedAbout[imageKey];
-      const linkValue = resolvedAbout[linkKey];
-      const instagramSource =
-        (imageValue && isInstagramUrl(imageValue) && imageValue) ||
-        (linkValue && isInstagramUrl(linkValue) && linkValue) ||
-        "";
+    if (type === 'about') {
+      const about = aboutContentSchema.parse(data);
+      const resolvedAbout = { ...about };
+      const mappings = [
+        ["aboutInstagramImage1", "aboutInstagramLink1"],
+        ["aboutInstagramImage2", "aboutInstagramLink2"],
+        ["aboutInstagramImage3", "aboutInstagramLink3"],
+        ["aboutInstagramImage4", "aboutInstagramLink4"],
+      ] as const;
 
-      if (!instagramSource) {
-        continue;
+      for (const [imageKey, linkKey] of mappings) {
+        const imageValue = resolvedAbout[imageKey];
+        const linkValue = resolvedAbout[linkKey];
+        const instagramSource =
+          (imageValue && isInstagramUrl(imageValue) && imageValue) ||
+          (linkValue && isInstagramUrl(linkValue) && linkValue) ||
+          "";
+
+        if (!instagramSource) {
+          continue;
+        }
+
+        const resolvedPreview = await resolveInstagramPreview(instagramSource);
+        const mediaFallback = getInstagramMediaUrl(instagramSource);
+
+        if (resolvedPreview || mediaFallback) {
+          resolvedAbout[imageKey] = resolvedPreview || mediaFallback || resolvedAbout[imageKey];
+          resolvedAbout[linkKey] = instagramSource;
+        }
       }
 
-      const resolvedPreview = await resolveInstagramPreview(instagramSource);
-      const mediaFallback = getInstagramMediaUrl(instagramSource);
-
-      if (resolvedPreview || mediaFallback) {
-        resolvedAbout[imageKey] = resolvedPreview || mediaFallback || resolvedAbout[imageKey];
-        resolvedAbout[linkKey] = instagramSource;
-      }
+      await upsertAboutContent(resolvedAbout);
+      return NextResponse.json({ about: resolvedAbout });
     }
 
-    await upsertAboutContent(resolvedAbout);
+    if (type === 'hero') {
+      const hero = heroContentSchema.parse(data);
+      await upsertHeroContent(hero);
+      return NextResponse.json({ hero });
+    }
 
-    return NextResponse.json({ about: resolvedAbout });
+    if (type === 'home') {
+      const home = homeContentSchema.parse(data);
+      await upsertHomeContent(home);
+      return NextResponse.json({ home });
+    }
+
+    return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

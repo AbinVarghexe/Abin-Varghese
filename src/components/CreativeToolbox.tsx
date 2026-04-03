@@ -131,7 +131,7 @@ const CreativeToolbox = () => {
   );
 
   return (
-    <section className="pt-28 pb-24 md:pb-16">
+    <section className="relative z-20 pt-28 pb-24 md:pb-16 bg-transparent pointer-events-none">
       <div className="px-4 md:px-8 lg:px-16 xl:px-32 py-4 relative">
         {/* Background Element */}
         <motion.div
@@ -162,7 +162,7 @@ const CreativeToolbox = () => {
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full flex items-center justify-between p-4 md:p-6 bg-white rounded-[24px] border border-zinc-200 hover:border-zinc-300 transition-colors relative z-20"
+                className="w-full flex items-center justify-between p-4 md:p-6 bg-white rounded-[24px] border border-zinc-200 hover:border-zinc-300 transition-colors relative z-20 pointer-events-auto"
               >
                 <div className="text-left">
                   <span className="block text-xl font-semibold text-zinc-900">
@@ -185,7 +185,7 @@ const CreativeToolbox = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -40 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="absolute top-full left-0 right-0 mt-2 p-2 md:p-4 bg-white rounded-[24px] border border-zinc-200 shadow-lg z-10 overflow-hidden"
+                    className="absolute top-full left-0 right-0 mt-2 p-2 md:p-4 bg-white rounded-[24px] border border-zinc-200 shadow-lg z-10 overflow-hidden pointer-events-auto"
                   >
                     {categories.map((category) => (
                       <button
@@ -217,7 +217,7 @@ const CreativeToolbox = () => {
               {filteredTools.map((tool) => (
                 <div
                   key={tool.id}
-                  className="flex items-center gap-6 p-4 md:p-6 bg-white rounded-[24px] border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all"
+                  className="flex items-center gap-6 p-4 md:p-6 bg-white rounded-[24px] border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all pointer-events-auto"
                 >
                   <div className="w-14 h-14 bg-zinc-50 rounded-lg flex items-center justify-center shrink-0 p-1">
                     <img

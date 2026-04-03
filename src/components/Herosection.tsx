@@ -10,6 +10,7 @@ import {
   useTransform,
   useInView,
 } from 'framer-motion';
+import { HeroContent } from '@/lib/hero-content-defaults';
 
 /* ─────────────────────────────── data ──────────────────────────── */
 const dotPositions = [
@@ -19,7 +20,7 @@ const dotPositions = [
 ];
 
 /* Behance — clean "Bē" mark, works at any size */
-function BehanceIcon({ className, ...rest }: { className?: string; [k: string]: unknown }) {
+function BehanceIcon({ className, strokeWidth, ...rest }: { className?: string; strokeWidth?: number; [k: string]: unknown }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -45,7 +46,6 @@ const socialTiles = [
   { icon: Instagram,    label: 'Instagram', href: 'https://www.instagram.com/abinvarghese' },
 ];
 
-const audienceDots = ['AV', 'UI', 'UX', 'FD', 'NX'];
 
 /* ─────────────────── animation variants ────────────────────────── */
 const container = {
@@ -83,7 +83,7 @@ function MagneticButton({
 }: {
   href: string;
   label: string;
-  icon?: React.ElementType;
+  icon?: any;
   secondary?: boolean;
 }) {
   const ref = useRef<HTMLAnchorElement>(null);
@@ -111,7 +111,7 @@ function MagneticButton({
         whileHover={{ scale: 1.04, boxShadow: '0 18px 44px rgba(0,32,215,0.12)' }}
         whileTap={{ scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="inline-flex items-center gap-3 rounded-full border-[2.5px] border-[#929292] bg-white pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-slate-800"
+        className="inline-flex items-center gap-3 rounded-full border-[2.5px] border-[#929292] bg-white pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-slate-800 pointer-events-auto"
       >
         <span className="min-w-[80px] text-center">{label}</span>
         {Icon && (
@@ -134,14 +134,15 @@ function MagneticButton({
       href={href}
       onMouseMove={handleMouse}
       onMouseLeave={reset}
-      style={{ x: sx, y: sy }}
+      style={{
+        x: sx,
+        y: sy,
+        background: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)',
+      }}
       whileHover={{ scale: 1.04, boxShadow: '0 22px 52px rgba(0,32,215,0.38)' }}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="inline-flex items-center gap-4 rounded-full border-[2.5px] border-[#929292] pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-white"
-      style={{
-        background: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)',
-      } as React.CSSProperties}
+      className="inline-flex items-center gap-4 rounded-full border-[2.5px] border-[#929292] pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-white pointer-events-auto"
     >
       <span className="min-w-[88px] text-center">{label}</span>
       {Icon && (
@@ -165,7 +166,7 @@ function SocialTile({
   rotate,
   delay,
 }: {
-  icon: React.ElementType;
+  icon: any;
   label: string;
   href: string;
   rotate: number;
@@ -186,7 +187,7 @@ function SocialTile({
         transition: { type: 'spring', stiffness: 420, damping: 22 },
       }}
       whileTap={{ scale: 0.93 }}
-      className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-[20px] border border-white/90 bg-white shadow-[0_16px_38px_rgba(97,77,219,0.12)]"
+      className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-[20px] border border-white/90 bg-white shadow-[0_16px_38px_rgba(97,77,219,0.12)] pointer-events-auto"
     >
       <Icon className="h-7 w-7 text-slate-800" strokeWidth={2.2} />
     </motion.a>
@@ -218,160 +219,195 @@ function FloatingDots() {
   );
 }
 
-/* ──────────────────────── shimmer text span ─────────────────────── */
-function ShimmerText({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.span
-      className="relative mt-2 block bg-clip-text pb-[0.2em] text-transparent"
-      style={{ backgroundImage: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)' }}
-    >
-      {/* subtle gloss sweep */}
-      <motion.span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-sm"
-        style={{
-          background:
-            'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.38) 50%, transparent 65%)',
-          backgroundSize: '200% 100%',
-        }}
-        animate={{ backgroundPosition: ['200% center', '-100% center'] }}
-        transition={{ duration: 2.8, repeat: Infinity, repeatDelay: 3.5, ease: 'easeInOut' }}
-      />
-      {children}
-    </motion.span>
-  );
-}
 
 /* ═══════════════════════════ Section ════════════════════════════ */
-const Herosection = () => {
+const Herosection = ({ data }: { data: HeroContent }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const inView     = useInView(sectionRef, { once: true, margin: '-60px' });
+  
 
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden px-4 pb-24 pt-40 md:px-6 md:pb-32 md:pt-52 lg:pt-64"
+      className="relative min-h-screen w-full bg-transparent pb-16"
     >
-      {/* ── Background layers ─────────────────────────────────────── */}
-      <div className="absolute inset-0 bg-[#ECECEC]" />
-
-      {/* soft radial glows — Figma blue palette */}
-      <div
-        className="absolute inset-0"
+      {/* ── Layer 1: Background (z-0) ─────────────────────────────── */}
+      <div 
+        className="absolute inset-0 z-0"
         style={{
-          backgroundImage: `
-            radial-gradient(circle at 20% 20%, rgba(125,163,246,0.13), transparent 32%),
-            radial-gradient(circle at 80% 25%, rgba(0,32,215,0.08), transparent 30%),
-            radial-gradient(circle at 50% 80%, rgba(125,163,246,0.09), transparent 38%)
-          `,
+          maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
         }}
-      />
+      >
+        <div className="absolute inset-0 bg-transparent" />
+        
+        {/* soft radial glows */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              radial-gradient(circle at 20% 20%, rgba(125,163,246,0.13), transparent 32%),
+              radial-gradient(circle at 80% 25%, rgba(0,32,215,0.08), transparent 30%),
+              radial-gradient(circle at 50% 80%, rgba(125,163,246,0.09), transparent 38%)
+            `,
+          }}
+        />
 
-      {/* line grid */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(100,80,220,0.07) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(100,80,220,0.07) 1px, transparent 1px)
-          `,
-          backgroundSize: '42px 42px',
-        }}
-      />
+        {/* grids */}
+        <div
+          className="absolute inset-0 opacity-70"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(0,32,215,0.14) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0,32,215,0.14) 1px, transparent 1px)
+            `,
+            backgroundSize: '84px 84px',
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{
+            backgroundImage: `radial-gradient(circle, rgba(0,32,215,0.35) 1px, transparent 1px)`,
+            backgroundSize: '42px 42px',
+          }}
+        />
 
-      {/* tiny dot grid (half-pitch of the line grid) */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `radial-gradient(circle, rgba(110,90,230,0.30) 1px, transparent 1px)`,
-          backgroundSize: '21px 21px',
-        }}
-      />
+        <FloatingDots />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(125,163,246,0.09),transparent_40%)]" />
+      </div>
 
-      {/* animated scatter dots */}
-      <FloatingDots />
-
-      {/* center highlight — Figma blue */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(125,163,246,0.09),transparent_40%)]" />
-
-      {/* ── Content ───────────────────────────────────────────────── */}
-      <div className="relative mx-auto max-w-[1400px]">
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate={inView ? 'show' : 'hidden'}
-          className="relative z-10 mx-auto flex max-w-4xl flex-col items-center text-center"
-        >
-          {/* headline */}
-          <motion.h1
-            variants={fadeUp}
-            className="max-w-4xl text-[2.2rem] font-semibold leading-[0.95] tracking-[-0.04em] text-[#0f1020] md:text-[3rem] lg:text-[4.5rem]"
+      {/* ── Layer 3: Foreground Text & UI (z-50) ───────────────────── */}
+      <div className="pointer-events-none relative z-50 flex min-h-full flex-col items-center justify-start px-4 md:px-6">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-start pt-60 md:pt-80">
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate={inView ? 'show' : 'hidden'}
+            className="flex max-w-4xl flex-col items-center text-center"
           >
-            Hi, Guys{' '}
-            <motion.span
-              aria-hidden
-              style={{ display: 'inline-block', transformOrigin: '70% 80%' }}
-              animate={{ rotate: [0, 25, -5, 20, -10, 0] }}
-              transition={{
-                duration: 1.8,
-                ease: 'easeInOut',
-                repeat: Infinity,
-                repeatDelay: 2,
-              }}
+            {/* headline */}
+            <motion.h1
+              variants={fadeUp}
+              className="pointer-events-auto max-w-4xl text-4xl font-semibold leading-[0.95] tracking-tighter text-[#0f1020] md:text-5xl lg:text-7xl"
             >
-              👋
-            </motion.span>
-            {' '}I'm
-            <ShimmerText>Abin Varghese</ShimmerText>
+            {data.heroGreeting.includes('👋') ? (
+              data.heroGreeting.split('👋').map((part, i, arr) => (
+                <span key={i}>
+                  {part}
+                  {i < arr.length - 1 && (
+                    <motion.span
+                      aria-hidden
+                      className="inline-block origin-[70%_80%]"
+                      animate={{ rotate: [0, 25, -5, 20, -10, 0] }}
+                      transition={{
+                        duration: 1.8,
+                        ease: 'easeInOut',
+                        repeat: Infinity,
+                        repeatDelay: 2,
+                      }}
+                    >
+                      👋
+                    </motion.span>
+                  )}
+                </span>
+              ))
+            ) : (
+              <>
+                {data.heroGreeting}{' '}
+                <motion.span
+                  aria-hidden
+                  className="inline-block origin-[70%_80%]"
+                  animate={{ rotate: [0, 25, -5, 20, -10, 0] }}
+                  transition={{
+                    duration: 1.8,
+                    ease: 'easeInOut',
+                    repeat: Infinity,
+                    repeatDelay: 2,
+                  }}
+                >
+                  👋
+                </motion.span>
+              </>
+            )}
+            <br />
+            <span className="mt-2 flex justify-center cursor-default text-4xl leading-[0.95] tracking-[-0.08em] md:mt-3 md:text-6xl lg:text-7xl">
+              {data.heroName.split('').map((char, index) => (
+                <motion.span
+                  key={index}
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={inView ? { 
+                    opacity: 1, 
+                    y: 0,
+                    transition: { type: 'spring', damping: 10, stiffness: 400, delay: 0.3 + index * 0.04 }
+                  } : {}}
+                  whileHover={{
+                    scaleY: 1.3,
+                    scaleX: 1.1,
+                    y: -12,
+                    rotate: index % 2 === 0 ? -4 : 4,
+                    transition: { type: 'spring', stiffness: 400, damping: 5 }
+                  }}
+                  className="inline-block origin-bottom bg-clip-text px-[0.02em] pt-2 pb-6 -mb-4 text-transparent"
+                  style={{
+                    backgroundImage: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)',
+                  }}
+                >
+                  {char === ' ' ? '\u00A0' : char}
+                </motion.span>
+              ))}
+            </span>
           </motion.h1>
 
           {/* sub-copy */}
           <motion.p
             variants={fadeUp}
-            className="mt-8 max-w-4xl text-base leading-7 text-slate-600 md:text-lg"
+            className="pointer-events-auto mt-6 max-w-4xl text-base leading-snug tracking-tight text-slate-600 md:mt-8 md:text-lg lg:text-xl"
           >
-            I design with purpose and build with precision every pixel and every line of code is intentional.Currently studying CS, already creating work that goes beyond the classroom.
+            {data.heroSubcopy}
           </motion.p>
 
           {/* audience pill */}
           <motion.div
             variants={scaleIn}
-            whileHover={{ scale: 1.03, boxShadow: '0 24px 52px rgba(85,68,184,0.14)' }}
-            transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-            className="mt-10 flex cursor-default items-center gap-2.5 rounded-full border border-white/80 bg-white/80 px-3.5 py-2 shadow-[0_14px_34px_rgba(85,68,184,0.09)] backdrop-blur"
+            className="pointer-events-auto mt-10 flex w-[380px] cursor-default items-center rounded-full border border-slate-200 bg-white/70 py-2.5 shadow-sm backdrop-blur-md"
           >
-            <div className="flex -space-x-2">
-              {audienceDots.map((dot, index) => (
-                <motion.div
-                  key={dot}
-                  whileHover={{ scale: 1.2, zIndex: 10 }}
-                  transition={{ type: 'spring', stiffness: 600, damping: 20 }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white text-[10px] font-semibold text-slate-700"
-                  style={{ background: index % 2 === 0 ? '#f1edff' : '#fff5ef' }}
-                >
-                  {dot}
-                </motion.div>
-              ))}
+            <div 
+              className="flex w-full overflow-hidden"
+              style={{ maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' }}
+            >
+              <motion.div
+                animate={{ x: ['0%', '-50%'] }}
+                transition={{ ease: 'linear', duration: 15, repeat: Infinity }}
+                className="flex w-max whitespace-nowrap"
+              >
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="flex gap-8 pr-8">
+                    <p className="text-[14px] font-medium tracking-wide text-[#0020d7]">
+                      {data.heroAvailabilityText}
+                    </p>
+                    <p className="text-[14px] font-medium tracking-wide text-[#0020d7]">
+                      {data.heroAvailabilityText}
+                    </p>
+                  </div>
+                ))}
+              </motion.div>
             </div>
-            <p className="text-sm font-medium text-slate-600">
-              Full-Stack Developer · UI/UX Designer · Kerala, IN.
-            </p>
           </motion.div>
 
           {/* CTA buttons — Figma pill style */}
           <motion.div
             variants={fadeUp}
-            className="mt-8 flex flex-col items-center gap-4"
+            className="pointer-events-auto mt-8 flex flex-col items-center gap-4"
           >
             <div className="flex flex-col gap-4 sm:flex-row">
               <MagneticButton
-                href="/projects"
-                label="View My Work"
+                href={data.heroCtaPrimaryUrl}
+                label={data.heroCtaPrimaryLabel}
                 icon={ArrowUpRight}
               />
               <MagneticButton
-                href="/contact"
-                label="Start a Project"
+                href={data.heroCtaSecondaryUrl}
+                label={data.heroCtaSecondaryLabel}
                 icon={ArrowUpRight}
                 secondary
               />
@@ -389,7 +425,7 @@ const Herosection = () => {
           {/* social icon tiles */}
           <motion.div
             variants={scaleIn}
-            className="mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6"
+            className="pointer-events-auto mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6"
           >
             {socialTiles.map(({ icon, label, href }, index) => (
               <SocialTile
@@ -404,16 +440,10 @@ const Herosection = () => {
           </motion.div>
         </motion.div>
       </div>
+    </div>
 
-      {/* bottom fade */}
-      <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-32"
-        style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0) 0%, #ffffff 100%)',
-        }}
-      />
-    </section>
-  );
+  </section>
+);
 };
 
 export default memo(Herosection);

@@ -125,10 +125,9 @@ export const ScrollingBanner = ({
   return (
     <div
       ref={bannerRef}
-      className={`absolute bottom-0 left-0 right-0 w-full pointer-events-none h-[120px] md:h-[200px] ${className}`}
+      className={`relative w-full overflow-visible pointer-events-none h-[180px] md:h-[260px] ${className}`}
       style={{
         zIndex: 40,
-        transform: 'translateY(50%)',
       }}
     >
       {/* Top Banner - Rotated +8deg - Scrolls Left to Right */}

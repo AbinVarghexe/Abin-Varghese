@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} ${vina.variable} antialiased`}
+        className={`${poppins.variable} ${vina.variable} antialiased select-none`}
       >
         <PersonSchema />
         <script

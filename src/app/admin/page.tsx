@@ -2,22 +2,39 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
-import { LogOut, LayoutDashboard, Home, User, Briefcase, Mail, Settings, RefreshCw, Eye, EyeOff, Save, ShieldAlert } from "lucide-react";
+import { LogOut, LayoutDashboard, Home, User, Briefcase, Mail, Settings, RefreshCw, Eye, EyeOff, Save, ShieldAlert, Monitor, ChevronLeft, ChevronRight } from "lucide-react";
 import { aboutContentDefaults } from "@/lib/about-content-defaults";
+import { heroContentDefaults } from "@/lib/hero-content-defaults";
+import { homeContentDefaults } from "@/lib/home-content-defaults";
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("hero");
   const [showPreview, setShowPreview] = useState(true);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
+  const [editorWidth, setEditorWidth] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Example placeholder state for form
   const [formData, setFormData] = useState({
-    heroTitle: "ABIN'S ABODE",
-    heroSubtitle: "Creative Developer & Designer",
-    aboutText: "Welcome to my digital batcave.",
+    // Hero
+    heroGreeting: heroContentDefaults.heroGreeting,
+    heroName: heroContentDefaults.heroName,
+    heroSubcopy: heroContentDefaults.heroSubcopy,
+    heroAudienceTags: heroContentDefaults.heroAudienceTags,
+    heroAvailabilityText: heroContentDefaults.heroAvailabilityText,
+    heroCtaPrimaryLabel: heroContentDefaults.heroCtaPrimaryLabel,
+    heroCtaPrimaryUrl: heroContentDefaults.heroCtaPrimaryUrl,
+    heroCtaSecondaryLabel: heroContentDefaults.heroCtaSecondaryLabel,
+    heroCtaSecondaryUrl: heroContentDefaults.heroCtaSecondaryUrl,
+    
+    // Home
+    scrollingBannerItems: homeContentDefaults.scrollingBannerItems,
+    
+    // About
     aboutImage: aboutContentDefaults.aboutImage,
     aboutInstagramImage1: aboutContentDefaults.aboutInstagramImage1,
     aboutInstagramImage2: aboutContentDefaults.aboutInstagramImage2,
@@ -41,6 +58,8 @@ export default function AdminDashboard() {
         setFormData((current) => ({
           ...current,
           ...data.about,
+          ...data.hero,
+          ...data.home,
         }));
       } catch (error) {
         console.error("Failed to load about content:", error);
@@ -65,20 +84,65 @@ export default function AdminDashboard() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            aboutImage: formData.aboutImage,
-            aboutInstagramImage1: formData.aboutInstagramImage1,
-            aboutInstagramImage2: formData.aboutInstagramImage2,
-            aboutInstagramImage3: formData.aboutInstagramImage3,
-            aboutInstagramImage4: formData.aboutInstagramImage4,
-            aboutInstagramLink1: formData.aboutInstagramLink1,
-            aboutInstagramLink2: formData.aboutInstagramLink2,
-            aboutInstagramLink3: formData.aboutInstagramLink3,
-            aboutInstagramLink4: formData.aboutInstagramLink4,
+            type: "about",
+            data: {
+              aboutImage: formData.aboutImage,
+              aboutInstagramImage1: formData.aboutInstagramImage1,
+              aboutInstagramImage2: formData.aboutInstagramImage2,
+              aboutInstagramImage3: formData.aboutInstagramImage3,
+              aboutInstagramImage4: formData.aboutInstagramImage4,
+              aboutInstagramLink1: formData.aboutInstagramLink1,
+              aboutInstagramLink2: formData.aboutInstagramLink2,
+              aboutInstagramLink3: formData.aboutInstagramLink3,
+              aboutInstagramLink4: formData.aboutInstagramLink4,
+            }
           }),
         });
 
         if (!response.ok) {
           throw new Error("Failed to save about content");
+        }
+      }
+
+      if (activeTab === "hero") {
+        const response = await fetch("/api/admin/site-content", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "hero",
+            data: {
+              heroGreeting: formData.heroGreeting,
+              heroName: formData.heroName,
+              heroSubcopy: formData.heroSubcopy,
+              heroAudienceTags: formData.heroAudienceTags,
+              heroAvailabilityText: formData.heroAvailabilityText,
+              heroCtaPrimaryLabel: formData.heroCtaPrimaryLabel,
+              heroCtaPrimaryUrl: formData.heroCtaPrimaryUrl,
+              heroCtaSecondaryLabel: formData.heroCtaSecondaryLabel,
+              heroCtaSecondaryUrl: formData.heroCtaSecondaryUrl,
+            }
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to save hero content");
+        }
+      }
+
+      if (activeTab === "home") {
+        const response = await fetch("/api/admin/site-content", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "home",
+            data: {
+              scrollingBannerItems: formData.scrollingBannerItems,
+            }
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to save home content");
         }
       }
 
@@ -130,9 +194,37 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDrag = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    const handleMouseMove = (mouseMoveEvent: MouseEvent) => {
+      const sidebarWidth = document.querySelector('aside')?.clientWidth || 88;
+      const newWidth = mouseMoveEvent.clientX - sidebarWidth;
+      
+      if (newWidth > 300 && newWidth < window.innerWidth - 300) {
+        setEditorWidth(newWidth);
+      }
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+    };
+    
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
   const navItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "hero", label: "Hero Section", icon: Home },
+    { id: "home", label: "Home Section", icon: Monitor },
     { id: "about", label: "About Section", icon: User },
     { id: "projects", label: "Projects", icon: Briefcase },
     { id: "contact", label: "Contact", icon: Mail },
@@ -143,20 +235,26 @@ export default function AdminDashboard() {
     <div className="flex h-screen bg-neutral-950 text-neutral-300 font-sans overflow-hidden">
       
       {/* Sidebar - The Batcomputer Console */}
-      <aside className="w-72 bg-black border-r border-neutral-800/60 flex flex-col relative z-20">
-        <div className="p-6 border-b border-neutral-800/60">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-neutral-900 border border-neutral-700 rounded-xl flex items-center justify-center shadow-inner shadow-white/5">
-              <ShieldAlert className="w-5 h-5 text-neutral-400" />
-            </div>
-            <div>
-              <h1 className="text-white font-bold tracking-wide">BATCAVE</h1>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] text-green-500 font-mono tracking-widest uppercase">System Active</span>
+      <aside className={`${isSidebarExpanded ? 'w-72' : 'w-[88px]'} bg-black border-r border-neutral-800/60 flex flex-col relative z-20 transition-all duration-300 ease-in-out shrink-0`}>
+        <div className={`p-6 border-b border-neutral-800/60 flex items-center ${isSidebarExpanded ? 'justify-between' : 'justify-center'}`}>
+          {isSidebarExpanded ? (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-neutral-900 border border-neutral-700 rounded-xl flex items-center justify-center shadow-inner shadow-white/5 shrink-0">
+                <ShieldAlert className="w-5 h-5 text-neutral-400" />
+              </div>
+              <div className="overflow-hidden">
+                <h1 className="text-white font-bold tracking-wide truncate">BATCAVE</h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-[10px] text-green-500 font-mono tracking-widest uppercase truncate">System Active</span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="w-10 h-10 bg-neutral-900 border border-neutral-700 rounded-xl flex items-center justify-center shadow-inner shadow-white/5 shrink-0">
+              <ShieldAlert className="w-5 h-5 text-neutral-400" />
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2 no-scrollbar">
@@ -164,37 +262,55 @@ export default function AdminDashboard() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+              title={!isSidebarExpanded ? item.label : undefined}
+              className={`w-full flex items-center ${isSidebarExpanded ? 'gap-3 px-4' : 'justify-center px-0'} py-3 rounded-xl transition-all duration-200 ${
                 activeTab === item.id 
-                  ? "bg-neutral-900 border border-neutral-700/50 text-white shadow-md" 
+                  ? "bg-neutral-900 border border-neutral-700/50 text-white shadow-md relative" 
                   : "hover:bg-neutral-900/50 text-neutral-400 hover:text-neutral-200"
               }`}
             >
-              <item.icon className={`w-4 h-4 ${activeTab === item.id ? "text-white" : ""}`} />
-              <span className="font-medium text-sm">{item.label}</span>
+              <item.icon className={`w-4 h-4 shrink-0 ${activeTab === item.id ? "text-white" : ""}`} />
+              {isSidebarExpanded && <span className="font-medium text-sm whitespace-nowrap truncate">{item.label}</span>}
+              {!isSidebarExpanded && activeTab === item.id && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-md"></div>
+              )}
             </button>
           ))}
         </div>
 
-        <div className="p-4 border-t border-neutral-800/60 flex items-center justify-between">
-          <div className="flex items-center gap-3 overflow-hidden">
+        {/* Expand / Collapse Button */}
+        <div className="px-4 py-2">
+          <button 
+            onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+            className={`w-full flex items-center ${isSidebarExpanded ? 'justify-start px-4 gap-3' : 'justify-center px-0'} py-3 rounded-xl hover:bg-neutral-900/50 text-neutral-500 hover:text-white transition-colors border border-transparent hover:border-neutral-800/60`}
+            title={isSidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
+          >
+            {isSidebarExpanded ? <ChevronLeft className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
+            {isSidebarExpanded && <span className="text-sm font-medium">Collapse</span>}
+          </button>
+        </div>
+
+        <div className={`p-4 border-t border-neutral-800/60 flex items-center ${isSidebarExpanded ? 'justify-between' : 'flex-col gap-4 justify-center'}`}>
+          <div className={`flex items-center gap-3 overflow-hidden ${!isSidebarExpanded && 'justify-center'}`}>
             {session?.user?.image ? (
-              <img src={session.user.image} alt="User" className="w-9 h-9 rounded-full border border-neutral-700" />
+              <img src={session.user.image} alt="User" className="w-9 h-9 shrink-0 rounded-full border border-neutral-700" />
             ) : (
-              <div className="w-9 h-9 bg-neutral-800 rounded-full flex items-center justify-center">
+              <div className="w-9 h-9 shrink-0 bg-neutral-800 rounded-full flex items-center justify-center">
                 <User className="w-4 h-4" />
               </div>
             )}
-            <div className="flex flex-col flex-1 min-w-0">
-              <span className="text-sm font-medium text-white truncate">{session?.user?.name || "Admin"}</span>
-              <span className="text-[10px] text-neutral-500 truncate">
-                {(session?.user as any)?.customEmailDisplay || session?.user?.email}
-              </span>
-            </div>
+            {isSidebarExpanded && (
+              <div className="flex flex-col flex-1 min-w-0">
+                <span className="text-sm font-medium text-white truncate">{session?.user?.name || "Admin"}</span>
+                <span className="text-[10px] text-neutral-500 truncate">
+                  {(session?.user as any)?.customEmailDisplay || session?.user?.email}
+                </span>
+              </div>
+            )}
           </div>
           <button 
             onClick={() => signOut()}
-            className="p-2 hover:bg-neutral-800 rounded-lg transition-colors text-neutral-400 hover:text-red-400"
+            className="p-2 hover:bg-neutral-800 rounded-lg transition-colors text-neutral-400 hover:text-red-400 shrink-0"
             title="Log Out"
           >
             <LogOut className="w-4 h-4" />
@@ -206,7 +322,10 @@ export default function AdminDashboard() {
       <main className="flex-1 flex overflow-hidden">
         
         {/* Left: Editor Panel */}
-        <div className={`flex-1 flex flex-col bg-neutral-900/20 max-w-3xl ${!showPreview ? 'max-w-none' : ''} transition-all duration-300`}>
+        <div 
+          className={`flex flex-col bg-neutral-900/20 ${!showPreview ? 'flex-1 w-full' : ''}`}
+          style={showPreview ? { width: editorWidth ? `${editorWidth}px` : '40%', flexShrink: 0 } : {}}
+        >
           <header className="h-16 px-6 border-b border-neutral-800/60 flex items-center justify-between bg-black/40 backdrop-blur-md sticky top-0 z-10">
             <h2 className="text-lg font-semibold text-white capitalize">{activeTab} Configuration</h2>
             <div className="flex gap-3">
@@ -233,22 +352,113 @@ export default function AdminDashboard() {
             {activeTab === "hero" && (
               <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="space-y-2">
-                  <label className="text-xs font-mono text-neutral-500 uppercase">HERO_TITLE</label>
+                  <label className="text-xs font-mono text-neutral-500 uppercase">GREETING</label>
                   <input 
                     type="text" 
-                    value={formData.heroTitle}
-                    onChange={(e) => setFormData({...formData, heroTitle: e.target.value})}
+                    value={formData.heroGreeting}
+                    onChange={(e) => setFormData({...formData, heroGreeting: e.target.value})}
                     className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                    placeholder="Hi, Guys 👋 I'm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-mono text-neutral-500 uppercase">HERO_SUBTITLE</label>
+                  <label className="text-xs font-mono text-neutral-500 uppercase">NAME</label>
+                  <input 
+                    type="text" 
+                    value={formData.heroName}
+                    onChange={(e) => setFormData({...formData, heroName: e.target.value})}
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                    placeholder="Abin Varghese."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-mono text-neutral-500 uppercase">SUBCOPY</label>
                   <textarea 
                     rows={3}
-                    value={formData.heroSubtitle}
-                    onChange={(e) => setFormData({...formData, heroSubtitle: e.target.value})}
+                    value={formData.heroSubcopy}
+                    onChange={(e) => setFormData({...formData, heroSubcopy: e.target.value})}
                     className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all resize-none"
+                    placeholder="I design with purpose..."
                   />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-mono text-neutral-500 uppercase">AUDIENCE LABELS (COMMA SEPARATED)</label>
+                  <input 
+                    type="text" 
+                    value={formData.heroAudienceTags}
+                    onChange={(e) => setFormData({...formData, heroAudienceTags: e.target.value})}
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                    placeholder="AV, UI, UX, FD, NX"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-mono text-neutral-500 uppercase">AVAILABILITY STATUS TEXT</label>
+                  <input 
+                    type="text" 
+                    value={formData.heroAvailabilityText}
+                    onChange={(e) => setFormData({...formData, heroAvailabilityText: e.target.value})}
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                    placeholder="Full-Stack Developer · UI/UX Designer · Kerala, IN."
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-neutral-500 uppercase">BUTTON 1 LABEL</label>
+                    <input 
+                      type="text" 
+                      value={formData.heroCtaPrimaryLabel}
+                      onChange={(e) => setFormData({...formData, heroCtaPrimaryLabel: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-neutral-500 uppercase">BUTTON 1 URL</label>
+                    <input 
+                      type="text" 
+                      value={formData.heroCtaPrimaryUrl}
+                      onChange={(e) => setFormData({...formData, heroCtaPrimaryUrl: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-neutral-500 uppercase">BUTTON 2 LABEL</label>
+                    <input 
+                      type="text" 
+                      value={formData.heroCtaSecondaryLabel}
+                      onChange={(e) => setFormData({...formData, heroCtaSecondaryLabel: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-neutral-500 uppercase">BUTTON 2 URL</label>
+                    <input 
+                      type="text" 
+                      value={formData.heroCtaSecondaryUrl}
+                      onChange={(e) => setFormData({...formData, heroCtaSecondaryUrl: e.target.value})}
+                      className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+              </div>
+            )}
+            
+            {activeTab === "home" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="space-y-2">
+                  <label className="text-xs font-mono text-neutral-500 uppercase">SCROLLING BANNER ITEMS (COMMA SEPARATED)</label>
+                  <textarea 
+                    rows={4}
+                    value={formData.scrollingBannerItems}
+                    onChange={(e) => setFormData({...formData, scrollingBannerItems: e.target.value})}
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all resize-none"
+                    placeholder="Web Developer, Graphic Designer, Video Editor..."
+                  />
+                  <p className="text-xs text-neutral-500 mt-2">These items will float continuously across the screen below the hero section.</p>
                 </div>
               </div>
             )}
@@ -346,7 +556,7 @@ export default function AdminDashboard() {
               </div>
             )}
             
-            {activeTab !== "hero" && activeTab !== "about" && (
+            {activeTab !== "hero" && activeTab !== "home" && activeTab !== "about" && (
               <div className="h-40 border border-dashed border-neutral-800 rounded-xl flex items-center justify-center text-neutral-500">
                 Data schema building for {activeTab}...
               </div>
@@ -360,17 +570,28 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Draggable Divider */}
+        {showPreview && (
+          <div 
+            onMouseDown={handleDrag}
+            className="w-1 hover:w-1.5 bg-neutral-800 hover:bg-neutral-600 cursor-col-resize z-30 transition-all flex items-center justify-center active:bg-neutral-500 relative"
+          >
+            <div className="absolute h-8 w-1 rounded-full bg-neutral-600 pointer-events-none"></div>
+          </div>
+        )}
+
         {/* Right: Live Preview Panel */}
         {showPreview && (
-          <div className="flex-1 border-l border-neutral-800/60 bg-black flex flex-col">
-            <div className="h-12 border-b border-neutral-800/60 bg-neutral-950 flex items-center justify-between px-4">
+          <div className="flex-1 bg-black flex flex-col min-w-[320px]">
+            {/* Simple Browser Bar */}
+            <div className="h-10 border-b border-neutral-800/60 bg-neutral-950 flex items-center justify-between px-4 shrink-0 shadow-sm relative z-10">
               <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/80"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500/80"></div>
               </div>
-              <div className="px-4 py-1 bg-black border border-neutral-800 rounded-md flex items-center gap-2">
-                <span className="text-[10px] text-neutral-500 font-mono">localhost:3000/</span>
+              <div className="px-4 py-1.5 bg-neutral-900 border border-neutral-800 rounded-md flex items-center gap-2 flex-1 max-w-sm mx-4 justify-center">
+                <span className="text-[10px] text-neutral-500 font-mono hidden sm:inline-block">localhost:3000/</span>
               </div>
               <button 
                 onClick={() => {
@@ -382,12 +603,14 @@ export default function AdminDashboard() {
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
             </div>
+            
+            {/* Iframe */}
             <div className="flex-1 bg-white relative">
-              {/* Iframe pointing to the live site. Uses a key to force rerender if needed, but mainly we use the ref */}
+              {isDragging && <div className="absolute inset-0 z-50 cursor-col-resize"></div>}
               <iframe 
                 ref={iframeRef}
                 src="/" 
-                className="absolute inset-0 w-full h-full border-none"
+                className="absolute inset-0 w-full h-full border-none pointer-events-auto"
                 title="Live Preview"
               />
             </div>

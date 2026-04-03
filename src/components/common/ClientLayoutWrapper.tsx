@@ -8,6 +8,13 @@ import MouseTrail from "@/components/ui/MouseTrail";
 import { MobileNav } from "@/components/common/MobileNav";
 import { MobileDock } from "@/components/common/MobileDock";
 import Preloader from "@/components/Preloader";
+import dynamic from "next/dynamic";
+const Hero3DLayer = dynamic(() => import("@/components/ui/Hero3DLayer"), {
+  ssr: false,
+});
+const JarvisAssistant = dynamic(() => import("@/components/ui/JarvisAssistant"), {
+  ssr: false,
+});
 
 const FONT = {
   A: [[0, 1, 1, 0], [1, 0, 0, 1], [1, 1, 1, 1], [1, 0, 0, 1], [1, 0, 0, 1]],
@@ -140,7 +147,7 @@ export default function ClientLayoutWrapper({
     return () => {
       window.removeEventListener("load", printConsoleBanner);
     };
-  }, [isAdminPath, pathname]);
+  }, [isAdminPath, pathname, isAdminPath]);
 
   if (isAdminPath) {
     return <>{children}</>;
@@ -150,14 +157,25 @@ export default function ClientLayoutWrapper({
     <>
       <Preloader />
       <MouseTrail baseThickness={4} enableCustomCursor={true} enableFade={true} />
-      <div className="hidden md:block">
+      <JarvisAssistant />
+      
+      {/* ── Global 3D Assistant Layer (Fixed, z-10) ──────────────── */}
+      <div className="fixed inset-0 z-10 pointer-events-none overflow-hidden h-screen w-screen hidden lg:block">
+        <Hero3DLayer />
+      </div>
+
+      <div className="hidden md:block select-none">
         <Navbar />
       </div>
-      <div className="block md:hidden">
+      <div className="block md:hidden select-none">
         <MobileNav />
         <MobileDock />
       </div>
-      <div className="">{children}</div>
+      
+      <main className="relative z-20 w-full pointer-events-none">
+        {children}
+      </main>
+      
       <Footer />
     </>
   );

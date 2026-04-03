@@ -5,12 +5,14 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#0020d7",
 };
 
 export const metadata: Metadata = {
   title: "Abin Varghese",
   description:
     "Portfolio of Abin Varghese, a passionate Front-End Developer and UI/UX Designer skilled in React, Next.js, Tailwind CSS, and Figma. Explore projects, design work, and achievements.",
+  manifest: "/manifest.json",
   keywords: [
     "Abin Varghese",
     "Front-End Developer",

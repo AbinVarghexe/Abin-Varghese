@@ -1,0 +1,16 @@
+{
+  "name": "Abin Varghese Portfolio",
+  "short_name": "Abin",
+  "description": "Portfolio of Abin Varghese, Front-End Developer & UI/UX Designer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0020d7",
+  "icons": [
+    {
+      "src": "/Logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

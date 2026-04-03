@@ -6,6 +6,7 @@ import SiteUnderDevelopment from "@/components/ui/SiteUnderDevelopment";
 import CreativeToolbox from "@/components/CreativeToolbox";
 import Footer from "@/components/Footer";
 import BrandsSection from "@/components/BrandsSection";
+import { getHeroContent, getHomeContent } from "@/lib/site-content";
 
 export const metadata: Metadata = {
   title: "Abin Varghese",
@@ -19,24 +20,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  const heroData = await getHeroContent();
+  const homeData = await getHomeContent();
+  
+  const scrollingItems = homeData.scrollingBannerItems.split(',').map(item => item.trim()).filter(Boolean);
+
   return (
     <main className="min-h-screen relative">
-      {/* Hero section with overlapping scrolling banner */}
-      <div className="relative">
-        <Herosection />
-
-        {/* Scrolling Banner - overlaps at bottom of hero grid */}
-        <ScrollingBanner
-          items={[
-            "Web Developer",
-            "Graphic Designer",
-            "Video Editor",
-            "VFX Artist",
-          ]}
-          speed={30}
-        />
-      </div>
+      <Herosection data={heroData} />
+      <ScrollingBanner
+        items={scrollingItems}
+        speed={30}
+      />
 
       <CreativeToolbox />
       <BrandsSection />
