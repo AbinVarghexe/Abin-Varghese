@@ -18,6 +18,7 @@ function Model() {
   
   // -- Neural Side-Swapping AI --
   const sideMultiplier = useRef(1); // 1: Right, -1: Left
+  const smoothedSideMultiplier = useRef(1); // **Smoothed state for fluid Transitions**
   const lastFlipTime = useRef(0);
   const lastUserInteractionTime = useRef(0);
   const isTransitioningSide = useRef(false);
@@ -174,9 +175,15 @@ function Model() {
 
       // **Buttery-Smooth Scroll Synchronization**
       const vh = window.innerHeight;
-      // We lerp the scrollRef itself to eliminate raw scroll 'jumps'
       smoothedScroll.current = THREE.MathUtils.lerp(smoothedScroll.current, scrollY, 0.05);
       const s = smoothedScroll.current;
+
+      // **Fluid Side Transition Smoothing**
+      smoothedSideMultiplier.current = THREE.MathUtils.lerp(
+        smoothedSideMultiplier.current, 
+        sideMultiplier.current, 
+        0.035 // Gliding speed
+      );
 
       const pCam = camera as THREE.PerspectiveCamera;
       const vfov = (pCam.fov * Math.PI) / 180;
@@ -205,8 +212,8 @@ function Model() {
         isTransitioningSide.current = false;
       }
 
-      // **AI Dynamic Milestone Generation** (Mirrored by sideMultiplier)
-      const baseSideOffset = visibleWidth * 0.35 * sideMultiplier.current;
+      // **AI Dynamic Milestone Generation** (Mirrored by smoothedSideMultiplier)
+      const baseSideOffset = visibleWidth * 0.35 * smoothedSideMultiplier.current;
       let targetX = baseSideOffset; 
       let targetY = 0; // **CENTERED INITIAL POSITION**
       
