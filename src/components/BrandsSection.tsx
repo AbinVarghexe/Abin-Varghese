@@ -20,7 +20,12 @@ const brands = [
   { name: "Incial", logo: "🦅" },
 ];
 
-const BrandsSection = () => {
+interface BrandsSectionProps {
+  logos?: string[];
+}
+
+const BrandsSection = ({ logos }: BrandsSectionProps) => {
+  const displayLogos = logos && logos.length > 0 ? logos : partnerLogos;
   const [isLightMode, setIsLightMode] = useState<boolean>(true);
 
   useEffect(() => {
@@ -104,7 +109,7 @@ const BrandsSection = () => {
         </div>
 
         <div className="relative z-10 mt-8 md:mt-12">
-          <LogoCarousel logos={partnerLogos} showTitle={false} />
+          <LogoCarousel logos={displayLogos} showTitle={false} />
         </div>
       </div>
     </section>

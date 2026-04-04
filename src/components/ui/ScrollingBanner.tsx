@@ -55,67 +55,80 @@ export const ScrollingBanner = ({
   }, []);
 
   useEffect(() => {
-    if (!bannerRef.current || !topContentRef.current || !bottomContentRef.current || !topBannerRef.current || !bottomBannerRef.current) return;
-
-    const topContent = topContentRef.current;
+    const topContent  = topContentRef.current;
     const bottomContent = bottomContentRef.current;
-    const topBanner = topBannerRef.current;
+    const topBanner   = topBannerRef.current;
     const bottomBanner = bottomBannerRef.current;
+    if (!topContent || !bottomContent || !topBanner || !bottomBanner) return;
 
-    // Calculate the width of one set of items (1/4 of total since we quadrupled)
-    const topWidth = topContent.scrollWidth / 4;
-    const bottomWidth = bottomContent.scrollWidth / 4;
-
-    // Set initial positions and rotation (responsive rotation - only change for mobile)
     const isMobile = window.innerWidth < 768;
-    const rotationAngle = isMobile ? 15 : 8; // Keep 8deg for desktop, 15deg for mobile
-    gsap.set(topBanner, { rotation: rotationAngle });
+    const rotationAngle = isMobile ? 15 : 8;
+    gsap.set(topBanner,    { rotation:  rotationAngle });
     gsap.set(bottomBanner, { rotation: -rotationAngle });
 
-    // Text scroll triggered by scroll - Top content moves left with infinite loop
-    gsap.to(topContent, {
-      x: -topWidth * 1,
-      ease: 'none',
-      modifiers: {
-        x: gsap.utils.unitize(x => (parseFloat(x) % topWidth)),
-      },
-      scrollTrigger: {
-        trigger: document.body,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 8, // Smooth scrubbing that reacts to scroll direction
-      },
+    let rafId: number;
+    let cleanupFn: () => void;
+
+    // Wait one frame for layout to settle before measuring
+    rafId = requestAnimationFrame(() => {
+      // DOM has 4 copies → unit = 1/4 of total scrollWidth
+      const topUnit    = topContent.scrollWidth / 4;
+      const bottomUnit = bottomContent.scrollWidth / 4;
+      if (topUnit <= 0 || bottomUnit <= 0) return;
+
+      const topSetter    = gsap.quickSetter(topContent,    'x', 'px');
+      const bottomSetter = gsap.quickSetter(bottomContent, 'x', 'px');
+
+      let topX      = 0, topTarget      = 0;
+      let bottomX   = 0, bottomTarget   = 0;
+      let lastScrollY = window.scrollY;
+      let animRafId: number;
+
+      const onScroll = () => {
+        const scrollY = window.scrollY;
+        const delta   = scrollY - lastScrollY;
+        lastScrollY   = scrollY;
+        // top strip: left on scroll-down; bottom strip: right on scroll-down
+        topTarget    -= delta * 0.4;
+        bottomTarget += delta * 0.4;
+      };
+
+      const tick = () => {
+        topX    += (topTarget    - topX)    * 0.12;
+        bottomX += (bottomTarget - bottomX) * 0.12;
+
+        let tx = topX    % topUnit;
+        let bx = bottomX % bottomUnit;
+        if (tx > 0) tx -= topUnit;
+        if (bx < 0) bx += bottomUnit;
+
+        topSetter(tx);
+        bottomSetter(bx);
+        animRafId = requestAnimationFrame(tick);
+      };
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      animRafId = requestAnimationFrame(tick);
+
+      const handleResize = () => {
+        const mob = window.innerWidth < 768;
+        const ang = mob ? 15 : 8;
+        gsap.set(topBanner,    { rotation:  ang });
+        gsap.set(bottomBanner, { rotation: -ang });
+      };
+      window.addEventListener('resize', handleResize);
+
+      cleanupFn = () => {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', handleResize);
+        cancelAnimationFrame(animRafId);
+      };
     });
 
-    // Text scroll triggered by scroll - Bottom content moves right with infinite loop
-    gsap.to(bottomContent, {
-      x: bottomWidth * 1,
-      ease: 'none',
-      modifiers: {
-        x: gsap.utils.unitize(x => (parseFloat(x) % bottomWidth)),
-      },
-      scrollTrigger: {
-        trigger: document.body,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: 8, // Smooth scrubbing that reacts to scroll direction
-      },
-    }
-    );
-
-    // Handle window resize to update rotation
-    const handleResize = () => {
-      const isMobile = window.innerWidth < 768;
-      const rotationAngle = isMobile ? 15 : 8;
-      gsap.set(topBanner, { rotation: rotationAngle });
-      gsap.set(bottomBanner, { rotation: -rotationAngle });
-    };
-
-    window.addEventListener('resize', handleResize);
-
     return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(rafId);
+      cleanupFn?.();
+      ScrollTrigger.getAll().forEach(t => t.kill());
     };
   }, [items, speed]);
 
