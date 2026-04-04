@@ -2,7 +2,16 @@
 
 import { memo, useEffect, useState } from "react";
 import Image from "next/image";
+import LogoCarousel from "./LogoCarousel";
 
+const partnerLogos = [
+  "/uploads/logos/1775313043262-incial.png",
+  "/uploads/logos/1775314295868-voltant.png",
+  "/uploads/logos/1775314641812-blaupunkt.png",
+  "/uploads/logos/1775314941462-manna.png",
+];
+
+// Brands array kept for legacy or other uses if needed, but carousel uses partnerLogos
 const brands = [
   { name: "BLAUPUNKT", logo: "●" },
   { name: "Incial", logo: "🦅" },
@@ -33,10 +42,11 @@ const BrandsSection = () => {
   return (
     <section className="w-full px-4 md:px-8 lg:px-16 py-8">
       <div
-        className="relative w-full rounded-[32px] px-6 md:px-12 py-20 md:py-32 overflow-hidden z-20"
+        className="relative w-full rounded-[32px] px-6 md:px-12 pt-8 md:pt-16 pb-12 md:pb-20 overflow-hidden z-20"
         style={{
           background: "linear-gradient(180deg, rgba(125,163,246,0.85) 0%, rgba(0,32,215,0.85) 100%)",
           backdropFilter: 'blur(8px)',
+          border: '5px solid #C4C4C4',
         }}
       >
         <div
@@ -78,28 +88,23 @@ const BrandsSection = () => {
           />
         </div>
 
-        <div className="text-center mb-8 md:mb-10 relative z-10">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-white flex items-center justify-center gap-2">
-            <span className="text-sm">◇</span>
-            Brands & <span className="text-[#0a0a23] font-bold">Companies</span>
-            <span className="text-sm">◇</span>
+        <div className="text-center mb-12 relative z-10">
+          <h2 className="text-2xl md:text-4xl lg:text-[40px] font-bold text-white flex items-center justify-center gap-6">
+            <span className="text-3xl md:text-5xl lg:text-6xl font-light">✧</span>
+            <div className="flex items-center gap-2">
+              <span className="text-white">Brands &</span>
+              <span className="text-black">Companies</span>
+            </div>
+            <span className="text-3xl md:text-5xl lg:text-6xl font-light">✧</span>
           </h2>
-          <p className="text-white/70 text-xs md:text-sm mt-2 max-w-md mx-auto">
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+          <p className="text-white/80 text-sm md:text-base mt-4 max-w-lg mx-auto font-normal leading-relaxed">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmo tempor incididunt ut labore
           </p>
         </div>
 
-        <div className="flex items-center justify-center gap-6 md:gap-10 lg:gap-16 flex-wrap relative z-10">
-          {brands.map((brand, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 text-[#0a0a23] font-bold text-base md:text-lg lg:text-xl"
-            >
-              <span className="text-lg md:text-xl">{brand.logo}</span>
-              <span style={{ fontFamily: "sans-serif" }}>{brand.name}</span>
-            </div>
-          ))}
+        <div className="relative z-10 mt-8 md:mt-12">
+          <LogoCarousel logos={partnerLogos} showTitle={false} />
         </div>
       </div>
     </section>

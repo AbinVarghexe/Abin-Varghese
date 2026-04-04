@@ -35,6 +35,7 @@ const heroKeyMap = {
 
 const homeKeyMap = {
   scrollingBannerItems: "home_scrolling_banner_items",
+  scrollingLogos: "home_scrolling_logos",
 } as const;
 
 export async function getAboutContent(): Promise<AboutContent> {
@@ -89,6 +90,11 @@ export async function getHomeContent(): Promise<HomeContent> {
 
   return {
     scrollingBannerItems: values.get(homeKeyMap.scrollingBannerItems) || siteContentDefaults.scrollingBannerItems,
+    scrollingLogos: (() => {
+      const val = values.get(homeKeyMap.scrollingLogos);
+      if (!val) return siteContentDefaults.scrollingLogos;
+      try { return JSON.parse(val); } catch { return siteContentDefaults.scrollingLogos; }
+    })(),
   };
 }
 
@@ -118,12 +124,16 @@ export async function upsertHeroContent(content: HeroContent) {
 
 export async function upsertHomeContent(content: HomeContent) {
   await prisma.$transaction(
-    Object.entries(homeKeyMap).map(([field, key]) =>
-      prisma.siteContent.upsert({
+    Object.entries(homeKeyMap).map(([field, key]) => {
+      const value = field === "scrollingLogos" 
+        ? JSON.stringify(content[field as keyof HomeContent]) 
+        : content[field as keyof HomeContent];
+        
+      return prisma.siteContent.upsert({
         where: { key },
-        update: { value: content[field as keyof HomeContent] },
-        create: { key, value: content[field as keyof HomeContent] },
-      })
-    )
+        update: { value: value as string },
+        create: { key, value: value as string },
+      });
+    })
   );
 }

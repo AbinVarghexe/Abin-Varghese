@@ -32,6 +32,7 @@ const heroContentSchema = z.object({
 
 const homeContentSchema = z.object({
   scrollingBannerItems: z.string(),
+  scrollingLogos: z.array(z.string()),
 });
 
 export async function GET() {

@@ -103,7 +103,7 @@ function Model() {
     const name = names[currentClip];
     const action = actions[name];
     if (action) {
-      action.reset().fadeIn(0.5).play();
+      action.reset().setEffectiveTimeScale(0.75).fadeIn(0.5).play();
       return () => { action.fadeOut(0.5); };
     }
   }, [actions, names, currentClip]);
@@ -182,7 +182,7 @@ function Model() {
       smoothedSideMultiplier.current = THREE.MathUtils.lerp(
         smoothedSideMultiplier.current, 
         sideMultiplier.current, 
-        0.035 // Gliding speed
+        0.012 // **Slow, elegant gliding speed**
       );
 
       const pCam = camera as THREE.PerspectiveCamera;
@@ -298,10 +298,10 @@ function Model() {
 
       // Physics: acceleration = force / mass
       const force = new THREE.Vector3().subVectors(idealTarget, groupRef.current.position);
-      force.multiplyScalar(0.045); 
+      force.multiplyScalar(0.02); // **Softer, more natural tracking**
       
       velocity.current.add(force);
-      velocity.current.multiplyScalar(0.75); // Snappiest response (Minimal damping)
+      velocity.current.multiplyScalar(0.7); // **Increased damping for viscous feel**
       
       groupRef.current.position.add(velocity.current);
 

@@ -2,7 +2,7 @@
 
 import { memo, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Github, Instagram, Linkedin } from 'lucide-react';
+import { ArrowUpRight, Calendar, Github, Instagram, Linkedin } from 'lucide-react';
 import {
   motion,
   useMotionValue,
@@ -80,11 +80,13 @@ function MagneticButton({
   label,
   icon: Icon,
   secondary,
+  ...rest
 }: {
   href: string;
   label: string;
   icon?: any;
   secondary?: boolean;
+  [key: string]: any;
 }) {
   const ref = useRef<HTMLAnchorElement>(null);
   const x   = useMotionValue(0);
@@ -112,6 +114,7 @@ function MagneticButton({
         whileTap={{ scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         className="inline-flex items-center gap-3 rounded-full border-[2.5px] border-[#929292] bg-white pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-slate-800 pointer-events-auto"
+        {...rest}
       >
         <span className="min-w-[80px] text-center">{label}</span>
         {Icon && (
@@ -143,6 +146,7 @@ function MagneticButton({
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       className="inline-flex items-center gap-4 rounded-full border-[2.5px] border-[#929292] pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-white pointer-events-auto"
+      {...rest}
     >
       <span className="min-w-[88px] text-center">{label}</span>
       {Icon && (
@@ -408,8 +412,10 @@ const Herosection = ({ data }: { data: HeroContent }) => {
               <MagneticButton
                 href={data.heroCtaSecondaryUrl}
                 label={data.heroCtaSecondaryLabel}
-                icon={ArrowUpRight}
+                icon={Calendar}
                 secondary
+                data-cal-link="abinvarghexe"
+                data-cal-config='{"layout":"month_view"}'
               />
             </div>
 

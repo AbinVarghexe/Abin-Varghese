@@ -35,7 +35,7 @@ export default async function Home() {
       />
 
       <CreativeToolbox />
-      <BrandsSection />
+      <BrandsSection logos={homeData.scrollingLogos} />
     </main>
   );
 }

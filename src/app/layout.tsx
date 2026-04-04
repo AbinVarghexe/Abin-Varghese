@@ -35,6 +35,36 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              (function (C, A, L) {
+                let p = function (a, ar) { a.q.push(ar); };
+                let d = C.document;
+                C.Cal = C.Cal || function () {
+                  let cal = C.Cal;
+                  let ar = arguments;
+                  if (!cal.loaded) {
+                    cal.q = cal.q || [];
+                    cal.loaded = true;
+                  }
+                  if (ar[0] === "init") {
+                    const api = function () { p(api, arguments); };
+                    const cand = d.createElement("script");
+                    cand.src = A;
+                    cand.async = true;
+                    d.getElementsByTagName("head")[0].appendChild(cand);
+                    api.q = api.q || [];
+                    return api;
+                  }
+                  p(cal, ar);
+                };
+              })(window, "https://app.cal.com/embed/embed.js", "init");
+              Cal("init", { origin: "https://app.cal.com" });
+              Cal("ui", {"styles":{"branding":{"brandColor":"#0020d7"}},"hideEventTypeDetails":false,"layout":"month_view"});
+            `,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
               (function() {
                 const theme = localStorage.getItem("theme");
                 if (theme === "dark" || (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {

@@ -16,8 +16,8 @@ export const heroContentDefaults: HeroContent = {
   heroSubcopy: "I design with purpose and build with precision every pixel and every line of code is intentional. Currently studying CS, already creating work that goes beyond the classroom.",
   heroAudienceTags: "AV,UI,UX,FD,NX",
   heroAvailabilityText: "Full-Stack Developer · UI/UX Designer · Kerala, IN.",
-  heroCtaPrimaryLabel: "View My Work",
+  heroCtaPrimaryLabel: "View Projects",
   heroCtaPrimaryUrl: "/projects",
-  heroCtaSecondaryLabel: "Start a Project",
-  heroCtaSecondaryUrl: "/contact",
+  heroCtaSecondaryLabel: "Book a Call",
+  heroCtaSecondaryUrl: "https://cal.com/abinvarghexe",
 };

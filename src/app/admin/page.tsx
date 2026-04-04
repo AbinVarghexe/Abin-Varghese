@@ -33,6 +33,7 @@ export default function AdminDashboard() {
     
     // Home
     scrollingBannerItems: homeContentDefaults.scrollingBannerItems,
+    scrollingLogos: homeContentDefaults.scrollingLogos,
     
     // About
     aboutImage: aboutContentDefaults.aboutImage,
@@ -137,6 +138,7 @@ export default function AdminDashboard() {
             type: "home",
             data: {
               scrollingBannerItems: formData.scrollingBannerItems,
+              scrollingLogos: formData.scrollingLogos,
             }
           }),
         });
@@ -191,6 +193,101 @@ export default function AdminDashboard() {
       console.error("Image upload failed:", error);
     } finally {
       setUploadingField(null);
+    }
+  };
+
+  const handleLogoUpload = async (file: File | null) => {
+    if (!file) return;
+
+    // Check aspect ratio
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    
+    img.onload = async () => {
+      const ratio = img.width / img.height;
+      const targetRatio = 160 / 50; // 3.2
+      const tolerance = 0.1; // Allow some minor difference
+
+      if (Math.abs(ratio - targetRatio) > tolerance) {
+        alert(`INVALID ASPECT RATIO: ${img.width}x${img.height} (Ratio: ${ratio.toFixed(2)}). \nLogo MUST be 160x50 or have a 3.2:1 ratio.`);
+        URL.revokeObjectURL(objectUrl);
+        return;
+      }
+
+      setUploadingField("scrollingLogos");
+
+      try {
+        const body = new FormData();
+        body.append("file", file);
+
+        const response = await fetch("/api/admin/upload/logo", {
+          method: "POST",
+          body,
+        });
+
+        if (!response.ok) {
+          throw new Error("Upload failed");
+        }
+
+        const data = await response.json();
+        setFormData((current) => ({
+          ...current,
+          scrollingLogos: [...current.scrollingLogos, data.url],
+        }));
+      } catch (error) {
+        console.error("Logo upload failed:", error);
+      } finally {
+        setUploadingField(null);
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+    img.src = objectUrl;
+  };
+
+  const removeLogo = async (index: number) => {
+    const logoUrl = formData.scrollingLogos[index];
+    if (!logoUrl) return;
+
+    try {
+      // 1. Delete from physical storage
+      const response = await fetch("/api/admin/upload/logo/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: logoUrl }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete logo file");
+      }
+
+      // 2. Remove from local state
+      const updatedLogos = formData.scrollingLogos.filter((_, i) => i !== index);
+      setFormData((current) => ({
+        ...current,
+        scrollingLogos: updatedLogos,
+      }));
+
+      // 3. Immediately save to database to keep sync
+      await fetch("/api/admin/site-content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "home",
+          data: {
+            scrollingBannerItems: formData.scrollingBannerItems,
+            scrollingLogos: updatedLogos,
+          }
+        }),
+      });
+
+      // Refresh preview
+      if (iframeRef.current) {
+        iframeRef.current.src = iframeRef.current.src;
+      }
+
+    } catch (error) {
+      console.error("Logo removal failed:", error);
+      alert("Could not remove logo. Please try again.");
     }
   };
 
@@ -459,6 +556,49 @@ export default function AdminDashboard() {
                     placeholder="Web Developer, Graphic Designer, Video Editor..."
                   />
                   <p className="text-xs text-neutral-500 mt-2">These items will float continuously across the screen below the hero section.</p>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-neutral-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-xs font-mono text-neutral-500 uppercase">COMPANY LOGOS</label>
+                      <p className="text-[10px] text-neutral-600 mt-1 uppercase tracking-wider">RECOMENDED RATIO: 160 x 50 (3.2:1) - STRICTLY ENFORCED</p>
+                    </div>
+                    <label className="inline-flex items-center px-4 py-2 rounded-lg bg-white text-black hover:bg-neutral-200 text-xs font-bold cursor-pointer transition-colors shadow-sm">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleLogoUpload(e.target.files?.[0] || null)}
+                      />
+                      Add Logo
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {formData.scrollingLogos.map((logo, index) => (
+                      <div key={index} className="group relative aspect-160/50 bg-black border border-neutral-800 rounded-xl overflow-hidden flex items-center justify-center p-4">
+                        <img src={logo} alt={`Logo ${index}`} className="max-h-full max-w-full object-contain grayscale group-hover:grayscale-0 transition-all" />
+                        <button 
+                          onClick={() => removeLogo(index)}
+                          className="absolute inset-0 bg-red-900/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                        >
+                          <span className="text-[10px] font-bold uppercase tracking-widest">Remove</span>
+                        </button>
+                      </div>
+                    ))}
+                    {formData.scrollingLogos.length === 0 && (
+                      <div className="col-span-full py-8 border border-dashed border-neutral-800 rounded-xl flex items-center justify-center text-neutral-600 text-xs font-mono">
+                        NO LOGOS UPLOADED
+                      </div>
+                    )}
+                  </div>
+                  {uploadingField === "scrollingLogos" && (
+                    <div className="flex items-center gap-3 text-green-500 font-mono text-[10px] animate-pulse">
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      UPLOADING TO MAINFRAME...
+                    </div>
+                  )}
                 </div>
               </div>
             )}
