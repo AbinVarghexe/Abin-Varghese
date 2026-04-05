@@ -9,6 +9,7 @@ import { MobileNav } from "@/components/common/MobileNav";
 import { MobileDock } from "@/components/common/MobileDock";
 import Preloader from "@/components/Preloader";
 import dynamic from "next/dynamic";
+import { PreviewProvider } from "@/lib/contexts/PreviewContext";
 const Hero3DLayer = dynamic(() => import("@/components/ui/Hero3DLayer"), {
   ssr: false,
 });
@@ -176,9 +177,11 @@ export default function ClientLayoutWrapper({
         <MobileDock />
       </div>
       
-      <main className="relative z-20 w-full pointer-events-none">
-        {children}
-      </main>
+      <PreviewProvider>
+        <main className="relative z-20 w-full pointer-events-none">
+          {children}
+        </main>
+      </PreviewProvider>
       
       <Footer />
     </>

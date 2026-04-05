@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import BrandsSection from "@/components/BrandsSection";
 import AboutSection from "@/components/AboutSection";
 import RecentProjects from "@/components/RecentProjects";
+import ServicesSection from "@/components/services/ServicesSection";
+import ReviewsSection from "@/components/ReviewsSection";
 import SlidingRoleBanner from "@/components/ui/SlidingRoleBanner";
 import { getHeroContent, getHomeContent } from "@/lib/site-content";
 
@@ -67,6 +69,8 @@ export default async function Home() {
           <SlidingRoleBanner direction="right" rotation={-4.88} />
 
           <RecentProjects />
+          <ServicesSection />
+          <ReviewsSection />
         </div>
       </div>
     </main>

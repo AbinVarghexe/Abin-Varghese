@@ -11,6 +11,7 @@ import {
   useInView,
 } from 'framer-motion';
 import { HeroContent } from '@/lib/hero-content-defaults';
+import { usePreview } from '@/lib/contexts/PreviewContext';
 
 /* ─────────────────────────────── data ──────────────────────────── */
 const dotPositions = [
@@ -80,13 +81,11 @@ function MagneticButton({
   label,
   icon: Icon,
   secondary,
-  ...rest
 }: {
   href: string;
   label: string;
   icon?: any;
   secondary?: boolean;
-  [key: string]: any;
 }) {
   const ref = useRef<HTMLAnchorElement>(null);
   const x   = useMotionValue(0);
@@ -114,7 +113,6 @@ function MagneticButton({
         whileTap={{ scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         className="inline-flex items-center gap-3 rounded-full border-[2.5px] border-[#929292] bg-white pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-slate-800 pointer-events-auto"
-        {...rest}
       >
         <span className="min-w-[80px] text-center">{label}</span>
         {Icon && (
@@ -146,7 +144,6 @@ function MagneticButton({
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
       className="inline-flex items-center gap-4 rounded-full border-[2.5px] border-[#929292] pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-white pointer-events-auto"
-      {...rest}
     >
       <span className="min-w-[88px] text-center">{label}</span>
       {Icon && (
@@ -225,9 +222,13 @@ function FloatingDots() {
 
 
 /* ═══════════════════════════ Section ════════════════════════════ */
-const Herosection = ({ data }: { data: HeroContent }) => {
+const Herosection = ({ data: initialData }: { data: HeroContent }) => {
+  const { previewData, isPreviewing } = usePreview();
   const sectionRef = useRef<HTMLElement>(null);
   const inView     = useInView(sectionRef, { once: true, margin: '-60px' });
+
+  // Real-time override from admin panel
+  const data = isPreviewing ? { ...initialData, ...previewData } : initialData;
   
 
   return (
@@ -295,7 +296,7 @@ const Herosection = ({ data }: { data: HeroContent }) => {
               className="pointer-events-auto max-w-4xl text-4xl font-semibold leading-[0.95] tracking-tighter text-[#0f1020] md:text-5xl lg:text-7xl"
             >
             {data.heroGreeting.includes('👋') ? (
-              data.heroGreeting.split('👋').map((part, i, arr) => (
+              data.heroGreeting.split('👋').map((part: string, i: number, arr: string[]) => (
                 <span key={i}>
                   {part}
                   {i < arr.length - 1 && (
@@ -335,7 +336,7 @@ const Herosection = ({ data }: { data: HeroContent }) => {
             )}
             <br />
             <span className="mt-2 flex justify-center cursor-default text-4xl leading-[0.95] tracking-[-0.08em] md:mt-3 md:text-6xl lg:text-7xl">
-              {data.heroName.split('').map((char, index) => (
+              {data.heroName.split('').map((char: string, index: number) => (
                 <motion.span
                   key={index}
                   initial={{ opacity: 0, y: 40 }}
@@ -414,8 +415,6 @@ const Herosection = ({ data }: { data: HeroContent }) => {
                 label={data.heroCtaSecondaryLabel}
                 icon={Calendar}
                 secondary
-                data-cal-link="abinvarghexe"
-                data-cal-config='{"layout":"month_view"}'
               />
             </div>
 

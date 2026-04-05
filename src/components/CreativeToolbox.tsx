@@ -147,7 +147,7 @@ const CreativeToolbox = () => {
         </motion.div>
 
         <div className="w-full mb-8 relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold pb-2 text-black mt-12">
+          <h2 className="text-4xl md:text-5xl font-bold pb-2 text-black mt-12 mb-2 tracking-tight">
             My Creative <span className="text-blue">Toolbox</span>
           </h2>
           <p className="text-black/70">

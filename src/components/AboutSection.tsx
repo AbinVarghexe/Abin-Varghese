@@ -170,19 +170,11 @@ export default function AboutSection() {
 
         {/* ── Left column: text ── */}
         <div ref={textRef} className="flex flex-col gap-6 w-full lg:w-[55%] pointer-events-auto">
-          <h2 style={{
-            fontFamily: 'var(--font-sans)', fontWeight: 600,
-            fontSize: 'clamp(40px,4.5vw,64px)',
-            lineHeight: 1.1, letterSpacing: '-1.28px', color: 'var(--color-indigo)',
-          }}>
-            About <span style={{ color: 'var(--color-blue)' }}>Me</span>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-black">
+            About <span className="text-blue-600">Me</span>
           </h2>
 
-          <p style={{
-            fontFamily: 'var(--font-sans)', fontWeight: 400,
-            fontSize: '18px', lineHeight: 1.7,
-            color: 'var(--color-text-secondary)', maxWidth: '560px',
-          }}>
+          <p className="text-black/70 text-lg leading-relaxed max-w-[560px]">
             Lorem Ipsum is simply dummy text of the printing and typesetting
             industry. Lorem Ipsum has been the industry&apos;s standard dummy text
             ever since the 1500s, when an unknown printer took a galley of type and
