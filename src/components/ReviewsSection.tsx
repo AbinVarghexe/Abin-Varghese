@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Star, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 
@@ -214,6 +214,7 @@ const ReviewCard = ({
 export default function ReviewsSection() {
   const [mounted, setMounted] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   
   const { scrollYProgress } = useScroll({
@@ -227,13 +228,23 @@ export default function ReviewsSection() {
     setMounted(true);
   }, []);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setActiveIndex((prev) => (prev + 1) % testimonials.length);
-  };
+  }, []);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || isPaused) return;
+
+    const interval = setInterval(() => {
+      handleNext();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [mounted, isPaused, handleNext]);
 
   if (!mounted) return <div className="h-[600px] w-full" />;
 
@@ -292,7 +303,11 @@ export default function ReviewsSection() {
             <ChevronLeft size={28} />
           </button>
 
-          <div className="relative w-full max-w-[650px] h-[400px] md:h-[550px] flex items-center justify-center overflow-visible z-10">
+          <div 
+            className="relative w-full max-w-[650px] h-[400px] md:h-[550px] flex items-center justify-center overflow-visible z-10"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
             <AnimatePresence mode="popLayout">
               {testimonials.map((testimonial, index) => (
                 <ReviewCard 
