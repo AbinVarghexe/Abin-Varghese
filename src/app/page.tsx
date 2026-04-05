@@ -7,6 +7,7 @@ import CreativeToolbox from "@/components/CreativeToolbox";
 import Footer from "@/components/Footer";
 import BrandsSection from "@/components/BrandsSection";
 import AboutSection from "@/components/AboutSection";
+import RecentProjects from "@/components/RecentProjects";
 import SlidingRoleBanner from "@/components/ui/SlidingRoleBanner";
 import { getHeroContent, getHomeContent } from "@/lib/site-content";
 
@@ -64,6 +65,8 @@ export default async function Home() {
 
           {/* Sliding role banner — section separator below About Me */}
           <SlidingRoleBanner direction="right" rotation={-4.88} />
+
+          <RecentProjects />
         </div>
       </div>
     </main>
