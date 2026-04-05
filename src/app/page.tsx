@@ -35,8 +35,8 @@ export default async function Home() {
     <main className="min-h-screen relative">
       <Herosection data={heroData} />
 
-      <div className="relative w-full z-0 overflow-hidden">
-        {/* ── Vertical Grid Background Layer ────────────────── */}
+      <div className="relative w-full overflow-hidden">
+        {/* ── Vertical Grid Background Layer (z-0) ────────── */}
         <div 
           className="absolute inset-0 pointer-events-none z-0" 
           style={{
@@ -49,8 +49,8 @@ export default async function Home() {
           }} 
         />
         
-        {/* All content below the hero section */}
-        <div className="relative z-10">
+        {/* All content below the hero section (Content Layer z-20) */}
+        <div className="relative z-20">
           <ScrollingBanner
             items={scrollingItems}
             speed={30}

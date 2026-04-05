@@ -139,7 +139,7 @@ const TypewriterSection = () => {
       onPointerDown={() => {
         soundArmedRef.current = true;
       }}
-      className="relative z-10 w-full pt-48 pb-28 flex items-center justify-center overflow-visible"
+      className="relative z-20 w-full pt-48 pb-28 flex items-center justify-center overflow-visible"
     >
       <MilesStickerBoard />
       <div className="relative w-[850px] h-[760px] flex justify-center items-end">
@@ -165,7 +165,7 @@ const TypewriterSection = () => {
             }}
           >
             <span
-              className="block text-[1.28rem] text-[#2f2619] leading-[2rem] whitespace-pre-wrap select-none"
+              className="block text-[1.28rem] text-[#2f2619] leading-8 whitespace-pre-wrap select-none"
               style={{
                 fontFamily: typewriterFont,
                 letterSpacing: '0.04em',

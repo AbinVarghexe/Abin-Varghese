@@ -148,7 +148,7 @@ const CreativeToolbox = () => {
 
         <div className="w-full mb-8 relative z-10">
           <h2 className="text-4xl md:text-5xl font-bold pb-2 text-black mt-12 mb-2 tracking-tight">
-            My Creative <span className="text-blue">Toolbox</span>
+            My Creative <span className="text-blue-600 font-serif italic font-medium">Toolbox</span>
           </h2>
           <p className="text-black/70">
             A curated collection of tools and technologies I use to bring ideas

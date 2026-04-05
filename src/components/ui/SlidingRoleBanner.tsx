@@ -132,7 +132,7 @@ export default function SlidingRoleBanner({
 
   return (
     <div
-      className={`relative w-full overflow-visible pointer-events-none h-[90px] md:h-[110px] ${className}`}
+      className={`relative z-20 w-full overflow-visible pointer-events-none h-[90px] md:h-[110px] ${className}`}
       aria-hidden="true"
     >
       {/* Diagonal strip */}

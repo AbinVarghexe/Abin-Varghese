@@ -9,7 +9,10 @@ import { MobileNav } from "@/components/common/MobileNav";
 import { MobileDock } from "@/components/common/MobileDock";
 import Preloader from "@/components/Preloader";
 import dynamic from "next/dynamic";
+import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 import { PreviewProvider } from "@/lib/contexts/PreviewContext";
+
 const Hero3DLayer = dynamic(() => import("@/components/ui/Hero3DLayer"), {
   ssr: false,
 });
@@ -159,12 +162,34 @@ export default function ClientLayoutWrapper({
       <Preloader />
       <MouseTrail baseThickness={4} enableCustomCursor={true} enableFade={true} />
       
-      {/* ── Home-Only Neural Interaction Layer ────────────────── */}
+      {/* ── Global Neural Stage (3-Layer Architecture) ────────── */}
       {pathname === "/" && (
         <>
-          <JarvisAssistant />
-          <div className="fixed inset-0 z-10 pointer-events-none overflow-hidden h-screen w-screen hidden lg:block">
-            <Hero3DLayer />
+          {/* Layer 1: Global Atmospheric BG (z-0) */}
+          <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+            <motion.div 
+              className="absolute inset-0 w-full h-[120%]"
+              style={{
+                y: useTransform(useScroll().scrollY, [0, 5000], [0, -200])
+              }}
+            >
+              <Image
+                src="/Home/cloud.jpg"
+                alt="Atmospheric background"
+                fill
+                priority
+                className="object-cover opacity-60"
+              />
+              <div className="absolute inset-0 bg-linear-to-b from-white/20 via-transparent to-white/20" />
+            </motion.div>
+          </div>
+
+          {/* Layer 2: 3D Interaction Layer (z-10) */}
+          <div className="fixed inset-0 z-10 pointer-events-none overflow-hidden h-screen w-screen">
+            <JarvisAssistant />
+            <div className="hidden lg:block h-full w-full">
+              <Hero3DLayer />
+            </div>
           </div>
         </>
       )}
@@ -178,7 +203,7 @@ export default function ClientLayoutWrapper({
       </div>
       
       <PreviewProvider>
-        <main className="relative z-20 w-full pointer-events-none">
+        <main className="relative w-full pointer-events-none">
           {children}
         </main>
       </PreviewProvider>

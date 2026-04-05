@@ -154,7 +154,7 @@ export default function AboutSection() {
   return (
     <section
       id="about"
-      className="relative w-full px-4 md:px-8 lg:px-20 py-16 md:py-28 overflow-visible pointer-events-none"
+      className="relative z-20 w-full px-4 md:px-8 lg:px-20 py-16 md:py-28 overflow-visible pointer-events-none"
       style={{ backgroundColor: 'transparent' }}
     >
       {/* Faint bg sparkle */}
@@ -166,12 +166,12 @@ export default function AboutSection() {
         lineHeight: 1, filter: 'blur(4px)', opacity: 0.16, userSelect: 'none', zIndex: 0,
       }}>✧</div>
 
-      <div className="relative z-10 max-w-[1200px] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+      <div className="relative z-20 max-w-[1200px] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
 
         {/* ── Left column: text ── */}
         <div ref={textRef} className="flex flex-col gap-6 w-full lg:w-[55%] pointer-events-auto">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-black">
-            About <span className="text-blue-600">Me</span>
+            About <span className="text-blue-600 font-serif italic font-medium">Me</span>
           </h2>
 
           <p className="text-black/70 text-lg leading-relaxed max-w-[560px]">

@@ -34,7 +34,6 @@ const services = [
     id: 'video' as const,
     title: 'Video Editing & VFX',
     description: 'High-fidelity video post-production, color grading, and visual effects for cinematic impact.',
-    lottieUrl: 'https://lottie.host/8e20235d-a60d-450f-9038-085e59b20893/vA4rV9m0XW.json',
     accentColor: '#f59e0b',
     bgGradient: 'from-amber-50 to-orange-50',
     className: 'md:col-span-1 md:row-span-2',
@@ -89,7 +88,7 @@ type LottieService = BaseService & { lottieUrl: string; isTall?: boolean; isWide
 // ─── Main Section ───────────────────────────────────────────────────────────
 export default function ServicesSection() {
   return (
-    <section id="services" className="pt-0 pb-24 px-4 md:px-8 lg:px-20 w-full bg-transparent relative overflow-hidden">
+    <section id="services" className="relative z-20 pt-0 pb-24 px-4 md:px-8 lg:px-20 w-full bg-transparent overflow-hidden">
       <div className="max-w-[1200px] mx-auto">
 
         {/* Header */}
@@ -101,7 +100,7 @@ export default function ServicesSection() {
           className="flex flex-col items-start text-left mb-10"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-black mb-2 tracking-tight">
-            My <span className="text-blue-600">Services</span>
+            My <span className="text-blue-600 font-serif italic font-medium">Services</span>
           </h2>
           <p className="mt-4 text-black/70 text-lg max-w-2xl leading-relaxed">
             Transforming ideas into digital reality through a blend of technical expertise and creative vision.
@@ -113,6 +112,7 @@ export default function ServicesSection() {
           {services.map(service => {
             if (service.id === 'uiux') return <UIUXCard key={service.id} service={service} />;
             if (service.id === 'motion') return <MotionGraphicsCard key={service.id} service={service} />;
+            if (service.id === 'video') return <VideoEditingCard key={service.id} service={service} />;
             return <LottieCard key={service.id} service={service as LottieService} />;
           })}
         </div>
@@ -273,6 +273,106 @@ function MotionGraphicsCard({ service }: { service: BaseService }) {
             <img src="https://cdn.simpleicons.org/davinciresolve" alt="DaVinci Resolve" className="w-full h-full object-contain" />
           </div>
         </OrbitingCircles>
+      </div>
+    </CardShell>
+  );
+}
+
+// ─── Video Editing Card ──────────────────────────────────────────────────
+function VideoEditingCard({ service }: { service: BaseService }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  return (
+    <CardShell service={service}>
+      <div className="relative w-full h-full flex flex-col items-center justify-center pt-8 pb-32 px-6 overflow-hidden bg-transparent">
+        {/* Simplified Video Preview "Screen" */}
+        <motion.div 
+          className="w-48 h-32 rounded-xl bg-zinc-900 border-4 border-zinc-800 shadow-2xl relative overflow-hidden mb-6 flex items-center justify-center p-4"
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          {/* Abstract moving visuals in the screen */}
+          <motion.div 
+            className="w-full h-full rounded-md bg-linear-to-tr from-amber-500/20 to-orange-500/20 relative overflow-hidden"
+          >
+            <motion.div 
+              className="absolute top-2 left-2 right-2 h-1.5 rounded-full bg-white/20"
+              animate={{ width: ["10%", "80%", "30%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            />
+            <motion.div 
+              className="absolute bottom-2 left-2 w-12 h-12 rounded-lg bg-orange-500/30 flex items-center justify-center"
+              animate={{ scale: [1, 1.1, 1], rotate: [0, 5, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Sparkles className="w-6 h-6 text-orange-400" />
+            </motion.div>
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-orange-500/10 to-transparent" />
+          </motion.div>
+        </motion.div>
+
+        {/* Editing Timeline Animation */}
+        <div className="w-full flex flex-col gap-2 relative">
+          {/* Timeline Ruler */}
+          <div className="w-full h-4 border-b border-zinc-200 mb-1 flex justify-between px-1">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className={`w-px ${i % 2 === 0 ? 'h-full bg-zinc-300' : 'h-1/2 bg-zinc-200 mt-auto'}`} />
+            ))}
+          </div>
+
+          {[
+            { color: '#f59e0b', width: '40%', x: '10%', delay: 0 },
+            { color: '#f97316', width: '30%', x: '55%', delay: 0.2 },
+            { color: '#ef4444', width: '25%', x: '20%', delay: 0.4 },
+          ].map((track, i) => (
+            <div key={i} className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden relative border border-zinc-200/50 shadow-inner">
+              <motion.div 
+                className="absolute h-full rounded-full shadow-sm"
+                style={{ backgroundColor: track.color, left: track.x, width: track.width }}
+                animate={{ opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 2, repeat: Infinity, delay: track.delay }}
+              />
+            </div>
+          ))}
+
+          {/* Moving Playhead */}
+          <motion.div 
+            className="absolute top-0 bottom-0 w-[2px] bg-red-500 z-10"
+            animate={{ left: ["0%", "100%", "0%"] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+          >
+            <div className="absolute -top-1 -left-1 w-2.5 h-2.5 rotate-45 bg-red-500 shadow-sm" />
+          </motion.div>
+        </div>
+
+        {/* Global VFX Elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          {isMounted && [...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 rounded-full bg-orange-400/30"
+              initial={{ 
+                x: Math.random() * 300 - 150 + 150, 
+                y: Math.random() * 300 - 150 + 150, 
+                opacity: 0 
+              }}
+              animate={{ 
+                y: [null, -100], 
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0] 
+              }}
+              transition={{ 
+                duration: 2 + Math.random() * 2, 
+                repeat: Infinity, 
+                delay: Math.random() * 5 
+              }}
+            />
+          ))}
+        </div>
       </div>
     </CardShell>
   );

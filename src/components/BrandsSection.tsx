@@ -45,7 +45,7 @@ const BrandsSection = ({ logos }: BrandsSectionProps) => {
   }, []);
 
   return (
-    <section className="w-full px-4 md:px-8 lg:px-16 py-8">
+    <section className="relative z-20 w-full px-4 md:px-8 lg:px-16 py-8">
       <div
         className="relative w-full rounded-[32px] px-6 md:px-12 pt-8 md:pt-16 pb-12 md:pb-20 overflow-hidden z-20"
         style={{

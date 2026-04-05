@@ -57,7 +57,7 @@ export default function RecentProjects() {
   const activeCategory = CREATIVE_CATEGORIES[activeCreativeIndex];
 
   return (
-    <section className="pt-24 pb-8 px-4 md:px-8 lg:px-20 w-full bg-transparent relative">
+    <section className="pt-24 pb-8 px-4 md:px-8 lg:px-20 w-full bg-transparent relative z-20">
       <div className="max-w-[1200px] mx-auto flex flex-col gap-6">
         {/* Custom Cursor Bubble */}
         <motion.div
@@ -83,7 +83,7 @@ export default function RecentProjects() {
         {/* HEADER SECTION */}
         <div className="flex flex-col items-center text-center w-full mb-8">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-2 text-black">
-            My Recent <span className="text-blue-600">Project&apos;s</span>
+            My Recent <span className="text-blue-600 font-serif italic font-medium">Project&apos;s</span>
           </h2>
           <p className="text-black/70 text-base md:text-lg leading-relaxed max-w-3xl">
             Exploring the intersection of high-performance engineering and creative visual storytelling across multiple digital disciplines.
