@@ -115,8 +115,6 @@ export default function ScrapbookHero({ content }: ScrapbookHeroProps) {
         </p>
       </div>
 
-      <AboutHeroMusic />
-
       <div className="relative w-full max-w-[900px] h-[800px] flex items-center justify-center mt-24">
         <div className="absolute z-10 w-[95%] max-w-[380px] md:max-w-none md:w-[560px] bg-[#fcfcfc] p-3 pb-8 md:p-5 md:pb-12 shadow-[0_30px_60px_rgba(0,0,0,0.3)] transform -rotate-2 transition-transform duration-500 hover:rotate-1 border border-black/5">
           <div className="relative w-full aspect-[3.5/4] bg-[#e2e2e2] overflow-hidden border border-black/10">
@@ -146,6 +144,8 @@ export default function ScrapbookHero({ content }: ScrapbookHeroProps) {
       <div className="absolute bottom-10 left-4 md:left-16 text-[9px] md:text-xs font-mono font-bold tracking-widest text-[#222] opacity-70 z-20 uppercase">
         <p>ISSUE NOVEMBER 2025 &nbsp;&nbsp;&nbsp; @THEHYBRIDDESIGNER.NP</p>
       </div>
+
+      <AboutHeroMusic />
     </section>
   );
 }

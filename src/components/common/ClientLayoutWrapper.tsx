@@ -48,6 +48,8 @@ export default function ClientLayoutWrapper({
 }) {
   const pathname = usePathname();
   const isAdminPath = pathname?.startsWith("/admin");
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 5000], [0, -200]);
 
   useEffect(() => {
     if (isAdminPath) {
@@ -170,7 +172,7 @@ export default function ClientLayoutWrapper({
             <motion.div 
               className="absolute inset-0 w-full h-[120%]"
               style={{
-                y: useTransform(useScroll().scrollY, [0, 5000], [0, -200])
+                y
               }}
             >
               <Image
@@ -203,7 +205,7 @@ export default function ClientLayoutWrapper({
       </div>
       
       <PreviewProvider>
-        <main className="relative w-full pointer-events-none">
+        <main className="relative w-full">
           {children}
         </main>
       </PreviewProvider>

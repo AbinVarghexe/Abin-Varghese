@@ -29,6 +29,10 @@ export default function AboutHeroMusic() {
       setIsReady(true);
     };
 
+    if (audio.readyState >= 2) {
+      setIsReady(true);
+    }
+
     const handlePlay = () => {
       setIsPlaying(true);
     };
@@ -167,7 +171,7 @@ export default function AboutHeroMusic() {
   return (
     <div
       ref={controlRef}
-      className="absolute bottom-20 left-4 md:left-16 z-30 flex flex-col items-center gap-2"
+      className="absolute bottom-20 left-4 md:left-16 z-[100] flex flex-col items-center gap-2"
     >
       <button
         type="button"
