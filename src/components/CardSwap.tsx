@@ -6,12 +6,17 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children?: React.ReactNode;
 }
 
-export const Card = forwardRef<HTMLDivElement, CardProps>(({ customClass, ...rest }, ref) => (
+export const Card = forwardRef<HTMLDivElement, CardProps>(({ customClass, children, ...rest }, ref) => (
   <div
     ref={ref}
     {...rest}
     className={`absolute top-1/2 left-1/2 rounded-xl border border-zinc-200 bg-white transform-3d will-change-transform backface-hidden ${customClass ?? ''} ${rest.className ?? ''}`.trim()}
-  />
+    style={{
+      ...((rest.style as any) ?? {})
+    }}
+  >
+    {children}
+  </div>
 ));
 Card.displayName = 'Card';
 

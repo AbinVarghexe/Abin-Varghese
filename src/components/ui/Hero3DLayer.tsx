@@ -161,12 +161,24 @@ function Model() {
   }, [scene, setIsModelLoaded]);
 
   const [scrollY, setScrollY] = useState(0);
+  const [totalHeight, setTotalHeight] = useState(0);
 
-  // Sync scroll for traveling & parallax
+  // Sync scroll and calculate total page height
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
+    const handleResize = () => setTotalHeight(document.documentElement.scrollHeight - window.innerHeight);
+    
+    // Initialize
+    handleResize();
+    handleScroll();
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   useFrame((state) => {
@@ -213,26 +225,20 @@ function Model() {
       }
 
       // **AI Dynamic Milestone Generation** (Mirrored by smoothedSideMultiplier)
-      const baseSideOffset = visibleWidth * 0.35 * smoothedSideMultiplier.current;
-      let targetX = baseSideOffset; 
-      let targetY = 0; // **CENTERED INITIAL POSITION**
+      // **Neural Global Journey Logic**
+      // Calculate 0 to 1 progress of the entire page scroll
+      const scrollProgress = totalHeight > 0 ? scrollY / totalHeight : 0;
       
-      if (s < vh * 1.0) {
-        targetX = baseSideOffset;
-        targetY = 0; // Stay centered in Hero
-      } else if (s < vh * 2.2) {
-        const rawT = (s - (vh * 1.0)) / (vh * 0.7);
-        const t = THREE.MathUtils.smoothstep(rawT, 0, 1); 
-        // Mirror the Hero -> About path
-        targetX = THREE.MathUtils.lerp(baseSideOffset, -baseSideOffset, t);
-        targetY = THREE.MathUtils.lerp(0, 0, t); // Transitions from center to center (left side)
-      } else {
-        const rawT = (s - (vh * 2.2)) / (vh * 0.7);
-        const t = THREE.MathUtils.smoothstep(rawT, 0, 1);
-        // Mirror the About -> Brand path
-        targetX = THREE.MathUtils.lerp(-baseSideOffset, baseSideOffset * 0.7, t);
-        targetY = THREE.MathUtils.lerp(0, -visibleHeight * 0.15, t); 
-      }
+      // Determine Phase Shift: starts at 1 (Right) if sideMultiplier is 1, else -1 (Left)
+      // This ensures if it's on the right, it immediately moves to the left on scroll.
+      const phase = sideMultiplier.current === 1 ? 0 : Math.PI;
+      
+      // Oscillation: Completed 4 full "to and fro" cycles across the entire page height.
+      const sideFactor = Math.cos(scrollProgress * Math.PI * 4 + phase);
+      const targetX = visibleWidth * 0.35 * sideFactor;
+      
+      // Gentle vertical wave for organic flight (2 cycles across the page)
+      const targetY = visibleHeight * 0.1 * Math.sin(scrollProgress * Math.PI * 2);
 
       const journeyTarget = new THREE.Vector3(targetX, targetY, 0);
 

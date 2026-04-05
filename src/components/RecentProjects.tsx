@@ -109,7 +109,16 @@ export default function RecentProjects() {
           </div>
 
           {/* Large Image Placeholder */}
-          <div className="w-full aspect-video md:aspect-21/9 bg-white rounded-[24px] overflow-hidden flex items-center justify-center relative shadow-sm hover:shadow-md transition-shadow z-10 border-[5px] border-zinc-200">
+          <div 
+            className="w-full aspect-video md:aspect-21/9 bg-white rounded-[24px] overflow-hidden flex items-center justify-center relative shadow-sm hover:shadow-md transition-shadow z-10 border-[5px] border-zinc-200"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgba(0,0,0,0.08) 1.5px, transparent 1.5px),
+                linear-gradient(to bottom, rgba(0,0,0,0.08) 1.5px, transparent 1.5px)
+              `,
+              backgroundSize: '80px 80px'
+            }}
+          >
              <div className="absolute inset-0 bg-linear-to-r from-transparent to-blue-100/50 mix-blend-multiply pointer-events-none z-0"></div>
              {/* Text mimicking the mock */}
              <div className="absolute left-8 md:left-16 text-zinc-900 max-w-sm z-30 w-2/3 md:w-auto pointer-events-none flex flex-col items-start">
