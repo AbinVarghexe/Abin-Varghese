@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Poppins, Dancing_Script, Lora } from "next/font/google";
 import localFont from "next/font/local";
 import "@/styles/globals.css";
 import { PersonSchema } from "@/seo/schema";
@@ -18,6 +18,18 @@ const vina = localFont({
   display: "swap",
 });
 
+const dancingScript = Dancing_Script({
+  subsets: ["latin"],
+  variable: "--font-script",
+  display: "swap",
+});
+
+const lora = Lora({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
 export const metadata: Metadata = seoMetadata;
 export { viewport };
 
@@ -29,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${poppins.variable} ${vina.variable} antialiased select-none`}
+        className={`${poppins.variable} ${vina.variable} ${dancingScript.variable} ${lora.variable} antialiased select-none`}
       >
         <PersonSchema />
         <script
