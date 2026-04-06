@@ -281,8 +281,8 @@ const Herosection = ({ data: initialData }: { data: HeroContent }) => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(125,163,246,0.09),transparent_40%)]" />
       </div>
 
-      {/* ── Layer 3: Foreground Text & UI (Content Layer z-20) ────── */}
-      <div className="pointer-events-none relative z-20 flex min-h-full flex-col items-center justify-start px-4 md:px-6">
+      {/* ── Layer 3: Foreground Text & UI (z-50) ───────────────────── */}
+      <div className="pointer-events-none relative z-50 flex min-h-full flex-col items-center justify-start px-4 md:px-6">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-start pt-60 md:pt-80">
           <motion.div
             variants={container}

@@ -2,15 +2,15 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Sparkles } from 'lucide-react';
 import { 
-  RevenueFunnel, 
-  RealTimeGraph, 
-  PaymentStatusList, 
-  CheckoutPreview, 
-  OrbitLogos, 
-  SetupStack, 
-  CTAGradient 
+  MotionGraphics, 
+  VideoEditing, 
+  GraphicDesign, 
+  UIUXDesign, 
+  WebDesign, 
+  VisualEffects, 
+  ThreeDDesigning 
 } from './BentoVisuals';
 
 interface BentoCardProps {
@@ -18,10 +18,9 @@ interface BentoCardProps {
   title: string;
   description: string;
   className?: string;
-  visualBg?: string;
-  darkText?: boolean;
-  fullVisual?: boolean;
+  accentColor?: string;
   delay?: number;
+  isLarge?: boolean;
 }
 
 const BentoCard = ({ 
@@ -29,27 +28,77 @@ const BentoCard = ({
   title, 
   description, 
   className = '', 
-  visualBg = 'bg-white',
-  darkText = false,
-  fullVisual = false,
-  delay = 0
+  accentColor = '#3b82f6',
+  delay = 0,
+  isLarge = false
 }: BentoCardProps) => (
   <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
+    variants={{
+      initial: { opacity: 0, y: 30 },
+      visible: { opacity: 1, y: 0 },
+      hover: { y: -6, transition: { duration: 0.3, ease: 'easeOut' } },
+    }}
+    initial="initial"
+    whileInView="visible"
     viewport={{ once: true }}
-    transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
-    className={`group relative rounded-[32px] overflow-hidden border border-zinc-100 shadow-sm transition-all hover:shadow-xl hover:border-zinc-200 bg-white flex flex-col ${className}`}
+    transition={{ duration: 0.5, delay }}
+    whileHover="hover"
+    className={`group relative rounded-[28px] border-[5px] border-zinc-200 bg-white overflow-hidden transition-all hover:shadow-2xl hover:border-zinc-300 cursor-pointer flex flex-col ${className}`}
   >
-    <div className={`relative flex-1 ${visualBg} overflow-hidden`}>
+    {/* Technical Stripe Background */}
+    <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.05] z-0" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id={`stripes-${title.replace(/\s+/g, '-').toLowerCase()}`} width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="40" stroke="currentColor" strokeWidth="2" className="text-zinc-600" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill={`url(#stripes-${title.replace(/\s+/g, '-').toLowerCase()})`} />
+    </svg>
+
+    {/* Top Seamless Fade */}
+    <div className="absolute top-0 left-0 right-0 h-32 z-20 bg-linear-to-b from-white to-transparent opacity-80 pointer-events-none" />
+
+    {/* Top Right Arrow Button */}
+    <div className="absolute top-6 right-6 z-50 pointer-events-none">
+      <motion.div
+        className="w-10 h-10 rounded-full border border-zinc-200 flex items-center justify-center bg-white/80 backdrop-blur-sm group-hover:bg-zinc-900 group-hover:border-zinc-900 transition-all duration-300 pointer-events-auto shadow-sm"
+        variants={{ 
+          initial: { opacity: 0, x: 10, y: -10 }, 
+          visible: { opacity: 1, x: 0, y: 0 }, 
+          hover: { scale: 1.1, rotate: 45, transition: { duration: 0.2 } } 
+        }}
+      >
+        <ArrowUpRight className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
+      </motion.div>
+    </div>
+
+    {/* Accent sliding top bar */}
+    <motion.div
+      className="absolute top-0 left-0 h-[3px] rounded-full z-40"
+      style={{ backgroundColor: accentColor }}
+      variants={{ 
+        initial: { width: '0%' }, 
+        visible: { width: '0%' }, 
+        hover: { width: '100%', transition: { duration: 0.4 } } 
+      }}
+    />
+
+    {/* Core Illustration Layer */}
+    <div className="relative flex-1 z-10 flex items-center justify-center overflow-hidden">
       {children}
     </div>
-    
-    <div className={`p-8 pt-0 ${fullVisual ? 'absolute bottom-0 left-0 right-0 z-20' : 'relative'}`}>
-      <h3 className={`text-xl font-bold tracking-tight mb-2 ${darkText ? 'text-white' : 'text-zinc-900 group-hover:text-blue-600 transition-colors'}`}>
+
+    {/* Bottom text overlay with fade */}
+    <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none">
+      <div className="w-full h-44" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.7) 40%, rgba(255,255,255,1) 100%)' }} />
+    </div>
+
+    {/* Text block */}
+    <div className="absolute bottom-0 left-0 right-0 z-30 bg-transparent px-7 pb-7 pt-0">
+      <h3 className={`font-bold text-zinc-900 leading-tight mb-1 ${isLarge ? 'text-2xl' : 'text-xl'}`}>
         {title}
       </h3>
-      <p className={`text-sm leading-relaxed ${darkText ? 'text-white/80' : 'text-zinc-500'}`}>
+      <p className="text-zinc-500 text-[11px] leading-tight line-clamp-2">
         {description}
       </p>
     </div>
@@ -58,7 +107,7 @@ const BentoCard = ({
 
 export default function BentoServices() {
   return (
-    <section className="relative w-full pt-48 pb-24 px-4 md:px-8 lg:px-20 bg-transparent overflow-hidden">
+    <section className="relative w-full pt-32 pb-16 px-4 md:px-8 lg:px-20 bg-transparent overflow-hidden">
       {/* Grid Overlay for the Bento Section */}
       <div 
         className="absolute inset-0 z-0 pointer-events-none"
@@ -77,9 +126,9 @@ export default function BentoServices() {
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="px-4 py-1.5 rounded-full border border-zinc-100 bg-white/50 backdrop-blur-sm text-xs font-bold text-zinc-400 uppercase tracking-widest mb-6"
+            className="px-4 py-1.5 rounded-full border border-zinc-100 bg-white/50 backdrop-blur-sm text-sm font-bold text-blue-500 uppercase tracking-widest mb-6"
           >
-            Capabilities
+            Services
           </motion.div>
           
           <motion.h2
@@ -107,91 +156,95 @@ export default function BentoServices() {
           </motion.p>
         </div>
 
-        {/* --- Bento Grid --- */}
-        <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 auto-rows-[minmax(180px,auto)]">
+        {/* --- Bento Grid (Corrected 2-3-2 Architecture) --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
-          {/* Card 1: Revenue Funnel (3 Col, 3 Row) */}
-          <BentoCard
-            title="Predictable, Recurring Revenue"
-            description="Turn one-time visitors into loyal advocates. We help you build steady growth with minimal friction."
-            className="md:col-span-3 lg:col-span-4 md:row-span-3"
-            delay={0.1}
-          >
-            <RevenueFunnel />
-          </BentoCard>
+          {/* COLUMN 1: LEFT (2 Cards) */}
+          <div className="flex flex-col gap-4 h-[880px] md:h-[880px]">
+             {/* Card 1: Motion Graphics */}
+            <BentoCard
+              title="Motion Graphics"
+              description="Breathe life into your brand with dynamic, smooth, and engaging animations that capture attention instantly."
+              className="flex-[1.2]"
+              accentColor="#7048e8"
+              delay={0.1}
+            >
+              <MotionGraphics />
+            </BentoCard>
 
-          {/* Card 2: Real-Time Graph (3 Col, 2 Row) */}
-          <BentoCard
-            title="Real-Time Performance Insights"
-            description="Track every interaction. Understand user behavior through intuitive, real-time data visualization."
-            className="md:col-span-3 lg:col-span-4 md:row-span-2"
-            delay={0.2}
-          >
-            <RealTimeGraph />
-          </BentoCard>
+            {/* Card 2: Video Editing */}
+            <BentoCard
+              title="Video Editing"
+              description="Professional storytelling through seamless cuts, color grading, and audio syncing for high-impact results."
+              className="flex-1"
+              accentColor="#f59e0b"
+              delay={0.2}
+            >
+              <VideoEditing />
+            </BentoCard>
+          </div>
 
-          {/* Card 3: Failed Payments (3 Col, 3 Row) */}
-          <BentoCard
-            title="Fewer Failed Interactions"
-            description="We optimize every touchpoint automatically, reducing drop-offs and ensuring smooth user journeys."
-            className="md:col-span-3 lg:col-span-4 md:row-span-3"
-            delay={0.3}
-          >
-            <PaymentStatusList />
-          </BentoCard>
+          {/* COLUMN 2: MIDDLE (3 Cards) */}
+          <div className="flex flex-col gap-4 h-[880px] md:h-[880px]">
+            {/* Card 3: Graphics Design */}
+            <BentoCard
+              title="Graphics Design"
+              description="Striking visual identities and marketing materials that resonate with your audience and elevate your brand."
+              className="flex-1"
+              accentColor="#be4bdb"
+              delay={0.3}
+            >
+              <GraphicDesign />
+            </BentoCard>
 
-          {/* Card 4: Checkout UI (3 Col, 2 Row) */}
-          <BentoCard
-            title="Higher Conversion at Checkout"
-            description="Our custom-built flows are optimized to convert more leads and increase average order value seamlessly."
-            className="md:col-span-3 lg:col-span-4 md:row-span-2"
-            delay={0.4}
-          >
-            <CheckoutPreview />
-          </BentoCard>
+            {/* Card 4: UI UX Design */}
+            <BentoCard
+              title="UI UX Design"
+              description="User-centric design systems that balance aesthetic beauty with intuitive functionality for digital products."
+              className="flex-1"
+              accentColor="#3b5bdb"
+              delay={0.4}
+            >
+              <UIUXDesign />
+            </BentoCard>
 
-          {/* Card 5: Orbiting Logos (3 Col, 2 Row) */}
-          <BentoCard
-            title="Less Busywork, More Growth"
-            description="We automate your integrations, sync your data, and manage the backend so you can scale safely."
-            className="md:col-span-3 lg:col-span-4 md:row-span-2"
-            delay={0.5}
-          >
-            <OrbitLogos />
-          </BentoCard>
+            {/* Card 5: Web Design */}
+            <BentoCard
+              title="Web Design"
+              description="High-performance, responsive websites built with modern frameworks to turn visitors into customers."
+              className="flex-1"
+              accentColor="#0d9488"
+              delay={0.5}
+            >
+              <WebDesign />
+            </BentoCard>
+          </div>
 
-          {/* Card 6: Setup Stack (3 Col, 2 Row) */}
-          <BentoCard
-            title="Fast Setup, No Headaches"
-            description="Get launched in days, not months. We handle the entire deployment pipeline with zero downtime."
-            className="md:col-span-3 lg:col-span-4 md:row-span-2"
-            delay={0.15}
-          >
-            <SetupStack />
-          </BentoCard>
+          {/* COLUMN 3: RIGHT (2 Cards) */}
+          <div className="flex flex-col gap-4 h-[880px] md:h-[880px]">
+            {/* Card 6: Visual Effects */}
+            <BentoCard
+              title="Visual Effects"
+              description="High-end cinematic compositing and digital effects that blur the line between imagination and reality."
+              className="flex-1"
+              accentColor="#e03131"
+              delay={0.6}
+            >
+              <VisualEffects />
+            </BentoCard>
 
-          {/* Card 7: Large CTA Gradient (Full Width Bottom) */}
-          <BentoCard
-            title="Enhance Profits From Your Ecosystem Via Memberships"
-            description="Our platforms are built for ambitious leaders who want to achieve exponential growth and retention."
-            className="md:col-span-6 lg:col-span-12 md:row-span-2"
-            visualBg="bg-blue-600"
-            darkText={true}
-            fullVisual={true}
-            delay={0.6}
-          >
-            <CTAGradient />
-            <div className="absolute bottom-8 right-8 z-30">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-black text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-2xl"
-              >
-                Book a call now
-                <ArrowRight className="w-4 h-4" />
-              </motion.button>
-            </div>
-          </BentoCard>
+            {/* Card 7: 3D Designing */}
+            <BentoCard
+              title="3D Designing"
+              description="Immersive 3D environments and product visualizations that provide a realistic perspective of your vision."
+              className="flex-[1.2]"
+              accentColor="#0c8599"
+              delay={0.7}
+              isLarge
+            >
+              <ThreeDDesigning />
+            </BentoCard>
+          </div>
 
         </div>
       </div>

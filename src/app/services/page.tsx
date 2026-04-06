@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import ServicesHero from '@/components/services/ServicesHero';
 import BentoServices from '@/components/services/BentoServices';
+import WhyChooseMe from '@/components/services/WhyChooseMe';
+import FAQ from '@/components/services/FAQ';
 
 export const metadata: Metadata = {
   title: "Services | Abin Varghese",
@@ -20,6 +22,8 @@ export default function ServicesPage() {
       <ServicesHero />
       <div className="relative z-30">
         <BentoServices />
+        <WhyChooseMe />
+        <FAQ />
       </div>
     </main>
   );
