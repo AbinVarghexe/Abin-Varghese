@@ -140,13 +140,10 @@ export default function BentoServices() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-6xl font-bold text-zinc-900 tracking-tight leading-[1.1]"
+            className="text-4xl md:text-6xl font-bold pb-2 text-black tracking-tight"
           >
             Built to Help You <br className="md:hidden" />
-            <span className="relative inline-block px-2">
-              <Sparkles className="absolute -top-6 -right-6 w-8 h-8 text-blue-500 opacity-40" />
-              <span className="bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Grow</span>
-            </span>
+            <span className="text-blue-600 font-serif italic font-medium">Grow</span> 
           </motion.h2>
           
           <motion.p
