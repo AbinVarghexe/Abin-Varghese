@@ -2,8 +2,9 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Sparkles } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
+import type { Service } from '@/constants/services';
 import { 
   MotionGraphics, 
   VideoEditing, 
@@ -110,7 +111,85 @@ const BentoCard = ({
   </Link>
 );
 
-export default function BentoServices() {
+interface BentoServicesProps {
+  services: Service[];
+}
+
+interface ServiceCardCopy {
+  title: string;
+  description: string;
+  href: string;
+  accentColor: string;
+}
+
+function resolveServiceCopy(
+  services: Service[],
+  id: string,
+  fallback: ServiceCardCopy
+): ServiceCardCopy {
+  const service = services.find((item) => item.id === id);
+  if (!service) {
+    return fallback;
+  }
+
+  return {
+    title: service.title,
+    description: service.description,
+    href: `/services/${service.id}`,
+    accentColor: service.accentColor,
+  };
+}
+
+export default function BentoServices({ services }: BentoServicesProps) {
+  const motionGraphics = resolveServiceCopy(services, 'motion-graphics', {
+    title: 'Motion Graphics',
+    description: 'Breathe life into your brand with dynamic, smooth, and engaging animations that capture attention instantly.',
+    href: '/services/motion-graphics',
+    accentColor: '#7048e8',
+  });
+
+  const videoEditing = resolveServiceCopy(services, 'video-editing', {
+    title: 'Video Editing',
+    description: 'Professional storytelling through seamless cuts, color grading, and audio syncing for high-impact results.',
+    href: '/services/video-editing',
+    accentColor: '#f59e0b',
+  });
+
+  const graphicsDesign = resolveServiceCopy(services, 'graphics-design', {
+    title: 'Graphics Design',
+    description: 'Striking visual identities and marketing materials that resonate with your audience and elevate your brand.',
+    href: '/services/graphics-design',
+    accentColor: '#be4bdb',
+  });
+
+  const uiUx = resolveServiceCopy(services, 'ui-ux-design', {
+    title: 'UI UX Design',
+    description: 'User-centric design systems that balance aesthetic beauty with intuitive functionality for digital products.',
+    href: '/services/ui-ux-design',
+    accentColor: '#3b5bdb',
+  });
+
+  const webDesign = resolveServiceCopy(services, 'web-design', {
+    title: 'Web Design',
+    description: 'High-performance, responsive websites built with modern frameworks to turn visitors into customers.',
+    href: '/services/web-design',
+    accentColor: '#0d9488',
+  });
+
+  const vfx = resolveServiceCopy(services, 'visual-effects', {
+    title: 'Visual Effects',
+    description: 'High-end cinematic compospositing and digital effects that blur the line between imagination and reality.',
+    href: '/services/visual-effects',
+    accentColor: '#e03131',
+  });
+
+  const threeD = resolveServiceCopy(services, 'three-d-designing', {
+    title: '3D Designing',
+    description: 'Immersive 3D environments and product visualizations that provide a realistic perspective of your vision.',
+    href: '/services/three-d-designing',
+    accentColor: '#0c8599',
+  });
+
   return (
     <section className="relative w-full pt-32 pb-16 px-4 md:px-8 lg:px-20 bg-transparent overflow-hidden">
       {/* Grid Overlay for the Bento Section */}
@@ -165,11 +244,11 @@ export default function BentoServices() {
           <div className="flex flex-col gap-4 h-[880px] md:h-[880px]">
              {/* Card 1: Motion Graphics */}
             <BentoCard
-              title="Motion Graphics"
-              description="Breathe life into your brand with dynamic, smooth, and engaging animations that capture attention instantly."
-              href="/services/motion-graphics"
+              title={motionGraphics.title}
+              description={motionGraphics.description}
+              href={motionGraphics.href}
               className="flex-[1.2]"
-              accentColor="#7048e8"
+              accentColor={motionGraphics.accentColor}
               delay={0.1}
             >
               <MotionGraphics />
@@ -177,11 +256,11 @@ export default function BentoServices() {
 
             {/* Card 2: Video Editing */}
             <BentoCard
-              title="Video Editing"
-              description="Professional storytelling through seamless cuts, color grading, and audio syncing for high-impact results."
-              href="/services/video-editing"
+              title={videoEditing.title}
+              description={videoEditing.description}
+              href={videoEditing.href}
               className="flex-1"
-              accentColor="#f59e0b"
+              accentColor={videoEditing.accentColor}
               delay={0.2}
             >
               <VideoEditing />
@@ -192,11 +271,11 @@ export default function BentoServices() {
           <div className="flex flex-col gap-4 h-[880px] md:h-[880px]">
             {/* Card 3: Graphics Design */}
             <BentoCard
-              title="Graphics Design"
-              description="Striking visual identities and marketing materials that resonate with your audience and elevate your brand."
-              href="/services/graphics-design"
+              title={graphicsDesign.title}
+              description={graphicsDesign.description}
+              href={graphicsDesign.href}
               className="flex-1"
-              accentColor="#be4bdb"
+              accentColor={graphicsDesign.accentColor}
               delay={0.3}
             >
               <GraphicDesign />
@@ -204,11 +283,11 @@ export default function BentoServices() {
 
             {/* Card 4: UI UX Design */}
             <BentoCard
-              title="UI UX Design"
-              description="User-centric design systems that balance aesthetic beauty with intuitive functionality for digital products."
-              href="/services/ui-ux-design"
+              title={uiUx.title}
+              description={uiUx.description}
+              href={uiUx.href}
               className="flex-1"
-              accentColor="#3b5bdb"
+              accentColor={uiUx.accentColor}
               delay={0.4}
             >
               <UIUXDesign />
@@ -216,11 +295,11 @@ export default function BentoServices() {
 
             {/* Card 5: Web Design */}
             <BentoCard
-              title="Web Design"
-              description="High-performance, responsive websites built with modern frameworks to turn visitors into customers."
-              href="/services/web-design"
+              title={webDesign.title}
+              description={webDesign.description}
+              href={webDesign.href}
               className="flex-1"
-              accentColor="#0d9488"
+              accentColor={webDesign.accentColor}
               delay={0.5}
             >
               <WebDesign />
@@ -231,11 +310,11 @@ export default function BentoServices() {
           <div className="flex flex-col gap-4 h-[880px] md:h-[880px]">
             {/* Card 6: Visual Effects */}
             <BentoCard
-              title="Visual Effects"
-              description="High-end cinematic compositing and digital effects that blur the line between imagination and reality."
-              href="/services/visual-effects"
+              title={vfx.title}
+              description={vfx.description}
+              href={vfx.href}
               className="flex-1"
-              accentColor="#e03131"
+              accentColor={vfx.accentColor}
               delay={0.6}
             >
               <VisualEffects />
@@ -243,11 +322,11 @@ export default function BentoServices() {
 
             {/* Card 7: 3D Designing */}
             <BentoCard
-              title="3D Designing"
-              description="Immersive 3D environments and product visualizations that provide a realistic perspective of your vision."
-              href="/services/three-d-designing"
+              title={threeD.title}
+              description={threeD.description}
+              href={threeD.href}
               className="flex-[1.2]"
-              accentColor="#0c8599"
+              accentColor={threeD.accentColor}
               delay={0.7}
               isLarge
             >

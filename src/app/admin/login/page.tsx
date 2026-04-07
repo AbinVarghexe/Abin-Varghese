@@ -2,19 +2,12 @@
 
 import { signIn } from "next-auth/react";
 import { Github, AlertTriangle } from "lucide-react";
-import { useState, useEffect, Suspense } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 function LoginForm() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
 
   return (
     <div className="relative z-10 w-full max-w-md p-8 md:p-10 bg-neutral-950/80 border border-neutral-800/50 backdrop-blur-xl rounded-3xl shadow-2xl shadow-black/80">

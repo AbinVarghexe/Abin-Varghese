@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { z } from 'zod';
 
 const projectSchema = z.object({
@@ -16,9 +16,9 @@ const projectSchema = z.object({
 
 // Get all projects (admin view)
 export async function GET() {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { response } = await requireAdminSession();
+  if (response) {
+    return response;
   }
 
   try {
@@ -38,9 +38,9 @@ export async function GET() {
 
 // Create new project
 export async function POST(request: NextRequest) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { response } = await requireAdminSession();
+  if (response) {
+    return response;
   }
 
   try {

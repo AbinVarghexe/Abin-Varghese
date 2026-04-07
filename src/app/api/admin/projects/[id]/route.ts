@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { requireAdminSession } from '@/lib/admin-auth';
 import { z } from 'zod';
 
 const projectSchema = z.object({
@@ -16,12 +16,12 @@ const projectSchema = z.object({
 
 // Get single project
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { response } = await requireAdminSession();
+  if (response) {
+    return response;
   }
 
   try {
@@ -49,9 +49,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { response } = await requireAdminSession();
+  if (response) {
+    return response;
   }
 
   try {
@@ -86,9 +86,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { response } = await requireAdminSession();
+  if (response) {
+    return response;
   }
 
   try {

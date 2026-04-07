@@ -1,17 +1,16 @@
 'use client';
 
-import { memo, useRef } from 'react';
-import Link from 'next/link';
+import { memo, useRef, type ComponentType } from 'react';
 import { ArrowUpRight, Calendar, Github, Instagram, Linkedin } from 'lucide-react';
 import {
   motion,
   useMotionValue,
   useSpring,
-  useTransform,
   useInView,
 } from 'framer-motion';
 import { HeroContent } from '@/lib/hero-content-defaults';
 import { usePreview } from '@/lib/contexts/PreviewContext';
+import type { HomeContent } from '@/lib/home-content-defaults';
 
 /* ─────────────────────────────── data ──────────────────────────── */
 const dotPositions = [
@@ -21,7 +20,7 @@ const dotPositions = [
 ];
 
 /* Behance — clean "Bē" mark, works at any size */
-function BehanceIcon({ className, strokeWidth, ...rest }: { className?: string; strokeWidth?: number; [k: string]: unknown }) {
+function BehanceIcon({ className }: { className?: string; strokeWidth?: number }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -40,12 +39,19 @@ function BehanceIcon({ className, strokeWidth, ...rest }: { className?: string; 
   );
 }
 
-const socialTiles = [
-  { icon: Github,       label: 'GitHub',    href: 'https://github.com/AbinVarghexe' },
-  { icon: BehanceIcon,  label: 'Behance',   href: 'https://www.behance.net/abinvarghese' },
-  { icon: Linkedin,     label: 'LinkedIn',  href: 'https://www.linkedin.com/in/abinvarghese' },
-  { icon: Instagram,    label: 'Instagram', href: 'https://www.instagram.com/abinvarghese' },
-];
+const socialIconMap = {
+  github: Github,
+  behance: BehanceIcon,
+  linkedin: Linkedin,
+  instagram: Instagram,
+} as const;
+
+const socialLabelMap = {
+  github: 'GitHub',
+  behance: 'Behance',
+  linkedin: 'LinkedIn',
+  instagram: 'Instagram',
+} as const;
 
 
 /* ─────────────────── animation variants ────────────────────────── */
@@ -84,7 +90,7 @@ function MagneticButton({
 }: {
   href: string;
   label: string;
-  icon?: any;
+  icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
   secondary?: boolean;
 }) {
   const ref = useRef<HTMLAnchorElement>(null);
@@ -167,7 +173,7 @@ function SocialTile({
   rotate,
   delay,
 }: {
-  icon: any;
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
   href: string;
   rotate: number;
@@ -222,7 +228,13 @@ function FloatingDots() {
 
 
 /* ═══════════════════════════ Section ════════════════════════════ */
-const Herosection = ({ data: initialData }: { data: HeroContent }) => {
+const Herosection = ({
+  data: initialData,
+  homeLinks,
+}: {
+  data: HeroContent;
+  homeLinks: Pick<HomeContent, 'socialLinks' | 'pageLinks'>;
+}) => {
   const { previewData, isPreviewing } = usePreview();
   const sectionRef = useRef<HTMLElement>(null);
   const inView     = useInView(sectionRef, { once: true, margin: '-60px' });
@@ -406,12 +418,12 @@ const Herosection = ({ data: initialData }: { data: HeroContent }) => {
           >
             <div className="flex flex-col gap-4 sm:flex-row">
               <MagneticButton
-                href={data.heroCtaPrimaryUrl}
+                href={homeLinks.pageLinks.projects || data.heroCtaPrimaryUrl}
                 label={data.heroCtaPrimaryLabel}
                 icon={ArrowUpRight}
               />
               <MagneticButton
-                href={data.heroCtaSecondaryUrl}
+                href={homeLinks.pageLinks.contact || data.heroCtaSecondaryUrl}
                 label={data.heroCtaSecondaryLabel}
                 icon={Calendar}
                 secondary
@@ -432,16 +444,21 @@ const Herosection = ({ data: initialData }: { data: HeroContent }) => {
             variants={scaleIn}
             className="pointer-events-auto mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6"
           >
-            {socialTiles.map(({ icon, label, href }, index) => (
-              <SocialTile
-                key={label}
-                icon={icon}
-                label={label}
-                href={href}
-                rotate={index % 2 === 0 ? -10 : 10}
-                delay={0.42 + index * 0.07}
-              />
-            ))}
+            {(Object.keys(homeLinks.socialLinks) as Array<keyof HomeContent['socialLinks']>).map((key, index) => {
+              const Icon = socialIconMap[key];
+              const href = homeLinks.socialLinks[key];
+
+              return (
+                <SocialTile
+                  key={key}
+                  icon={Icon}
+                  label={socialLabelMap[key]}
+                  href={href}
+                  rotate={index % 2 === 0 ? -10 : 10}
+                  delay={0.42 + index * 0.07}
+                />
+              );
+            })}
           </motion.div>
         </motion.div>
       </div>

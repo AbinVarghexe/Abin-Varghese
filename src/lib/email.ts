@@ -17,13 +17,13 @@ export interface ContactEmailData {
  * @param data Contact form data
  * @returns Promise with email result
  */
-export async function sendContactEmail(data: ContactEmailData) {
+export async function sendContactEmail(data: ContactEmailData, targetEmail?: string) {
   const { name, email, subject, message } = data;
 
   try {
     const result = await resend.emails.send({
       from: 'Portfolio Contact <onboarding@resend.dev>', // Update with your verified domain
-      to: process.env.CONTACT_EMAIL || 'your-email@example.com',
+      to: targetEmail || process.env.CONTACT_EMAIL || 'your-email@example.com',
       replyTo: email,
       subject: subject || `New message from ${name}`,
       html: `

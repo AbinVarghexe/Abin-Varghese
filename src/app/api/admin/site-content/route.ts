@@ -33,6 +33,18 @@ const heroContentSchema = z.object({
 const homeContentSchema = z.object({
   scrollingBannerItems: z.string(),
   scrollingLogos: z.array(z.string()),
+  socialLinks: z.object({
+    github: z.string(),
+    behance: z.string(),
+    linkedin: z.string(),
+    instagram: z.string(),
+  }),
+  pageLinks: z.object({
+    about: z.string(),
+    projects: z.string(),
+    services: z.string(),
+    contact: z.string(),
+  }),
 });
 
 export async function GET() {

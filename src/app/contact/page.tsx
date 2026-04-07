@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { ArrowUpRight, Instagram, Linkedin, Mail, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import DarkVeil from '@/components/DarkVeil';
+import ContactFormCard from '@/components/contact/ContactFormCard';
+import { getContactSectionSettings } from '@/lib/contact-content';
 
 export const metadata: Metadata = {
   title: "Contact | Abin Varghese",
@@ -16,7 +18,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const formSettings = await getContactSectionSettings();
+
   return (
     <div className="relative min-h-screen w-full text-black dark:text-white bg-[#f8f5f2] dark:bg-black overflow-hidden flex flex-col items-center justify-center pt-20 pb-24 font-['Poppins',sans-serif] transition-colors duration-500">
       {/* Background Interactive Effect (Dark Mode) */}
@@ -51,7 +55,7 @@ export default function ContactPage() {
         />
         <div className="absolute inset-0 z-[-1] opacity-[0.05] dark:opacity-[0.03] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%221.5%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E")' }} />
         <Sparkles className="w-[18px] h-[18px] text-black/60 dark:text-white/75 group-hover:text-black dark:group-hover:text-white group-hover:animate-pulse transition-colors duration-300" />
-        <span className="text-[13.5px] font-medium tracking-wide">Let's Connect</span>
+        <span className="text-[13.5px] font-medium tracking-wide">Let&apos;s Connect</span>
       </div>
 
       {/* Main Content */}
@@ -64,26 +68,26 @@ export default function ContactPage() {
               Reach Me <ArrowUpRight className="w-12 h-12 md:w-16 md:h-16 text-black dark:text-white stroke-[2px] transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
             </h1>
             <p className="text-black/70 dark:text-white/75 font-medium leading-[1.6] text-base md:text-lg max-w-[380px] transition-colors duration-300 group-hover:text-black/90 dark:group-hover:text-white">
-              We promise to reply within 24 hours, every time. We promise to reply within 24 hours, every time.
+              {formSettings.introText}
             </p>
           </div>
 
           <div className="flex flex-col mt-2">
-            <Link href="https://instagram.com" className="flex items-center justify-between border-b border-black/10 dark:border-white/20 py-5 group hover:border-black/30 dark:hover:border-white/50 transition-all duration-300 relative overflow-hidden">
+            <Link href={formSettings.instagramUrl} className="flex items-center justify-between border-b border-black/10 dark:border-white/20 py-5 group hover:border-black/30 dark:hover:border-white/50 transition-all duration-300 relative overflow-hidden">
               <div className="flex items-center gap-5 transition-transform duration-300 group-hover:translate-x-3">
                 <Instagram className="w-5 h-5 text-black/70 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors duration-500 group-hover:scale-110" />
                 <span className="font-semibold text-[15px] group-hover:text-black dark:group-hover:text-white transition-colors duration-300">Instagram</span>
               </div>
               <ArrowUpRight className="w-4 h-4 text-black/40 dark:text-white/50 opacity-0 transition-all duration-300 -translate-x-4 translate-y-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:text-black dark:group-hover:text-white" />
             </Link>
-            <Link href="https://linkedin.com" className="flex items-center justify-between border-b border-black/10 dark:border-white/20 py-5 group hover:border-black/30 dark:hover:border-white/50 transition-all duration-300 relative overflow-hidden">
+            <Link href={formSettings.linkedinUrl} className="flex items-center justify-between border-b border-black/10 dark:border-white/20 py-5 group hover:border-black/30 dark:hover:border-white/50 transition-all duration-300 relative overflow-hidden">
               <div className="flex items-center gap-5 transition-transform duration-300 group-hover:translate-x-3">
                 <Linkedin className="w-5 h-5 text-black/70 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors duration-500 group-hover:scale-110" />
                 <span className="font-semibold text-[15px] group-hover:text-black dark:group-hover:text-white transition-colors duration-300">LinkedIn</span>
               </div>
               <ArrowUpRight className="w-4 h-4 text-black/40 dark:text-white/50 opacity-0 transition-all duration-300 -translate-x-4 translate-y-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:text-black dark:group-hover:text-white" />
             </Link>
-            <Link href="mailto:toabinvarghes@gmail.com" className="flex items-center justify-between border-b border-black/10 dark:border-white/20 py-5 group hover:border-black/30 dark:hover:border-white/50 transition-all duration-300 relative overflow-hidden">
+            <Link href={`mailto:${formSettings.contactEmail}`} className="flex items-center justify-between border-b border-black/10 dark:border-white/20 py-5 group hover:border-black/30 dark:hover:border-white/50 transition-all duration-300 relative overflow-hidden">
               <div className="flex items-center gap-5 transition-transform duration-300 group-hover:translate-x-3">
                 <Mail className="w-5 h-5 text-black/70 dark:text-white/90 group-hover:text-black dark:group-hover:text-white transition-colors duration-500 group-hover:scale-110" />
                 <span className="font-semibold text-[15px] group-hover:text-black dark:group-hover:text-white transition-colors duration-300">Gmail</span>
@@ -93,56 +97,13 @@ export default function ContactPage() {
           </div>
 
           <p className="text-[13px] text-black/60 dark:text-white/60 font-medium transition-colors hover:text-black dark:hover:text-white cursor-pointer w-fit">
-            toabinvarghes@gmail.com
+            {formSettings.contactEmail}
           </p>
         </div>
 
         {/* Right Column - Form */}
         <div className="w-full lg:w-fit relative z-20 group/form">
-          <form className="relative bg-white/60 dark:bg-white/[0.05] border-[3px] border-white dark:border-white/20 backdrop-blur-xl p-6 sm:p-8 md:px-[32.6px] md:py-[24px] rounded-[35px] flex flex-col gap-[12px] w-full lg:w-[684px] shadow-[0_16px_40px_-5px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_-5px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.1)] hover:shadow-[0_20px_50px_-5px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_30px_60px_-10px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-shadow duration-500 overflow-hidden">
-            {/* Very faint noise texture overlay */}
-            <div 
-              className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-0"
-              style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%221.5%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E")' }}
-            />
-
-            <div className="flex flex-col md:flex-row gap-[30px] relative z-10 w-full">
-              <div className="flex-1 w-full md:w-[325px]">
-                <input 
-                  type="text" 
-                  placeholder="Name" 
-                  className="contact-input group/input w-full border-[2px] border-black/5 dark:border-[rgba(180,180,180,0.3)] rounded-[22px] pl-[31.7px] pr-[20px] text-[15.8px] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-[#d0d0d0] focus:outline-none focus:border-black/20 dark:focus:border-white/50 hover:border-black/15 dark:hover:border-white/40 focus:-translate-y-1 hover:-translate-y-0.5 focus:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] dark:focus:shadow-[0_8px_20px_-4px_rgba(255,255,255,0.05)] transition-all duration-300 font-medium h-[70px] bg-black/[0.02] dark:bg-transparent shadow-inner dark:shadow-[inset_0_1px_4px_rgba(0,0,0,0.1)]"
-                />
-              </div>
-              <div className="flex-1 w-full md:w-[325px]">
-                <input 
-                  type="email" 
-                  placeholder="Email" 
-                  className="contact-input w-full border-[2px] border-black/5 dark:border-[rgba(180,180,180,0.3)] rounded-[22px] pl-[26.4px] pr-[20px] text-[15.8px] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-[#d0d0d0] focus:outline-none focus:border-black/20 dark:focus:border-white/50 hover:border-black/15 dark:hover:border-white/40 focus:-translate-y-1 hover:-translate-y-0.5 focus:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] dark:focus:shadow-[0_8px_20px_-4px_rgba(255,255,255,0.05)] transition-all duration-300 font-medium h-[70px] bg-black/[0.02] dark:bg-transparent shadow-inner dark:shadow-[inset_0_1px_4px_rgba(0,0,0,0.1)]"
-                />
-              </div>
-            </div>
-            
-            <div className="w-full relative z-10 mt-[11px] md:mt-0">
-              <textarea 
-                placeholder="Message" 
-                className="contact-input w-full border-[2px] border-black/5 dark:border-[rgba(180,180,180,0.3)] rounded-[22px] px-[40.8px] pt-[29.5px] pb-[20px] text-[15.8px] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-[#d0d0d0] focus:outline-none focus:border-black/20 dark:focus:border-white/50 hover:border-black/15 dark:hover:border-white/40 focus:-translate-y-1 hover:-translate-y-0.5 focus:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] dark:focus:shadow-[0_8px_20px_-4px_rgba(255,255,255,0.05)] transition-all duration-300 resize-none font-medium h-[309px] bg-black/[0.02] dark:bg-transparent shadow-inner dark:shadow-[inset_0_1px_4px_rgba(0,0,0,0.1)]"
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              className="group overflow-hidden w-full bg-black dark:bg-white text-white dark:text-black font-semibold text-[17.6px] uppercase h-[70px] rounded-[34.8px] border-[2px] border-black dark:border-[rgba(180,180,180,0.3)] hover:bg-neutral-800 dark:hover:bg-neutral-200 active:scale-[0.99] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative z-10 flex items-center justify-center tracking-wide"
-            >
-              {/* Shimmer Spark Line Effect */}
-              <div className="absolute inset-0 w-[10%] h-[200%] bg-white/30 dark:bg-black/10 rotate-[35deg] -translate-y-[50%] -translate-x-[600%] group-hover:translate-x-[1500%] transition-transform duration-1000 ease-in-out z-10" />
-              
-              <span className="relative z-20 flex items-center justify-center gap-2">
-                Submit 
-                <ArrowUpRight className="w-5 h-5 opacity-0 -translate-x-4 translate-y-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500" />
-              </span>
-            </button>
-          </form>
+          <ContactFormCard isEnabled={formSettings.formEnabled} />
         </div>
       </div>
 

@@ -2,9 +2,7 @@
 import type { Metadata } from "next";
 import Herosection from "@/components/Herosection";
 import ScrollingBanner from "@/components/ui/ScrollingBanner";
-import SiteUnderDevelopment from "@/components/ui/SiteUnderDevelopment";
 import CreativeToolbox from "@/components/CreativeToolbox";
-import Footer from "@/components/Footer";
 import BrandsSection from "@/components/BrandsSection";
 import AboutSection from "@/components/AboutSection";
 import RecentProjects from "@/components/RecentProjects";
@@ -12,6 +10,7 @@ import ServicesSection from "@/components/services/ServicesSection";
 import ReviewsSection from "@/components/ReviewsSection";
 import SlidingRoleBanner from "@/components/ui/SlidingRoleBanner";
 import { getHeroContent, getHomeContent } from "@/lib/site-content";
+import { homePageContentClass, homePageShellClass } from "@/lib/home-page-design-system";
 
 export const metadata: Metadata = {
   title: "Abin Varghese",
@@ -28,12 +27,21 @@ export const metadata: Metadata = {
 export default async function Home() {
   const heroData = await getHeroContent();
   const homeData = await getHomeContent();
-  
-  const scrollingItems = homeData.scrollingBannerItems.split(',').map(item => item.trim()).filter(Boolean);
+
+  const scrollingItems = homeData.scrollingBannerItems
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
 
   return (
-    <main className="min-h-screen relative">
-      <Herosection data={heroData} />
+    <main className={homePageShellClass("relative")}>
+      <Herosection
+        data={heroData}
+        homeLinks={{
+          socialLinks: homeData.socialLinks,
+          pageLinks: homeData.pageLinks,
+        }}
+      />
 
       <div className="relative w-full overflow-hidden">
         {/* ── Vertical Grid Background Layer (z-0) ────────── */}
@@ -50,7 +58,7 @@ export default async function Home() {
         />
         
         {/* All content below the hero section (Content Layer z-20) */}
-        <div className="relative z-20">
+        <div className={homePageContentClass("z-20")}>
           <ScrollingBanner
             items={scrollingItems}
             speed={30}

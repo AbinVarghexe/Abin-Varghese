@@ -3,6 +3,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sendContactEmail } from '@/lib/email';
+import { getContactSectionSettings } from '@/lib/contact-content';
+import prisma from '@/lib/prisma';
 import { z } from 'zod';
 
 // Validation schema for contact form
@@ -20,21 +22,40 @@ export async function POST(request: NextRequest) {
     // Validate input
     const validatedData = contactSchema.parse(body);
 
+    const formSettings = await getContactSectionSettings();
+    if (!formSettings.formEnabled) {
+      return NextResponse.json(
+        { error: 'Contact form is currently disabled' },
+        { status: 403 }
+      );
+    }
+
+    const submission = await prisma.contactSubmission.create({
+      data: {
+        name: validatedData.name,
+        email: validatedData.email,
+        subject: validatedData.subject || null,
+        message: validatedData.message,
+      },
+    });
+
     // Send email directly
-    const emailResult = await sendContactEmail(validatedData);
+    const emailResult = await sendContactEmail(validatedData, formSettings.contactEmail);
 
     if (!emailResult.success) {
       console.error('Email sending failed:', emailResult.error);
-      return NextResponse.json(
-        { error: 'Failed to send email. Please try again.' },
-        { status: 500 }
-      );
+      return NextResponse.json({
+        success: true,
+        message: 'Message saved. Email delivery failed, but the admin inbox has your submission.',
+        submissionId: submission.id,
+      });
     }
 
     return NextResponse.json(
       {
         success: true,
         message: 'Message sent successfully!',
+        submissionId: submission.id,
       },
       { status: 200 }
     );

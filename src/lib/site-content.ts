@@ -36,6 +36,8 @@ const heroKeyMap = {
 const homeKeyMap = {
   scrollingBannerItems: "home_scrolling_banner_items",
   scrollingLogos: "home_scrolling_logos",
+  socialLinks: "home_social_links",
+  pageLinks: "home_page_links",
 } as const;
 
 export async function getAboutContent(): Promise<AboutContent> {
@@ -95,6 +97,36 @@ export async function getHomeContent(): Promise<HomeContent> {
       if (!val) return siteContentDefaults.scrollingLogos;
       try { return JSON.parse(val); } catch { return siteContentDefaults.scrollingLogos; }
     })(),
+    socialLinks: (() => {
+      const val = values.get(homeKeyMap.socialLinks);
+      if (!val) return siteContentDefaults.socialLinks;
+      try {
+        const parsed = JSON.parse(val) as Partial<HomeContent["socialLinks"]>;
+        return {
+          github: parsed.github || siteContentDefaults.socialLinks.github,
+          behance: parsed.behance || siteContentDefaults.socialLinks.behance,
+          linkedin: parsed.linkedin || siteContentDefaults.socialLinks.linkedin,
+          instagram: parsed.instagram || siteContentDefaults.socialLinks.instagram,
+        };
+      } catch {
+        return siteContentDefaults.socialLinks;
+      }
+    })(),
+    pageLinks: (() => {
+      const val = values.get(homeKeyMap.pageLinks);
+      if (!val) return siteContentDefaults.pageLinks;
+      try {
+        const parsed = JSON.parse(val) as Partial<HomeContent["pageLinks"]>;
+        return {
+          about: parsed.about || siteContentDefaults.pageLinks.about,
+          projects: parsed.projects || siteContentDefaults.pageLinks.projects,
+          services: parsed.services || siteContentDefaults.pageLinks.services,
+          contact: parsed.contact || siteContentDefaults.pageLinks.contact,
+        };
+      } catch {
+        return siteContentDefaults.pageLinks;
+      }
+    })(),
   };
 }
 
@@ -125,9 +157,10 @@ export async function upsertHeroContent(content: HeroContent) {
 export async function upsertHomeContent(content: HomeContent) {
   await prisma.$transaction(
     Object.entries(homeKeyMap).map(([field, key]) => {
-      const value = field === "scrollingLogos" 
-        ? JSON.stringify(content[field as keyof HomeContent]) 
-        : content[field as keyof HomeContent];
+      const value =
+        field === "scrollingLogos" || field === "socialLinks" || field === "pageLinks"
+          ? JSON.stringify(content[field as keyof HomeContent])
+          : content[field as keyof HomeContent];
         
       return prisma.siteContent.upsert({
         where: { key },

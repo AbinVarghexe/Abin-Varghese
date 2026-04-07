@@ -28,6 +28,31 @@ const nextConfig: NextConfig = {
           hostname: 'lookaside.instagram.com',
           pathname: '/**',
         },
+        {
+          protocol: 'https',
+          hostname: 'opengraph.githubassets.com',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
+          hostname: 'raw.githubusercontent.com',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
+          hostname: 'user-images.githubusercontent.com',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
+          hostname: 'camo.githubusercontent.com',
+          pathname: '/**',
+        },
+        {
+          protocol: 'https',
+          hostname: 'github.com',
+          pathname: '/**',
+        },
       ],
     },
 };
