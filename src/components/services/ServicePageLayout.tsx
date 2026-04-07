@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, CheckCircle2, Zap, Film, Palette, Globe, Cpu, Eye, Box, ExternalLink, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, Sparkles, CheckCircle2, Zap, Film, Palette, Globe, Cpu, Eye, Box, ExternalLink, ArrowUpRight, Figma, Github, Code2, Instagram, Youtube, Dribbble, Calendar, Clock, User } from 'lucide-react';
 import Link from 'next/link';
-import { Service } from '@/constants/services';
+import { Service, ProjectLink } from '@/constants/services';
 
 const iconMap = {
   Zap,
@@ -14,8 +14,35 @@ const iconMap = {
   Cpu,
   Eye,
   Box,
-  Sparkles
+  Sparkles,
+  Figma,
+  Github,
+  Code2,
+  Instagram,
+  Youtube,
+  Dribbble,
+  ExternalLink,
+  ArrowUpRight,
+  Calendar,
+  Clock,
+  User
 };
+
+// ─── Video Preview Sub-Component ──────────────────────────────────────────
+function VideoPreview({ videoUrl, poster }: { videoUrl: string; poster?: string }) {
+  return (
+    <video
+      autoPlay
+      loop
+      muted
+      playsInline
+      poster={poster}
+      className="w-full h-full object-cover"
+    >
+      <source src={videoUrl} type="video/mp4" />
+    </video>
+  );
+}
 
 interface ServicePageLayoutProps {
   service: Service;
@@ -29,11 +56,25 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
   // Cursor Follow Logic for Project Cards
   const cursorX = useMotionValue(0);
   const cursorY = useMotionValue(0);
-  const springConfig = { damping: 25, stiffness: 200 };
+  const springConfig = { damping: 30, stiffness: 250 };
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
   const [hoveredProject, setHoveredProject] = useState<string | null>(null);
-  const [displayLimit, setDisplayLimit] = useState(3);
+  const [hoveredLinkLabel, setHoveredLinkLabel] = useState<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const getLinkProvider = (url: string = "") => {
+    if (url.includes('behance')) return 'Behance';
+    if (url.includes('dribbble')) return 'Dribbble';
+    if (url.includes('github')) return 'GitHub';
+    if (url.includes('figma')) return 'Figma';
+    if (url.includes('youtube')) return 'YouTube';
+    if (url.includes('instagram')) return 'Instagram';
+    return 'View Project';
+  };
+
+  // Projects count for the stack
+  const projectItems = (service.contents || []).filter(item => item.type === 'project');
 
   const handleMouseMove = (e: React.MouseEvent) => {
     cursorX.set(e.clientX);
@@ -61,8 +102,32 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
         </motion.div>
       </nav>
 
+      {/* Dynamic Cursor Bubble */}
+      <AnimatePresence>
+        {hoveredProject && (
+          <motion.div
+            style={{
+              left: cursorXSpring,
+              top: cursorYSpring,
+              position: 'fixed',
+              pointerEvents: 'none',
+              zIndex: 9999,
+            }}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="hidden lg:flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-full shadow-2xl backdrop-blur-md border border-white/20 -translate-x-1/2 -translate-y-[120%]"
+          >
+            <span className="text-xs font-black uppercase tracking-widest whitespace-nowrap">
+              {hoveredLinkLabel}
+            </span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Hero Section */}
-      <section className="relative pt-52 pb-20 px-6 md:px-12 lg:px-24 overflow-hidden">
+      <section className="relative pt-44 pb-12 px-6 md:px-12 lg:px-24 overflow-hidden">
         {/* ── Vertical & Horizontal Grid Overlay with High-Density Pseudo-Random Dots ─────────────────────────── */}
         <div 
           className="absolute inset-0 z-0 pointer-events-none"
@@ -120,7 +185,7 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
 
       {/* Main Content */}
       <section 
-        className="relative py-20 px-6 md:px-12 lg:px-24 bg-white border-t border-zinc-100 overflow-hidden"
+        className="relative pt-20 pb-10 px-6 md:px-12 lg:px-24 bg-white border-t border-zinc-100 overflow-hidden"
       >
         {/* Section-specific Dotted Grid Background */}
         <div 
@@ -195,7 +260,7 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                   </div>
 
                   {/* Horizontal Grid (3 per row) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-32 lg:gap-y-48 gap-x-12 relative z-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-24 lg:gap-y-32 gap-x-10 relative z-10">
                     {service.providedServices.map((subService, i) => (
                       <motion.div
                         key={i}
@@ -204,7 +269,7 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                         viewport={{ once: true }}
                         transition={{ duration: 0.7, delay: i * 0.1 }}
                         whileHover={{ y: -15, rotate: 0, transition: { duration: 0.4 } }}
-                        className="relative group bg-white p-10 pt-16 rounded-[44px] shadow-[0_30px_70px_rgba(0,0,0,0.06)] border border-zinc-100 flex flex-col items-center text-center gap-8"
+                        className="relative group bg-white p-8 pt-14 rounded-[32px] shadow-[0_30px_70px_rgba(0,0,0,0.06)] border border-zinc-100 flex flex-col items-center text-center gap-6"
                       >
                         {/* Number Indicator & Punched Hole Aesthetics */}
                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col items-center">
@@ -237,274 +302,257 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
         </div>
       </section>
 
-      {/* Visual Showcase (Featured Content) */}
+      {/* Visual Showcase (3D Stacked Projects) */}
       {service.contents && service.contents.length > 0 && (
-        <section className="py-32 px-6 md:px-12 lg:px-24 border-t border-zinc-100 overflow-hidden bg-white">
-          <div className="max-w-[1200px] mx-auto text-center mb-24">
-            <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight">Featured Projects</h2>
-            <p className="text-zinc-500 mt-4 max-w-xl mx-auto text-lg leading-relaxed">Deep dive into recent successful deliveries and project processes.</p>
+        <section className="pt-24 pb-32 border-t border-zinc-100 overflow-hidden bg-white">
+          <div className="max-w-[1200px] mx-auto px-6 md:px-12 lg:px-24 mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+            <div className="max-w-xl">
+              <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight">Featured Projects</h2>
+              <p className="text-zinc-500 mt-4 text-lg leading-relaxed font-medium">Deep dive into recent successful deliveries and project processes.</p>
+            </div>
+            
+            {/* Stack Controls */}
+            <div className="flex items-center gap-3">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={activeIndex === 0}
+                onClick={() => setActiveIndex(prev => Math.max(0, prev - 1))}
+                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
+                  activeIndex === 0 ? 'border-zinc-100 text-zinc-200 bg-zinc-50/50' : 'border-zinc-200 text-zinc-400 hover:border-zinc-900 hover:text-zinc-900 bg-white'
+                }`}
+              >
+                <ArrowLeft className="w-5 h-5 rotate-90" />
+              </motion.button>
+              
+              <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Project</span>
+                <span className="text-lg font-black text-zinc-900">0{activeIndex + 1}<span className="text-zinc-300 mx-1">/</span>0{projectItems.length}</span>
+              </div>
+
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                disabled={activeIndex === projectItems.length - 1}
+                onClick={() => setActiveIndex(prev => Math.min(projectItems.length - 1, prev + 1))}
+                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all shadow-lg font-bold ${
+                  activeIndex === projectItems.length - 1 ? 'border-zinc-100 text-zinc-200 bg-zinc-50/50' : 'border-zinc-900 bg-zinc-900 text-white hover:bg-zinc-800'
+                }`}
+              >
+                <ArrowUpRight className="w-5 h-5 rotate-135" />
+              </motion.button>
+            </div>
           </div>
 
-          <div className="max-w-[1200px] mx-auto flex flex-col gap-20">
-            {service.contents.slice(0, displayLimit).map((item, i) => {
-              if (item.type === 'project') {
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8 }}
-                    whileHover="hover"
-                    onMouseEnter={() => setHoveredProject(item.title)}
-                    onMouseLeave={() => setHoveredProject(null)}
-                    onMouseMove={handleMouseMove}
-                    className="relative group w-full"
-                  >
-                    <a 
-                      href={item.url || "#"} 
-                      target={item.url ? "_blank" : undefined}
-                      rel={item.url ? "noopener noreferrer" : undefined}
-                      className={item.url ? "cursor-none block" : "block"}
+          {/* 3D Stack Container */}
+          <div className="relative h-[650px] lg:h-[520px] max-w-[1100px] mx-auto px-6" style={{ perspective: '1200px' }}>
+            <div className="relative w-full h-full flex items-center justify-center">
+              <AnimatePresence mode="popLayout">
+                {projectItems.map((item, idx) => {
+                  const diff = idx - activeIndex;
+                  const isVisible = Math.abs(diff) <= 2;
+                  
+                  if (!isVisible && diff !== 0) return null;
+
+                  return (
+                    <motion.div
+                      key={item.title}
+                      initial={{ 
+                        opacity: 0, 
+                        scale: 0.8,
+                        y: diff > 0 ? -200 : 800, // Come from stack (top) or below if returning
+                        rotateX: 10,
+                        rotateY: 0,
+                        z: -100
+                      }}
+                      animate={{ 
+                        opacity: diff === 0 ? 1 : diff > 0 ? 1 - (diff * 0.15) : 0, // High opacity for back cards
+                        scale: 1 - Math.abs(diff) * 0.05,
+                        y: diff * -55, // Stack spacing increased to see back cards properly
+                        zIndex: projectItems.length - Math.abs(diff),
+                        rotateX: 12 + (diff * -2), 
+                        rotateY: 0,
+                        z: diff * -80,
+                        filter: 'none', // Removed blur so back cards is clearly visible
+                        boxShadow: diff > 0 ? '0px -10px 40px rgba(0,0,0,0.1)' : 'none'
+                      }}
+                      exit={{ 
+                        opacity: 1, // physical drop, no fade out
+                        scale: 0.9,
+                        y: 800, // Drops completely down
+                        transition: { duration: 0.4, ease: "circIn" }
+                      }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 260, 
+                        damping: 25 
+                      }}
+                      drag="y"
+                      dragConstraints={{ top: 0, bottom: 0 }}
+                      onDragEnd={(_, info) => {
+                        if (info.offset.y < -50 && activeIndex < projectItems.length - 1) {
+                          setActiveIndex(prev => prev + 1);
+                        } else if (info.offset.y > 50 && activeIndex > 0) {
+                          setActiveIndex(prev => prev - 1);
+                        }
+                      }}
+                      onMouseEnter={() => {
+                        if (diff === 0) {
+                          setHoveredProject(item.title);
+                          setHoveredLinkLabel(activeIndex < projectItems.length - 1 ? "Next Project" : "Last Project");
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        setHoveredProject(null);
+                        setHoveredLinkLabel(null);
+                      }}
+                      onMouseMove={(e) => {
+                        if (diff === 0) {
+                          cursorX.set(e.clientX);
+                          cursorY.set(e.clientY);
+                        }
+                      }}
+                      onClick={() => {
+                        if (diff === 0 && activeIndex < projectItems.length - 1) {
+                           setActiveIndex(prev => prev + 1);
+                        }
+                      }}
+                      className={`absolute w-full max-w-[1000px] h-[580px] lg:h-[480px] group ${diff === 0 ? 'cursor-none lg:cursor-pointer' : 'pointer-events-none'}`}
                     >
-                      <motion.div 
-                        variants={{
-                          hover: { y: -8, transition: { duration: 0.4, ease: 'easeOut' } }
-                        }}
-                        className="relative rounded-[28px] border-[5px] border-zinc-200 bg-white overflow-hidden transition-all hover:shadow-2xl hover:border-zinc-300 shadow-sm"
-                      >
-                        {/* Technical Stripe Background (Layered Design) */}
-                        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.05] z-0" xmlns="http://www.w3.org/2000/svg">
-                          <defs>
-                            <pattern id={`stripes-proj-unified-${i}`} width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                              <line x1="0" y1="0" x2="0" y2="40" stroke="currentColor" strokeWidth="2" className="text-zinc-600" />
-                            </pattern>
-                          </defs>
-                          <rect width="100%" height="100%" fill={`url(#stripes-proj-unified-${i})`} />
-                        </svg>
-
-                        {/* Accent sliding top bar */}
-                        <motion.div
-                          className="absolute top-0 left-0 h-[3px] rounded-full z-40 bg-zinc-950"
-                          variants={{ 
-                            initial: { width: '0%' }, 
-                            hover: { width: '100%', transition: { duration: 0.4 } } 
-                          }}
-                        />
-
-                        {/* Content Grid */}
-                        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-                          {/* Left: Project Info */}
-                          <div className="p-8 md:p-10 flex flex-col justify-center gap-6 lg:border-r border-zinc-100 bg-white/50 backdrop-blur-[2px]">
-                            <div className="flex flex-col gap-4">
+                      <div className="block h-full w-full outline-none">
+                        <div className="relative h-full w-full rounded-[40px] bg-zinc-50 border-[5px] border-zinc-200 overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.12)] flex flex-col lg:flex-row transition-all group-hover:border-zinc-300">
+                          {/* Card Content (Preserving existing layout) */}
+                          <div className="flex-1 p-8 md:p-12 flex flex-col justify-center relative z-20 pointer-events-auto">
+                            <div className="flex items-start justify-between mb-8">
                               <div className="flex items-center gap-4">
-                                {/* Project Icon */}
-                                <motion.div 
-                                  initial={{ scale: 0.8, opacity: 0 }}
-                                  whileInView={{ scale: 1, opacity: 1 }}
-                                  viewport={{ once: true }}
-                                  transition={{ delay: 0.2 }}
-                                  className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg shrink-0 bg-zinc-900"
-                                  style={{ 
-                                    boxShadow: `0 4px 12px -2px rgba(0,0,0,0.2)`
-                                  }}
-                                >
+                                <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-white shadow-xl">
                                   {(() => {
                                     const IconComponent = iconMap[item.projectIcon as keyof typeof iconMap] || Sparkles;
-                                    return <IconComponent className="w-5 h-5" />;
+                                    return <IconComponent className="w-6 h-6" />;
                                   })()}
-                                </motion.div>
-                                
-                                <h3 className="text-xl md:text-2xl font-bold text-zinc-900 tracking-tight">{item.title}</h3>
+                                </div>
+                                <div>
+                                   <a 
+                                     href={item.projectLinks?.[0]?.url || item.url || "#"} 
+                                     target="_blank" 
+                                     rel="noopener noreferrer"
+                                     className="hover:text-blue-600 transition-colors inline-block cursor-pointer"
+                                     onClick={(e) => e.stopPropagation()}
+                                     onMouseEnter={() => setHoveredLinkLabel("View Project")}
+                                     onMouseLeave={() => setHoveredLinkLabel(activeIndex < projectItems.length - 1 ? "Next Project" : "Last Project")}
+                                   >
+                                     <h3 className="text-2xl md:text-3xl font-black text-zinc-900 tracking-tight leading-none mb-1">{item.title}</h3>
+                                   </a>
+                                   <div className="flex items-center gap-3">
+                                     {item.techStack?.slice(0, 2).map((tech, tIdx) => (
+                                       <span key={tIdx} className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{tech}</span>
+                                     ))}
+                                   </div>
+                                </div>
                               </div>
-                              
-                              <p className="text-base text-zinc-500 leading-relaxed max-w-md font-medium">
-                                {item.description}
-                              </p>
+                              <a 
+                                href={item.projectLinks?.[0]?.url || item.url || "#"} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="w-12 h-12 rounded-full border-2 border-zinc-100 flex items-center justify-center text-zinc-400 hover:border-zinc-900 hover:text-zinc-900 transition-colors cursor-pointer z-30 relative"
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseEnter={() => setHoveredLinkLabel("View Project")}
+                                onMouseLeave={() => setHoveredLinkLabel(activeIndex < projectItems.length - 1 ? "Next Project" : "Last Project")}
+                              >
+                                <ArrowUpRight className="w-6 h-6" />
+                              </a>
                             </div>
 
-                            {/* Metadata Pills */}
-                            <div className="flex flex-wrap gap-2 pt-4 border-t border-zinc-100">
-                              {[item.date, item.duration, item.role].filter(Boolean).map((tag, tagIndex) => (
-                                <div 
-                                  key={tagIndex}
-                                  className="px-4 py-1.5 rounded-full bg-zinc-50 border border-zinc-100 text-zinc-600 text-xs font-semibold tracking-wide shadow-sm"
-                                >
-                                  {tag}
+                            <p className="text-base md:text-lg text-zinc-600 font-medium leading-relaxed max-w-lg balance mb-8">
+                              {item.description}
+                            </p>
+
+                            <div className="pt-8 border-t border-zinc-100/50 flex flex-wrap gap-3">
+                              {[
+                                { icon: Calendar, text: item.date || "Sept 2025" },
+                                { icon: Clock, text: item.duration || "2-3 Weeks" },
+                                { icon: User, text: item.role || "Lead Designer" }
+                              ].map((pill, pIdx) => (
+                                <div key={pIdx} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-zinc-100 shadow-sm">
+                                  <pill.icon className="w-3 h-3 text-zinc-400" />
+                                  <span className="text-[10px] font-black text-zinc-900 uppercase tracking-wider">{pill.text}</span>
                                 </div>
                               ))}
                             </div>
                           </div>
 
-                          {/* Right: Project Visual */}
-                          <div 
-                            className="p-10 md:p-12 flex items-center justify-center bg-zinc-50/10 relative overflow-hidden"
-                            style={{ backgroundColor: `${item.bgColor || '#f9fafb'}08` }}
-                          >
-                            {/* Top/Bottom Seamless Fades */}
-                            <div className="absolute top-0 left-0 right-0 h-20 z-10 bg-linear-to-b from-white to-transparent pointer-events-none" />
-                            <div className="absolute bottom-0 left-0 right-0 h-20 z-10 bg-linear-to-t from-white to-transparent pointer-events-none" />
-
-                            <div className="relative z-10 w-full max-w-[480px] aspect-4/3">
-                              {/* Device Mockup Placeholder - Tablet / Pad style */}
-                              <div className="absolute inset-0 bg-zinc-900 rounded-[2.5rem] border-8 border-zinc-800 shadow-2xl overflow-hidden">
-                                <div className="absolute top-0 inset-x-0 h-8 bg-zinc-800 flex items-center px-5 gap-2.5">
-                                  <div className="w-3 h-3 rounded-full bg-red-400/60" />
-                                  <div className="w-3 h-3 rounded-full bg-amber-400/60" />
-                                  <div className="w-3 h-3 rounded-full bg-emerald-400/60" />
-                                </div>
-                                <div className="absolute inset-0 top-8 bg-zinc-800/50 flex flex-col items-center justify-center p-8">
-                                  <motion.div 
-                                    animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.8, 0.5] }}
-                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                                    className="w-32 h-2 bg-zinc-700 rounded-full mb-5" 
-                                  />
-                                  <div className="w-14 h-14 rounded-full border-2 border-zinc-700 flex items-center justify-center">
-                                    <Sparkles className="w-7 h-7 text-zinc-600" />
+                          <div className="lg:w-[45%] h-[300px] lg:h-full relative overflow-hidden bg-white/40 flex items-start justify-center">
+                            <div className="absolute inset-0 z-0 opacity-[0.05]" style={{ backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, backgroundSize: '24px 24px' }} />
+                            <div className="relative w-full h-full flex items-center justify-center">
+                              <img src="/mockups/hand_held_phone.png" alt="Mockup" className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none scale-100 lg:scale-[1.1] " />
+                              <div 
+                                className="relative w-[124px] h-[268px] lg:w-[145px] lg:h-[312px] bg-zinc-200 rounded-[28px] overflow-hidden z-10 shadow-inner"
+                                style={{ transform: 'perspective(1200px) rotateY(-11deg) rotateX(4deg) translate(-5px, -26px)' }}
+                              >
+                                {item.videoUrl ? (
+                                  <VideoPreview videoUrl={item.videoUrl} poster={item.mockupImage} />
+                                ) : item.mockupImage ? (
+                                  <img src={item.mockupImage} alt={item.title} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
+                                    <Sparkles className="w-8 h-8 text-white/20" />
                                   </div>
-                                </div>
+                                )}
                               </div>
-                              
-                              {item.mockupImage && (
-                                <img 
-                                  src={item.mockupImage} 
-                                  alt={item.title}
-                                  className="absolute inset-0 w-full h-full object-cover rounded-[2.5rem] opacity-0 transition-opacity"
-                                  onError={(e) => (e.currentTarget.style.display = 'none')}
-                                />
-                              )}
-
-                              {/* Behance Indicator Badge */}
-                              {item.url?.includes('behance.net') && (
-                                <div className="absolute top-12 right-4 z-20 flex items-center gap-1.5 px-3 py-1 bg-blue-600 text-white rounded-full text-[10px] font-bold tracking-widest shadow-lg">
-                                  BEHANCE <ExternalLink className="w-3 h-3" />
-                                </div>
-                              )}
                             </div>
-
-                            {/* Floating Accent Glow */}
-                            <div 
-                              className="absolute -bottom-10 -right-10 w-40 h-40 rounded-full blur-3xl opacity-[0.05] pointer-events-none z-0 bg-zinc-400"
-                            />
                           </div>
+
+                          {/* Hover Progress Accent */}
+                          <motion.div 
+                            className="absolute bottom-0 left-0 h-1.5 bg-zinc-950 z-50 text-white"
+                            initial={{ width: 0 }}
+                            whileHover={{ width: '100%', transition: { duration: 0.8, ease: "circOut" } }}
+                          />
                         </div>
-                      </motion.div>
-                    </a>
-                  </motion.div>
-                );
-              }
-
-              // Fallback to simpler card for other content types
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  whileHover="hover"
-                  className="relative rounded-[32px] border-[5px] border-zinc-200 bg-white overflow-hidden group shadow-md max-w-xl mx-auto transition-all hover:border-zinc-300 hover:shadow-xl"
-                >
-                  {/* Technical Stripe Background */}
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.03] z-0" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                      <pattern id={`stripes-fallback-${i}`} width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                        <line x1="0" y1="0" x2="0" y2="40" stroke="currentColor" strokeWidth="2" className="text-zinc-600" />
-                      </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill={`url(#stripes-fallback-${i})`} />
-                  </svg>
-
-                  {/* Accent sliding top bar */}
-                  <motion.div
-                    className="absolute top-0 left-0 h-[4px] rounded-full z-40 bg-zinc-950"
-                    variants={{ 
-                      initial: { width: '0%' }, 
-                      hover: { width: '100%', transition: { duration: 0.4 } } 
-                    }}
-                  />
-
-                  <div className="aspect-video bg-zinc-100 relative overflow-hidden z-10">
-                    {item.type === 'video' ? (
-                       <video 
-                        src={item.url} 
-                        className="w-full h-full object-cover" 
-                        autoPlay 
-                        loop 
-                        muted 
-                        playsInline
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-zinc-50 font-bold text-zinc-300">
-                        {item.title}
                       </div>
-                    )}
-                  </div>
-                  <div className="p-8">
-                    <h3 className="text-xl font-bold text-zinc-900">{item.title}</h3>
-                    <p className="text-zinc-500 mt-2">{item.description}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
           </div>
 
-          {/* Load More Button */}
-          {service.contents && service.contents.length > displayLimit && (
-            <div className="flex justify-center mt-24">
+          {/* Dynamic Redirect Button */}
+          <div className="flex justify-center mt-12">
+            <Link href={service.projectsUrl || "/projects"} className="no-underline">
               <motion.button 
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                onClick={() => setDisplayLimit(service.contents!.length)}
-                whileHover={{ scale: 1.03, y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}
+                whileHover={{ scale: 1.03, y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
                 whileTap={{ scale: 0.98 }}
                 className="group inline-flex items-center no-underline transition-all duration-300"
                 style={{
-                  gap: '15.945px',
+                  gap: '15px',
                   background: 'linear-gradient(208.44deg, #444 5%, #111 84%)',
-                  border: '2.657px solid rgba(255, 255, 255, 0.1)',
+                  border: '2px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '9999px',
-                  padding: '9.744px 9.744px 9.744px 31.004px',
+                  padding: '10px 10px 10px 30px',
                   fontFamily: 'inherit',
                   fontWeight: 500,
                   fontSize: '15px',
                   color: '#fff',
                 }}
               >
-                <span className="min-w-[80px] text-center">Load More Projects</span>
+                <span className="min-w-[80px] text-center">{service.projectsLabel || "View More"}</span>
                 <span
                   className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
-                  style={{ width: '46.949px', height: '46.949px' }}
+                  style={{ width: '46px', height: '46px' }}
                 >
-                  <ArrowUpRight className="text-[#0b0b0c] w-[18px] h-[18px]" strokeWidth={2.2} />
+                  <ArrowUpRight className="text-zinc-950 w-[18px] h-[18px]" strokeWidth={2.2} />
                 </span>
               </motion.button>
-            </div>
-          )}
+            </Link>
+          </div>
         </section>
       )}
 
-      {/* Floating Project Cursor Bubble */}
-      <AnimatePresence>
-        {hoveredProject && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            className="fixed top-0 left-0 pointer-events-none z-100 px-4 py-2 bg-zinc-900 text-white rounded-full text-xs font-bold shadow-2xl backdrop-blur-md flex items-center gap-2 border border-white/20"
-            style={{
-              x: cursorXSpring,
-              y: cursorYSpring,
-              translateX: 20, // Offset horizontally
-              translateY: 20, // Offset vertically
-            }}
-          >
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            {hoveredProject}
-            <ExternalLink className="w-3 h-3 text-zinc-400 ml-1" />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* End of Main Content */}
     </div>
   );
 }
