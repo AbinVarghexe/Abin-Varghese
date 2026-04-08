@@ -561,7 +561,6 @@ main {
   min-height: 100vh;
   overflow: hidden;
   color: var(--home-color-text-primary);
-  background: var(--home-gradient-page);
 }
 
 .home-page-content {
