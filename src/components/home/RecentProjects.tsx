@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { motion, useSpring } from "framer-motion";
-import CardSwap, { Card } from "./CardSwap";
-import { ArchGallery } from "./ui/ArchGallery";
+import CardSwap, { Card } from "@/components/effects/CardSwap";
+import { ArchGallery } from "@/components/ui/ArchGallery";
 
 const CREATIVE_CATEGORIES = [
   {

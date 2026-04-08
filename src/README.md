@@ -1,73 +1,63 @@
-# Source Directory Structure
+# Source Index
 
-This directory contains all the source code for the Next.js 16 portfolio application.
+This `src/` tree is organized by runtime concern first, then by feature.
 
 ## Directory Layout
 
-```
+```text
 src/
-├── app/              # Next.js App Router pages and layouts
-│   ├── page.tsx      # Home page (/)
-│   ├── layout.tsx    # Root layout with Navbar/Footer
-│   ├── about/        # About page (/about)
-│   ├── contact/      # Contact page (/contact)
-│   ├── projects/     # Projects page (/projects)
-│   └── api/          # API routes
-│       ├── projects/ # GET /api/projects
-│       └── contact/  # POST /api/contact
-│
-├── components/       # Reusable React components
-│   ├── Navbar.tsx    # Navigation with floating animation
-│   ├── Footer.tsx    # Footer component
-│   └── MouseTrail.tsx # WebGL mouse trail effect
-│
-├── lib/              # Utility functions and configurations
-│   ├── prisma.ts     # Prisma client singleton
-│   ├── email.ts      # Email service (Resend)
-│   └── utils.ts      # Helper functions
-│
-└── styles/           # Global styles
-    └── globals.css   # Tailwind CSS and global styles
+├── app/
+│   ├── (marketing)/         # Public routes; group name does not affect URLs
+│   │   ├── page.tsx         # /
+│   │   ├── about/page.tsx   # /about
+│   │   ├── contact/page.tsx # /contact
+│   │   ├── pinterest/       # /pinterest and /pinterest/[id]
+│   │   ├── projects/        # /projects and /projects/[projectSlug]
+│   │   └── services/        # /services and /services/[slug]
+│   ├── (admin)/admin/       # /admin routes only
+│   ├── (api)/api/           # /api routes only
+│   ├── layout.tsx           # Root HTML shell and global metadata
+│   ├── robots.ts            # Metadata route for /robots.txt
+│   ├── sitemap.ts           # Metadata route for /sitemap.xml
+│   └── favicon.svg          # App icon asset
+├── components/
+│   ├── about/               # About-page specific UI
+│   ├── admin/               # Admin shell and admin-only widgets
+│   ├── common/              # Shared wrappers and navigation helpers
+│   ├── contact/             # Contact page modules
+│   ├── effects/             # Reusable motion and visual effects
+│   ├── home/                # Home-page specific UI
+│   ├── layout/              # Site chrome like navbar/footer/preloader
+│   ├── pinterest/           # Pinterest feature UI
+│   ├── projects/            # Projects feature UI
+│   ├── services/            # Services feature UI
+│   └── ui/                  # Generic presentational primitives
+├── constants/               # Static typed content constants
+├── lib/                     # Data access, auth, Prisma, utilities, contexts
+├── seo/                     # Metadata config, helpers, and JSON-LD schema
+├── store/                   # Client state stores
+├── styles/                  # Global CSS
+└── types/                   # Global type augmentations
 ```
 
-## Import Path Alias
+## Routing Notes
 
-The project uses `@/` as an alias for the `src/` directory. This is configured in `tsconfig.json`:
+- Route groups such as `(marketing)`, `(admin)`, and `(api)` are organizational only.
+- Public URLs remain unchanged even though the folders moved.
+- Admin routes are isolated and explicitly marked `noindex`.
 
-```typescript
-// Import examples:
-import Navbar from '@/components/Navbar';
-import prisma from '@/lib/prisma';
-import '@/styles/globals.css';
+## Import Alias
+
+The project uses `@/` as an alias for `src/`.
+
+```ts
+import Navbar from "@/components/layout/Navbar";
+import { createPageMetadata } from "@/seo/page-metadata";
+import prisma from "@/lib/prisma";
 ```
 
-## Page Structure
+## Conventions
 
-### App Router (Next.js 16)
-- Each route is a folder containing a `page.tsx` file
-- `layout.tsx` defines the common layout for all pages
-- API routes are in `app/api/[name]/route.ts`
-
-### Example Page Structure:
-```
-app/
-├── page.tsx          # / (Home)
-├── layout.tsx        # Root layout
-├── about/
-│   └── page.tsx      # /about
-└── projects/
-    └── page.tsx      # /projects
-```
-
-## Component Guidelines
-
-- Use **Server Components** by default (no `'use client'` directive)
-- Add `'use client'` only when using:
-  - `useState`, `useEffect`, or other React hooks
-  - Event handlers
-  - Browser APIs
-  - Animation libraries (framer-motion)
-
-## Development
-
-All source code changes should be made in the `src/` directory. The `@/` import alias makes it easy to reference files across the project structure.
+- Keep route files in `src/app` and feature UI in the matching `src/components/<feature>` folder.
+- Prefer server components by default and only opt into `'use client'` when interactivity requires it.
+- Put cross-route SEO logic in `src/seo` and route-specific metadata beside each page.

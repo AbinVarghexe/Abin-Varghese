@@ -10,6 +10,8 @@ import {
   pinterestPins,
   type PinterestPin,
 } from "@/lib/pinterest-content";
+import { createPageMetadata } from "@/seo/page-metadata";
+import { BreadcrumbSchema } from "@/seo/schema";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -25,15 +27,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const pin = getPinById(id);
 
   if (!pin) {
-    return {
+    return createPageMetadata({
       title: "Pin Not Found | PinLab",
-    };
+      description: "The requested inspiration pin could not be found.",
+      path: "/pinterest",
+      noIndex: true,
+    });
   }
 
-  return {
+  return createPageMetadata({
     title: `${pin.title} | PinLab`,
     description: pin.description,
-  };
+    path: `/pinterest/${pin.id}`,
+    image: pin.mediaPath,
+    keywords: pin.tags,
+    type: "article",
+  });
 }
 
 function PinHeroMedia({ pin }: { pin: PinterestPin }) {
@@ -107,6 +116,13 @@ export default async function PinDetailsPage({ params, searchParams }: PageProps
       className="home-page-shell min-h-screen pb-14 pt-24 sm:pt-28"
       style={{ background: design.gradients.page }}
     >
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Pinterest", path: "/pinterest" },
+          { name: pin.title, path: `/pinterest/${pin.id}` },
+        ]}
+      />
       <div className="mx-auto w-[min(100%,1620px)] px-3 sm:px-5 lg:px-8">
         <Link
           href={backHref}

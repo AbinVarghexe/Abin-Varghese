@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import AboutHeroMusic from "@/components/AboutHeroMusic";
+import AboutHeroMusic from "@/components/about/AboutHeroMusic";
 
 import type { AboutContent } from "@/lib/about-content-defaults";
 

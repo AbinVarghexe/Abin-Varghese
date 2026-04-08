@@ -2,21 +2,17 @@
 import type { Metadata } from 'next';
 import { ArrowUpRight, Instagram, Linkedin, Mail, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import DarkVeil from '@/components/DarkVeil';
+import DarkVeil from '@/components/effects/DarkVeil';
 import ContactFormCard from '@/components/contact/ContactFormCard';
 import { getContactSectionSettings } from '@/lib/contact-content';
+import { createPageMetadata } from '@/seo/page-metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Contact | Abin Varghese",
   description:
     "Get in touch with Abin Varghese for freelance work, collaborations, or internship opportunities. Front-end developer and UI/UX designer available for projects.",
-  openGraph: {
-    title: "Contact | Abin Varghese",
-    description:
-      "Get in touch with Abin for freelance work, collaborations, or internship opportunities.",
-    url: "https://abinvarghese.me/contact",
-  },
-};
+  path: "/contact",
+});
 
 export default async function ContactPage() {
   const formSettings = await getContactSectionSettings();

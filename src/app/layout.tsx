@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, Dancing_Script, Lora } from "next/font/google";
 import localFont from "next/font/local";
 import "@/styles/globals.css";
-import { PersonSchema } from "@/seo/schema";
+import { PersonSchema, WebSiteSchema } from "@/seo/schema";
 import { metadata as seoMetadata, viewport } from "@/seo/metadata";
 import ClientLayoutWrapper from "@/components/common/ClientLayoutWrapper";
 
@@ -43,6 +43,7 @@ export default function RootLayout({
       <body
         className={`${poppins.variable} ${vina.variable} ${dancingScript.variable} ${lora.variable} antialiased select-none`}
       >
+        <WebSiteSchema />
         <PersonSchema />
         <script
           dangerouslySetInnerHTML={{

@@ -2,12 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import MouseTrail from "@/components/ui/MouseTrail";
 import { MobileNav } from "@/components/common/MobileNav";
 import { MobileDock } from "@/components/common/MobileDock";
-import Preloader from "@/components/Preloader";
+import Preloader from "@/components/layout/Preloader";
 import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
@@ -153,7 +153,7 @@ export default function ClientLayoutWrapper({
     return () => {
       window.removeEventListener("load", printConsoleBanner);
     };
-  }, [isAdminPath, pathname, isAdminPath]);
+  }, [isAdminPath, pathname]);
 
   if (isAdminPath) {
     return <>{children}</>;

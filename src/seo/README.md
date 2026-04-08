@@ -1,41 +1,35 @@
 # SEO Configuration - Abin Varghese Portfolio
 
-This folder contains all SEO setup files for https://abinvarghese.me
+This folder contains the central SEO setup for https://abinvarghese.me.
 
 ## Files
 
-- **metadata.ts**: Main SEO metadata configuration including Open Graph and Twitter cards
-- **schema.tsx**: JSON-LD structured data for Person schema
-- **robots.txt**: Robots file (located in `/public` folder)
-- **next-sitemap.config.js**: Sitemap generation configuration
+- **config.ts**: Canonical site configuration and absolute URL helpers
+- **metadata.ts**: Global App Router metadata shared by the full site
+- **page-metadata.ts**: Reusable helper for route-level metadata
+- **schema.tsx**: JSON-LD helpers for person, website, breadcrumb, service, and project schema
 
 ## Setup
 
-1. Install dependencies:
-   ```bash
-   pnpm add next-sitemap
-   ```
-
-2. The sitemap will be automatically generated after build via the `postbuild` script in `package.json`
-
-3. Metadata is imported and used in `app/layout.tsx`
-
-4. Person schema is added to the root layout for structured data
+1. Global metadata is exported from `src/seo/metadata.ts` and mounted in `src/app/layout.tsx`
+2. Route-level metadata uses `createPageMetadata()` from `src/seo/page-metadata.ts`
+3. Structured data is rendered through helpers in `src/seo/schema.tsx`
+4. `src/app/robots.ts` and `src/app/sitemap.ts` are the authoritative crawler endpoints
 
 ## Page-Level SEO
 
 Each page can export its own metadata:
 
 ```tsx
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Page Title | Abin Varghese",
   description: "Page description",
-};
+  path: "/page-path",
+});
 ```
 
 ## Verification
 
-- Google Search Console: Add verification code to `metadata.ts`
-- Update social media links in `schema.tsx` with actual URLs
-- Add actual OG image at `/public/og-image.png`
-
+- Set `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` to enable Google Search Console verification
+- Set `NEXT_PUBLIC_SITE_URL` when the canonical production domain changes
+- Keep the default social image configured in `src/seo/config.ts` available in `public/`

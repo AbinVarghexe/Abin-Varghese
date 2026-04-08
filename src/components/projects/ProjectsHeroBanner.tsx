@@ -162,36 +162,62 @@ export default function ProjectsHeroBanner({
           </div>
 
           <div className="absolute inset-x-0 bottom-4 z-50 px-4 md:bottom-5">
-            <div className="mx-auto w-fit rounded-[22px] border border-white/40 bg-white/20 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+            <div className="mx-auto w-fit rounded-[24px] border border-white/40 bg-white/20 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl">
               <div className="flex w-fit flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
                   onClick={() => onWorkspaceChange('coding')}
-                  className="group inline-flex items-center gap-2.5 rounded-full border-2 border-[#929292] py-1.5 pl-4 pr-1.5 text-[13px] font-medium transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
+                  className="group inline-flex items-center no-underline transition-all duration-300 cursor-pointer"
                   style={
                     workspace === 'coding'
                       ? {
-                          color: '#ffffff',
-                          background: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)',
-                          boxShadow: '0 14px 32px rgba(0,32,215,0.32)',
+                          gap: '10px',
+                          background: 'linear-gradient(208.44deg, #444 5%, #111 84%)',
+                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '9999px',
+                          padding: '6px 6px 6px 20px',
+                          fontFamily: 'inherit',
+                          fontWeight: 500,
+                          fontSize: '13px',
+                          color: '#fff',
+                          boxShadow: '0 16px 32px rgba(0,0,0,0.3)',
                         }
                       : {
-                          color: '#1e293b',
+                          gap: '10px',
                           background: '#ffffff',
-                          boxShadow: '0 10px 22px rgba(0,0,0,0.14)',
+                          border: '1.5px solid transparent',
+                          borderRadius: '9999px',
+                          padding: '6px 6px 6px 20px',
+                          fontFamily: 'inherit',
+                          fontWeight: 500,
+                          fontSize: '13px',
+                          color: '#1e293b',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                         }
                   }
+                  onMouseEnter={(event) => {
+                    const element = event.currentTarget as HTMLElement;
+                    element.style.transform = 'scale(1.03) translateY(-2px)';
+                  }}
+                  onMouseLeave={(event) => {
+                    const element = event.currentTarget as HTMLElement;
+                    element.style.transform = 'scale(1) translateY(0px)';
+                  }}
                   aria-label="Switch to coding workspace"
                 >
-                  <span className="min-w-[72px] text-center">Coding</span>
+                  <span className="min-w-[64px] text-center">Coding</span>
                   <span
-                    className="flex h-8 w-8 items-center justify-center rounded-full transition-transform duration-300 group-hover:rotate-45"
-                    style={{ background: workspace === 'coding' ? '#ffffff' : '#e2e8f0' }}
+                    className="flex items-center justify-center rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
+                    style={{ 
+                      width: '32px', 
+                      height: '32px',
+                      background: workspace === 'coding' ? '#ffffff' : '#f1f5f9'
+                    }}
                   >
-                    <Code2
-                      className="h-4 w-4"
-                      style={{ color: workspace === 'coding' ? '#0020d7' : '#1e293b' }}
-                      strokeWidth={2.3}
+                    <Code2 
+                      className="w-4 h-4" 
+                      strokeWidth={2.2} 
+                      style={{ color: workspace === 'coding' ? '#111' : '#1e293b' }} 
                     />
                   </span>
                 </button>
@@ -199,31 +225,57 @@ export default function ProjectsHeroBanner({
                 <button
                   type="button"
                   onClick={() => onWorkspaceChange('designing')}
-                  className="group inline-flex items-center gap-2.5 rounded-full border-2 border-[#929292] py-1.5 pl-4 pr-1.5 text-[13px] font-medium transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
+                  className="group inline-flex items-center no-underline transition-all duration-300 cursor-pointer"
                   style={
                     workspace === 'designing'
                       ? {
-                          color: '#ffffff',
-                          background: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)',
-                          boxShadow: '0 14px 32px rgba(0,32,215,0.32)',
+                          gap: '10px',
+                          background: 'linear-gradient(208.44deg, #444 5%, #111 84%)',
+                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '9999px',
+                          padding: '6px 6px 6px 20px',
+                          fontFamily: 'inherit',
+                          fontWeight: 500,
+                          fontSize: '13px',
+                          color: '#fff',
+                          boxShadow: '0 16px 32px rgba(0,0,0,0.3)',
                         }
                       : {
-                          color: '#1e293b',
+                          gap: '10px',
                           background: '#ffffff',
-                          boxShadow: '0 10px 22px rgba(0,0,0,0.14)',
+                          border: '1.5px solid transparent',
+                          borderRadius: '9999px',
+                          padding: '6px 6px 6px 20px',
+                          fontFamily: 'inherit',
+                          fontWeight: 500,
+                          fontSize: '13px',
+                          color: '#1e293b',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                         }
                   }
+                  onMouseEnter={(event) => {
+                    const element = event.currentTarget as HTMLElement;
+                    element.style.transform = 'scale(1.03) translateY(-2px)';
+                  }}
+                  onMouseLeave={(event) => {
+                    const element = event.currentTarget as HTMLElement;
+                    element.style.transform = 'scale(1) translateY(0px)';
+                  }}
                   aria-label="Switch to designing workspace"
                 >
-                  <span className="min-w-[72px] text-center">Designing</span>
+                  <span className="min-w-[64px] text-center">Designing</span>
                   <span
-                    className="flex h-8 w-8 items-center justify-center rounded-full transition-transform duration-300 group-hover:rotate-45"
-                    style={{ background: workspace === 'designing' ? '#ffffff' : '#e2e8f0' }}
+                    className="flex items-center justify-center rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
+                    style={{ 
+                      width: '32px', 
+                      height: '32px',
+                      background: workspace === 'designing' ? '#ffffff' : '#f1f5f9'
+                    }}
                   >
-                    <Palette
-                      className="h-4 w-4"
-                      style={{ color: workspace === 'designing' ? '#0020d7' : '#1e293b' }}
-                      strokeWidth={2.3}
+                    <Palette 
+                      className="w-4 h-4" 
+                      strokeWidth={2.2} 
+                      style={{ color: workspace === 'designing' ? '#111' : '#1e293b' }} 
                     />
                   </span>
                 </button>

@@ -4,18 +4,14 @@ import BentoServices from '@/components/services/BentoServices';
 import WhyChooseMe from '@/components/services/WhyChooseMe';
 import FAQ from '@/components/services/FAQ';
 import { getServicesContent } from '@/lib/services-content';
+import { createPageMetadata } from '@/seo/page-metadata';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Services | Abin Varghese",
   description:
     "Explore web development, UI/UX design, mobile development, and consulting services offered by Abin Varghese.",
-  openGraph: {
-    title: "Services | Abin Varghese",
-    description:
-      "Explore web development, UI/UX design, mobile development, and consulting services.",
-    url: "https://abinvarghese.me/services",
-  },
-};
+  path: "/services",
+});
 
 export default async function ServicesPage() {
   const services = await getServicesContent();

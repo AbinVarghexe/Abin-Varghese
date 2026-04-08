@@ -1,4 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { defaultOgImage, siteConfig, siteUrl } from "@/seo/config";
+
+const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -9,9 +12,10 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Abin Varghese",
-  description:
-    "Portfolio of Abin Varghese, a passionate Front-End Developer and UI/UX Designer skilled in React, Next.js, Tailwind CSS, and Figma. Explore projects, design work, and achievements.",
+  metadataBase: new URL(siteUrl),
+  title: siteConfig.defaultTitle,
+  description: siteConfig.description,
+  applicationName: siteConfig.siteName,
   manifest: "/manifest.json",
   keywords: [
     "Abin Varghese",
@@ -33,10 +37,10 @@ export const metadata: Metadata = {
     "React Developer",
     "Web Designer",
   ],
-  authors: [{ name: "Abin Varghese", url: "https://abinvarghese.me" }],
-  creator: "Abin Varghese",
-  publisher: "Abin Varghese",
-  metadataBase: new URL("https://abinvarghese.me"),
+  authors: [{ name: siteConfig.creator, url: siteUrl }],
+  creator: siteConfig.creator,
+  publisher: siteConfig.creator,
+  category: "portfolio",
   alternates: {
     canonical: "/",
   },
@@ -46,29 +50,25 @@ export const metadata: Metadata = {
     apple: "/Logo.svg",
   },
   openGraph: {
-    title: "Abin Varghese | Front-End Developer & UI/UX Designer",
-    description:
-      "Explore the portfolio of Abin Varghese — front-end developer and designer skilled in React, Next.js, and UI/UX design.",
-    url: "https://abinvarghese.me",
-    siteName: "Abin Varghese Portfolio",
+    title: siteConfig.defaultTitle,
+    description: siteConfig.description,
+    url: siteUrl,
+    siteName: siteConfig.siteName,
     images: [
       {
-        url: "https://abinvarghese.me/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Abin Varghese Portfolio Preview",
+        url: defaultOgImage,
+        alt: "Abin Varghese portrait",
       },
     ],
-    locale: "en_IN",
+    locale: siteConfig.locale,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Abin Varghese | Front-End Developer & UI/UX Designer",
-    description:
-      "Explore the portfolio of Abin Varghese — front-end developer and designer skilled in React, Next.js, and UI/UX design.",
-    images: ["https://abinvarghese.me/og-image.png"],
-    creator: "@abin_varghese",
+    title: siteConfig.defaultTitle,
+    description: siteConfig.description,
+    images: [defaultOgImage],
+    creator: siteConfig.twitterHandle,
   },
   robots: {
     index: true,
@@ -81,8 +81,10 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "your-google-verification-code", // Replace with actual verification code
-  },
+  verification: googleSiteVerification
+    ? {
+        google: googleSiteVerification,
+      }
+    : undefined,
 };
 

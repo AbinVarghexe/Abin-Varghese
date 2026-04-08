@@ -3,12 +3,14 @@ import Image from "next/image";
 import PinCard from "@/components/pinterest/PinCard";
 import { homePageDesignSystem } from "@/lib/home-page-design-system";
 import { pinterestPins } from "@/lib/pinterest-content";
+import { createPageMetadata } from "@/seo/page-metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Pinterest Clone | Abin",
   description:
     "Pinterest-inspired board experience featuring images, videos, and 3D concepts in a masonry feed.",
-};
+  path: "/pinterest",
+});
 
 const boardTags: Array<{ label: string; preview: string }> = [
   { label: "Creative", preview: "/about/Abin_1.png" },

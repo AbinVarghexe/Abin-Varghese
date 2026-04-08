@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ArrowUpRight,
@@ -13,6 +13,7 @@ import {
   Palette,
   Sparkles,
   Video,
+  MousePointer2,
 } from 'lucide-react';
 import {
   IconBrandBehance,
@@ -35,6 +36,8 @@ interface WorkspaceProjectsSectionProps {
   sourceUrl: string;
   workspace: WorkspaceFilter;
 }
+
+const CARD_RATIO = 'aspect-video w-full';
 
 const CARD_HEIGHTS = [
   'h-[220px]',
@@ -144,72 +147,156 @@ function resolveGithubProfileUrl(sourceUrl: string): string {
 function WorkspaceProjectCard({
   project,
   index,
-  heightClass,
 }: {
   project: WorkspaceProject;
   index: number;
-  heightClass?: string;
 }) {
-  const dynamicHeight = heightClass || CARD_HEIGHTS[index % CARD_HEIGHTS.length];
+  const design = homePageDesignSystem;
   const fallbackSrc = `https://opengraph.githubassets.com/portfolio/${project.owner}/${project.repo}`;
 
   return (
     <article
-      className={`group relative break-inside-avoid overflow-hidden rounded-xl border border-black/10 bg-white shadow-[0_10px_30px_rgba(18,18,18,0.08)] ${dynamicHeight}`}
+      className={`group relative break-inside-avoid overflow-hidden transition-all duration-300 hover:shadow-lg ${CARD_RATIO}`}
+      style={{
+        borderRadius: design.components.card.base.radius,
+        border: design.components.card.base.border,
+        background: design.components.card.base.background,
+        boxShadow: design.shadows.subtle,
+      }}
     >
       <Link
         href={`/projects/${encodeURIComponent(project.slug)}`}
-        className="absolute inset-0 z-10"
+        className="absolute inset-0 z-10 pointer-events-auto"
         aria-label={`Open ${project.title} details`}
       />
 
-      <ProjectPreviewImage
-        src={project.imageUrl}
-        fallbackSrc={fallbackSrc}
-        alt={`${project.title} project preview`}
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-        className="object-cover object-top transition duration-500 group-hover:scale-105"
-      />
+      {/* Background Layer: Static preview image */}
+      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+        <ProjectPreviewImage
+          src={project.imageUrl}
+          fallbackSrc={fallbackSrc}
+          alt={`${project.title} project preview`}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          className="absolute inset-0 h-full w-full object-cover object-top transition duration-700 ease-out group-hover:scale-105"
+        />
+      </div>
 
-      <div className="absolute inset-0 bg-linear-to-t from-black/72 via-black/32 to-black/8 opacity-0 transition duration-300 group-hover:opacity-100" />
+      {/* Content overlays */}
+      <div className="absolute inset-0 z-5 pointer-events-none">
+        <div className="absolute inset-0 z-2 bg-transparent pointer-events-none group-hover:bg-black/10 transition-colors duration-500" />
+      </div>
 
-      <div className="absolute bottom-4 left-4 z-20 max-w-[78%] translate-y-2 space-y-3 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 md:bottom-5 md:left-5">
-        <div className="space-y-1 text-white">
-          <p className="line-clamp-1 text-base font-semibold tracking-tight md:text-lg">
-            {project.title}
-          </p>
-          <p className="line-clamp-2 text-xs text-white/90 md:text-sm">
-            {project.description}
-          </p>
-        </div>
+      {/* Hover Floating Details Panel */}
+      <div 
+        className="absolute bottom-3 left-3 right-3 z-20 flex flex-col gap-3 p-4 shrink-0 pointer-events-none translate-y-8 opacity-0 transition-all duration-400 ease-out group-hover:translate-y-0 group-hover:opacity-100" 
+        style={{ 
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(12px)",
+          borderRadius: "1.25rem",
+          border: '1.5px solid rgba(255,255,255,0.4)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+        }}
+      >
+         <div className="px-1">
+            <h3 
+              className="line-clamp-1 text-[16px] font-semibold tracking-tight"
+              style={{ color: design.colors.text.primary, fontFamily: design.typography.families.sans }}
+            >
+              {project.title}
+            </h3>
+            <p 
+              className="line-clamp-1 text-[13px] mt-1"
+              style={{ color: design.colors.text.body, fontFamily: design.typography.families.sans }}
+            >
+              {project.description}
+            </p>
+         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {project.liveUrl ? (
+         {/* Design-System Based Action Row (Chunky, not stretched) */}
+         <div className="flex items-center gap-2 mt-1 relative z-30 pointer-events-auto">
+            {project.liveUrl && (
+              <>
+                <a
+                  href={project.liveUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group/btn inline-flex items-center justify-between no-underline transition-transform hover:scale-[1.02]"
+                  style={{
+                    background: design.gradients.secondaryAction, // Black secondary color
+                    borderRadius: design.components.button.base.radius,
+                    padding: '6px 6px 6px 14px',
+                    boxShadow: '0 10px 20px rgba(0,0,0,0.15)',
+                  }}
+                  aria-label={`Open ${project.title} live website`}
+                >
+                  <span 
+                    className="text-[12px] tracking-wide mr-2"
+                    style={{ 
+                      color: "#ffffff", 
+                      fontFamily: design.typography.families.sans,
+                      fontWeight: 500
+                    }}
+                  >
+                    Live
+                  </span>
+                  <span 
+                    className="flex items-center justify-center rounded-full shrink-0 transition-transform duration-300 group-hover/btn:-rotate-12" 
+                    style={{ 
+                      width: '28px', 
+                      height: '28px',
+                      background: 'rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    <Globe 
+                      className="w-4 h-4" 
+                      style={{ color: "#ffffff" }} 
+                      strokeWidth={2} 
+                    />
+                  </span>
+                </a>
+              </>
+            )}
+            
             <a
-              href={project.liveUrl}
+              href={project.githubUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-black shadow-[0_8px_20px_rgba(0,0,0,0.22)]"
-              aria-label={`Open ${project.title} live website`}
+              className="group/btn inline-flex items-center justify-between no-underline transition-transform hover:scale-[1.02]"
+              style={{
+                background: design.components.button.secondary.background,
+                border: '1.5px solid #e4e4e7',
+                borderRadius: design.components.button.base.radius,
+                padding: '4.5px 4.5px 4.5px 12.5px', // adjusted for border
+                boxShadow: design.components.button.secondary.shadow,
+              }}
+              aria-label={`Open ${project.title} GitHub repository`}
             >
-              <Globe className="h-4 w-4" />
-              Live
-              <ArrowUpRight className="h-4 w-4" />
+              <span 
+                className="text-[12px] tracking-wide mr-2"
+                style={{ 
+                  color: design.components.button.secondary.text, 
+                  fontFamily: design.typography.families.sans,
+                  fontWeight: 500
+                }}
+              >
+                Repo
+              </span>
+              <span 
+                className="flex items-center justify-center rounded-full shrink-0 transition-transform duration-300 group-hover/btn:rotate-12" 
+                style={{ 
+                  width: '28px', 
+                  height: '28px',
+                  background: design.components.button.secondary.iconBackground,
+                }}
+              >
+                <Github 
+                  className="w-4 h-4" 
+                  style={{ color: design.components.button.secondary.iconColor }} 
+                  strokeWidth={2} 
+                />
+              </span>
             </a>
-          ) : null}
-
-          <a
-            href={project.githubUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full bg-[#0f172a] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(0,0,0,0.24)]"
-            aria-label={`Open ${project.title} GitHub repository`}
-          >
-            <Github className="h-4 w-4" />
-            GitHub
-            <ArrowUpRight className="h-4 w-4" />
-          </a>
-        </div>
+         </div>
       </div>
     </article>
   );
@@ -247,7 +334,7 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
     <div className="grid grid-cols-12 gap-4 auto-rows-[210px] md:auto-rows-[220px] xl:auto-rows-[240px]">
       {projects.map((project, index) => (
         <div key={project.id} className={getTileClass(index)}>
-          <WorkspaceProjectCard project={project} index={index} heightClass="h-full" />
+          <WorkspaceProjectCard project={project} index={index} />
         </div>
       ))}
     </div>
@@ -695,13 +782,13 @@ function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }
                       </div>
                     </div>
 
-                    <div className="mt-3 overflow-hidden rounded-lg border border-black/10 bg-white">
+                    <div className="mt-4 aspect-video w-full overflow-hidden" style={{ borderRadius: '1rem', border: '1px solid rgba(0,0,0,0.1)' }}>
                       <iframe
+                        title={card.title}
                         src={card.embedUrl}
-                        title={`${card.title} embed`}
-                        className="h-[460px] w-full"
-                        loading="lazy"
+                        className="h-full w-full bg-white"
                         allowFullScreen
+                        loading="lazy"
                       />
                     </div>
                   </section>

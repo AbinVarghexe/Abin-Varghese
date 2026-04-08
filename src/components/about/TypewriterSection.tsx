@@ -3,7 +3,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef, useCallback } from "react";
-import MilesStickerBoard from "@/components/MilesStickerBoard";
+import MilesStickerBoard from "@/components/about/MilesStickerBoard";
 
 
 const TypewriterSection = () => {

@@ -1,28 +1,30 @@
 // Home Page
 import type { Metadata } from "next";
-import Herosection from "@/components/Herosection";
+import Herosection from "@/components/home/Herosection";
 import ScrollingBanner from "@/components/ui/ScrollingBanner";
-import CreativeToolbox from "@/components/CreativeToolbox";
-import BrandsSection from "@/components/BrandsSection";
-import AboutSection from "@/components/AboutSection";
-import RecentProjects from "@/components/RecentProjects";
+import CreativeToolbox from "@/components/home/CreativeToolbox";
+import BrandsSection from "@/components/home/BrandsSection";
+import AboutSection from "@/components/home/AboutSection";
+import RecentProjects from "@/components/home/RecentProjects";
 import ServicesSection from "@/components/services/ServicesSection";
-import ReviewsSection from "@/components/ReviewsSection";
+import ReviewsSection from "@/components/home/ReviewsSection";
 import SlidingRoleBanner from "@/components/ui/SlidingRoleBanner";
 import { getHeroContent, getHomeContent } from "@/lib/site-content";
 import { homePageContentClass, homePageShellClass } from "@/lib/home-page-design-system";
+import { createPageMetadata } from "@/seo/page-metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Abin Varghese",
   description:
     "Explore the work of Abin Varghese, a front-end developer specializing in React, Next.js, and modern UI/UX design. View projects, skills, and achievements.",
-  openGraph: {
-    title: "Abin Varghese",
-    description:
-      "Explore the work of Abin Varghese, a front-end developer specializing in React, Next.js, and modern UI/UX design.",
-    url: "https://abinvarghese.me",
-  },
-};
+  path: "/",
+  keywords: [
+    "Abin Varghese portfolio",
+    "Next.js developer portfolio",
+    "React front-end developer",
+    "UI UX designer portfolio",
+  ],
+});
 
 export default async function Home() {
   const heroData = await getHeroContent();

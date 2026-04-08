@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
-import KeyboardDemo from "@/components/keyboard-demo";
+import KeyboardDemo from "@/components/about/keyboard-demo";
 
 export default function DeskBookSection() {
   // 0: Closed, 1: Opened Page 1, 2: Flipped to Page 2

@@ -5,22 +5,18 @@ import {
   getConfiguredGithubSourceUrl,
   getGithubWorkspaceProjects,
 } from '@/lib/github-projects';
+import { createPageMetadata } from '@/seo/page-metadata';
 
 interface ProjectsPageProps {
   searchParams: Promise<{ workspace?: string }>;
 }
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Projects | Abin Varghese",
   description:
     "Discover web apps, AI integrations, and portfolio designs built with React and Next.js. Explore Abin Varghese's portfolio of front-end development projects.",
-  openGraph: {
-    title: "Projects | Abin Varghese",
-    description:
-      "Discover web apps, AI integrations, and portfolio designs built with React and Next.js.",
-    url: "https://abinvarghese.me/projects",
-  },
-};
+  path: "/projects",
+});
 
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
   const { workspace } = await searchParams;

@@ -3,11 +3,14 @@ import Link from 'next/link';
 import { Github, Globe, ArrowLeft } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import ProjectPreviewImage from '@/components/projects/ProjectPreviewImage';
+import LiveProjectFrame from '@/components/projects/LiveProjectFrame';
 import {
   getGithubWorkspaceProjectBySlug,
   getGithubWorkspaceProjects,
   type WorkspaceProject,
 } from '@/lib/github-projects';
+import { createPageMetadata } from '@/seo/page-metadata';
+import { BreadcrumbSchema, SoftwareProjectSchema } from '@/seo/schema';
 
 interface PageProps {
   params: Promise<{ projectSlug: string }>;
@@ -19,22 +22,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const project = await getGithubWorkspaceProjectBySlug(projectSlug);
 
   if (!project) {
-    return {
+    return createPageMetadata({
       title: 'Project Not Found | Abin Varghese',
       description: 'This project could not be loaded from GitHub.',
-    };
+      path: '/projects',
+      noIndex: true,
+    });
   }
 
-  return {
+  return createPageMetadata({
     title: `${project.title} | Projects | Abin Varghese`,
     description: project.description,
-    openGraph: {
-      title: `${project.title} | Abin Varghese`,
-      description: project.description,
-      images: [project.imageUrl],
-      url: `https://abinvarghese.me/projects/${encodeURIComponent(project.slug)}`,
-    },
-  };
+    path: `/projects/${encodeURIComponent(project.slug)}`,
+    image: project.imageUrl,
+    keywords: project.tags,
+    type: "article",
+  });
 }
 
 function scoreProjectRelation(current: WorkspaceProject, candidate: WorkspaceProject) {
@@ -116,6 +119,23 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
 
   return (
     <main className="min-h-screen bg-[#f8f5f2] px-3 pb-14 pt-24 sm:px-5 lg:px-8">
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", path: "/" },
+          { name: "Projects", path: "/projects" },
+          { name: project.title, path: `/projects/${encodeURIComponent(project.slug)}` },
+        ]}
+      />
+      <SoftwareProjectSchema
+        name={project.title}
+        description={project.description}
+        path={`/projects/${encodeURIComponent(project.slug)}`}
+        image={project.imageUrl}
+        keywords={project.tags}
+        codeRepository={project.githubUrl}
+        liveUrl={project.liveUrl}
+        dateModified={project.updatedAt}
+      />
       <div className="mx-auto w-[min(100%,1360px)]">
         <Link
           href={backHref}
@@ -127,15 +147,30 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
 
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
           <div className="xl:col-span-8">
-            <div className="relative min-h-[360px] overflow-hidden rounded-xl border border-black/10 bg-zinc-200 md:min-h-[520px]">
-              <ProjectPreviewImage
-                src={project.imageUrl}
-                fallbackSrc={fallbackSrc}
-                alt={`${project.title} preview image`}
-                sizes="(max-width: 1280px) 100vw, 66vw"
-                className="object-cover object-top"
-                priority
-              />
+            {/* Hero preview: live iframe if liveUrl is set, otherwise GitHub OG banner */}
+            <div className="w-full overflow-hidden rounded-xl border border-black/10 bg-zinc-200">
+              {project.liveUrl ? (
+                <div className="aspect-video w-full overflow-hidden rounded-xl" style={{ borderRadius: '0.75rem' }}>
+                  <LiveProjectFrame
+                    url={project.liveUrl}
+                    title={project.title}
+                    fallbackImage={project.imageUrl || fallbackSrc}
+                    isInteractive
+                    borderRadius="0.75rem"
+                  />
+                </div>
+              ) : (
+                <div className="relative min-h-[360px] md:min-h-[520px]">
+                  <ProjectPreviewImage
+                    src={project.imageUrl}
+                    fallbackSrc={fallbackSrc}
+                    alt={`${project.title} preview image`}
+                    sizes="(max-width: 1280px) 100vw, 66vw"
+                    className="object-cover object-top"
+                    priority
+                  />
+                </div>
+              )}
             </div>
 
             <div className="mt-5 rounded-xl border border-black/10 bg-white p-5">

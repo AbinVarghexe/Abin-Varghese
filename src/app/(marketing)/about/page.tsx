@@ -1,20 +1,16 @@
 import type { Metadata } from "next";
-import ScrapbookHero from "@/components/ScrapbookHero";
-import DeskBookSection from "@/components/DeskBookSection";
-import TypewriterSection from "@/components/TypewriterSection";
+import ScrapbookHero from "@/components/about/ScrapbookHero";
+import DeskBookSection from "@/components/about/DeskBookSection";
+import TypewriterSection from "@/components/about/TypewriterSection";
 import { getAboutContent } from "@/lib/site-content";
+import { createPageMetadata } from "@/seo/page-metadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "About Me | Abin Varghese",
   description:
     "Learn about Abin Varghese's journey, education, and experience as a front-end developer and UI/UX designer. Discover skills, achievements, and background.",
-  openGraph: {
-    title: "About Me | Abin Varghese",
-    description:
-      "Learn about Abin's journey, education, and experience as a developer and designer.",
-    url: "https://abinvarghese.me/about",
-  },
-};
+  path: "/about",
+});
 
 export default async function AboutPage() {
   const aboutContent = await getAboutContent();
