@@ -120,7 +120,6 @@ const TypewriterSection = ({ quote }: { quote: string }) => {
   }, []);
 
   // Paper animation: y position depends on typing progress
-  // Adjusted so the paper starts just inside the roller and comes out above the typewriter
   const paperStartY = 110; // px, just inside the roller
   const paperEndY = -65; // Keep the paper reveal inside this section
   const typingProgress = typedText.length / fullText.length;
@@ -139,12 +138,16 @@ const TypewriterSection = ({ quote }: { quote: string }) => {
       onPointerDown={() => {
         soundArmedRef.current = true;
       }}
-      className="relative z-20 w-full pt-48 pb-28 flex items-center justify-center overflow-visible"
+      className="relative z-20 w-full pt-48 pb-28 flex items-center justify-center overflow-visible bg-[#fdfaf5]"
+      style={{ 
+        backgroundImage: 'radial-gradient(circle, rgba(139, 90, 43, 0.15) 1.5px, transparent 1.5px)',
+        backgroundSize: '32px 32px',
+        backgroundPosition: 'center center'
+      }}
     >
       <MilesStickerBoard />
       <div className="relative w-[850px] h-[760px] flex justify-center items-end">
         {/* Animated Paper */}
-        {/* Paper is now clipped so only the part above the typewriter is visible */}
         <div
           className="absolute left-1/2 -translate-x-1/2 z-10 pointer-events-none"
           style={{
@@ -180,7 +183,7 @@ const TypewriterSection = ({ quote }: { quote: string }) => {
             </span>
           </motion.div>
         </div>
-        {/* Prefer the keyed WebM so the typewriter can render with a real transparent background. */}
+        
         <div
           className="absolute z-20 left-1/2 -translate-x-1/2 bottom-0 w-[550px] pointer-events-none"
         >

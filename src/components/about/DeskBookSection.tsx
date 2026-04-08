@@ -1,41 +1,187 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useRef, useCallback } from "react";
-import KeyboardDemo from "@/components/about/keyboard-demo";
-import type { SiteCopyContent } from "@/lib/site-copy-content";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import type { SiteCopyContent, SiteCopyTimelineEntry } from "@/lib/site-copy-content";
 
 type DeskBookSectionProps = {
   copy: Pick<
     SiteCopyContent,
-    "aboutIntroTitle" | "aboutIntroBody" | "aboutBookImage" | "aboutTimelineTitle" | "aboutTimelineEntries"
+    "aboutIntroTitle" | "aboutIntroBody" | "aboutBookImage" | "aboutTimelineTitle" | "aboutTimelineEntries" | "homeReviewsItems"
   >;
 };
 
+type PageContent = {
+  type: "text" | "timeline" | "certificates";
+  title?: string;
+  isChapterStart?: boolean;
+  body?: string[];
+  items?: SiteCopyTimelineEntry[];
+  achievements?: Array<{ name: string; content: string; designation?: string }>;
+  image?: string;
+  subtitle?: string;
+};
+
 export default function DeskBookSection({ copy }: DeskBookSectionProps) {
-  // 0: Closed, 1: Opened Page 1, 2: Flipped to Page 2
-  const [page, setPage] = useState(0);
-  const [scrolled1, setScrolled1] = useState(false);
-  const [scrolled2, setScrolled2] = useState(false);
+  const [spread, setSpread] = useState(0);
   const [keyboardEngaged, setKeyboardEngaged] = useState(false);
   const keyboardRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
+  // Pagination Logic - Dynamic Flow Engine
+  const pages = useMemo(() => {
+    const list: PageContent[] = [];
+
+    // Capacity defines how much text fits on each specific page index
+    const getCapacity = (index: number) => {
+        if (index === 0) return 450; // Wider image takes more space
+        if (index === 1) return 800;
+        return 750; // Reverted to spacious two-entry capacity
+    };
+
+    // Flow paragraph text across pages
+    const flowText = (text: string, title?: string, image?: string) => {
+        let remaining = text;
+        let isFirstPage = true;
+        while (remaining.length > 0) {
+            const limit = getCapacity(list.length);
+            const paragraphs = remaining.split(/\n\s*\n/).filter(Boolean);
+            let currentChunk = "";
+            let pIndex = 0;
+
+            while (pIndex < paragraphs.length) {
+                const p = paragraphs[pIndex];
+                if (currentChunk.length + p.length <= limit) {
+                    currentChunk += (currentChunk ? "\n\n" : "") + p;
+                    pIndex++;
+                } else if (!currentChunk && p.length > limit) {
+                    // Split at the last space within the character limit to maximize space usage
+                    let breakPoint = p.lastIndexOf(" ", limit);
+                    if (breakPoint === -1) breakPoint = limit;
+                    currentChunk = p.substring(0, breakPoint + 1).trim();
+                    paragraphs[pIndex] = p.substring(breakPoint + 1).trim();
+                    break;
+                } else break;
+            }
+
+            list.push({
+                type: "text",
+                title: isFirstPage ? title : undefined,
+                isChapterStart: isFirstPage && !!title,
+                body: [currentChunk],
+                image: isFirstPage ? image : undefined,
+            });
+
+            remaining = paragraphs.slice(pIndex).join("\n\n").trim();
+            isFirstPage = false;
+        }
+    };
+
+    // Flow timeline entries across pages
+    const flowTimeline = (items: SiteCopyTimelineEntry[], title: string, subtitle?: string) => {
+        let remaining = [...items];
+        let isFirst = true;
+
+        while (remaining.length > 0) {
+            const limit = getCapacity(list.length);
+            let currentList: SiteCopyTimelineEntry[] = [];
+            let currentChars = 0;
+            let consumed = 0;
+
+            for (const entry of remaining) {
+                // Ensure max 2 entries per page for better spacing
+                if (currentList.length >= 2) break;
+
+                // Calculation refined: limit copy contribution to 200 due to line-clamp-4 protection
+                // Increased buffer to 120 for more aggressive page breaks on long technical roles
+                const entryWeight = entry.role.length + entry.organization.length + Math.min(entry.copy.length, 200) + 120;
+                if (currentChars + entryWeight <= limit || currentList.length === 0) {
+                    currentList.push(entry);
+                    currentChars += entryWeight;
+                    consumed++;
+                } else break;
+            }
+
+            list.push({
+                type: "timeline",
+                title: isFirst ? title : `${title} (Cont.)`,
+                subtitle: isFirst ? subtitle : undefined,
+                isChapterStart: isFirst,
+                items: currentList,
+            });
+
+            remaining = remaining.slice(consumed);
+            isFirst = false;
+        }
+    };
+
+    // Flow certifications across pages
+    const flowCertifications = (certs: any[], title: string, subtitle?: string) => {
+        let remaining = [...certs];
+        let isFirst = true;
+
+        while (remaining.length > 0) {
+            const limit = getCapacity(list.length);
+            let currentList: any[] = [];
+            let currentWeight = 0;
+            let consumed = 0;
+
+            for (const cert of remaining) {
+                // Ensure max 2 certifications per page
+                if (currentList.length >= 2) break;
+
+                // Approximate weight for a certificate entry (+250 for layout overhead)
+                const weight = cert.name.length + cert.content.length + 250;
+                if (currentWeight + weight <= limit || currentList.length === 0) {
+                    currentList.push(cert);
+                    currentWeight += weight;
+                    consumed++;
+                } else break;
+            }
+
+            list.push({
+                type: "certificates",
+                title: isFirst ? title : `${title} (Cont.)`,
+                subtitle: isFirst ? subtitle : undefined,
+                achievements: currentList,
+                isChapterStart: isFirst
+            });
+
+            remaining = remaining.slice(consumed);
+            isFirst = false;
+        }
+    };
+
+    // 1. ABOUT ME
+    flowText(copy.aboutIntroBody, "About me", copy.aboutBookImage);
+
+    // 2. EDUCATION
+    const edu = copy.aboutTimelineEntries.filter(e => 
+        e.organization.toLowerCase().match(/college|university|school/) || 
+        e.role.toLowerCase().includes("b.tech")
+    );
+    if (edu.length) flowTimeline(edu, "Academic Foundation");
+
+    // 3. EXPERIENCE
+    const exp = copy.aboutTimelineEntries.filter(e => !edu.includes(e));
+    if (exp.length) flowTimeline(exp, "Professional Journey");
+
+    // 4. CERTIFICATIONS
+    const certs = copy.homeReviewsItems || [];
+    if (certs.length) flowCertifications(certs, "Certifications");
+
+    return list;
+  }, [copy]);
+
+  const totalSpreads = pages.length;
+
   const playBookSound = useCallback((type: "open" | "turn" | "close") => {
     if (typeof window === "undefined") return;
-
-    const AudioCtx =
-      window.AudioContext ||
-      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
-
     const ctx = audioContextRef.current ?? new AudioCtx();
     audioContextRef.current = ctx;
-
-    if (ctx.state === "suspended") {
-      void ctx.resume();
-    }
+    if (ctx.state === "suspended") void ctx.resume();
 
     const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.28, ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
@@ -45,12 +191,9 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
 
     const source = ctx.createBufferSource();
     source.buffer = noiseBuffer;
-
     const filter = ctx.createBiquadFilter();
     filter.type = "bandpass";
     filter.frequency.setValueAtTime(type === "turn" ? 900 : 700, ctx.currentTime);
-    filter.Q.setValueAtTime(0.6, ctx.currentTime);
-
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0.0001, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(type === "turn" ? 0.05 : 0.04, ctx.currentTime + 0.02);
@@ -66,334 +209,252 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null;
-      if (!keyboardRef.current || (target && keyboardRef.current.contains(target))) {
-        return;
-      }
-
+      if (!keyboardRef.current || (target && keyboardRef.current.contains(target))) return;
       setKeyboardEngaged(false);
     };
-
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, []);
 
-  const closeBook = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("close"); setPage(0); };
-  const openCover = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("open"); setPage(1); };
-  const turnToPage2 = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("turn"); setPage(2); };
-  const turnToPage1 = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("turn"); setPage(1); };
-  const introParagraphs = copy.aboutIntroBody
-    .split(/\n\s*\n/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
+  const closeBook = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("close"); setSpread(0); };
+  const openCover = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("open"); setSpread(1); };
+  const nextSpread = (e: React.MouseEvent) => { e.stopPropagation(); if (spread <= totalSpreads) { playBookSound("turn"); setSpread(s => s + 1); } };
+  const prevSpread = (e: React.MouseEvent) => { e.stopPropagation(); if (spread > 1) { playBookSound("turn"); setSpread(s => s - 1); } else { closeBook(e); } };
+
+  const renderPage = (content: PageContent, pageNum: number) => {
+    return (
+      <div className="w-full h-full flex flex-col px-10 md:px-14 lg:px-16 pt-12 md:pt-16 pb-12 relative z-10 text-[#382818] bg-[#f4e8d1] shadow-inner overflow-hidden select-none">
+        <div className="absolute inset-y-0 left-0 bg-linear-to-r from-black/20 to-transparent w-16 pointer-events-none opacity-40"></div>
+        
+        <div className="flex-1 flex flex-col overflow-hidden">
+        {content.title && (
+          <header className="mb-6 md:mb-10 relative">
+            <h2 className={`font-serif font-bold text-[#4a331e] border-b-2 border-[#d4bc96] pb-3 uppercase tracking-tight ${content.isChapterStart ? 'text-2xl md:text-3xl lg:text-4xl' : 'text-xl md:text-2xl opacity-70'}`}>
+              {content.title}
+            </h2>
+            {content.subtitle && (
+              <p className="mt-4 text-[#5c4636]/80 italic font-serif text-sm md:text-base leading-relaxed text-justify">
+                {content.subtitle}
+              </p>
+            )}
+          </header>
+        )}
+        
+        {content.type === "text" && content.body && (
+          <div className={`font-serif leading-relaxed text-justify text-[#4a3320] ${pageNum <= 2 
+            ? 'space-y-6 md:space-y-8 text-base md:text-lg lg:text-[1.15rem]' 
+            : 'space-y-6 md:space-y-8 text-sm md:text-base lg:text-lg'}`}>
+            
+            {content.image && (
+              <div className="flex justify-center w-full mt-4 mb-8 transform rotate-0 z-20">
+                <div className="relative w-32 h-36 md:w-48 md:h-52 bg-[#fffcf5] p-1.5 shadow-lg border border-[#e0cfa9]">
+                  <div className="relative w-full h-full overflow-hidden grayscale-5 sepia-15">
+                    <Image src={content.image} alt="Abin Varghese" fill className="object-cover object-top" unoptimized />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {content.body.map((chunk, idx) => (
+              <div key={idx} className={pageNum <= 2 ? "space-y-4" : "space-y-6"}>
+                {chunk.split(/\n\s*\n/).map((p, i) => (
+                    <p key={i} className={i === 0 && idx === 0 && pageNum === 1 
+                        ? `${pageNum <= 2 ? "first-letter:text-5xl" : "first-letter:text-6xl"} first-letter:font-bold first-letter:float-left first-letter:mr-3 first-letter:text-[#8b5a2b] first-letter:mt-1 shadow-sm` 
+                        : ""}>
+                        {p}
+                    </p>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {content.type === "timeline" && content.items && (
+          <div className="space-y-5 pl-1">
+            {content.items.map((entry, i) => (
+              <div key={i} className="relative pl-6 md:pl-10 border-l-2 border-[#8b5a2b]/30 pb-1">
+                <div className="absolute top-2 -left-[7px] w-3 h-3 rounded-full bg-[#8b5a2b] shadow-sm"></div>
+                
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-base md:text-xl font-bold font-serif text-[#4a3320] leading-tight">{entry.role}</h3>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#8b5a2b] opacity-60"></div>
+                    <p className="bg-[#8b5a2b]/10 px-2 py-0.5 rounded-sm text-[#965839] text-[10px] md:text-xs font-mono font-bold tracking-widest uppercase opacity-90">
+                      {entry.organization} <span className="mx-1 opacity-40">•</span> {entry.duration}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-[#5c4636] font-serif text-sm md:text-[1.1rem] mt-2 leading-relaxed opacity-90 text-justify line-clamp-4">{entry.copy}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {content.type === "certificates" && content.achievements && (
+          <div className="space-y-6">
+            {content.achievements.map((item, i) => (
+              <div key={i} className="relative p-5 bg-[#fffcf5]/40 border border-[#d4bc96]/60 rounded-sm shadow-sm transition-all hover:bg-[#fffcf5]/60">
+                <div className="absolute top-0 left-0 w-1 h-full bg-[#8b5a2b]/20"></div>
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <h4 className="text-base md:text-lg font-bold font-serif text-[#4a3320] leading-snug">
+                      {item.name}
+                    </h4>
+                    {item.designation && (
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <div className="w-1 h-1 rounded-full bg-[#8b5a2b]/40"></div>
+                        <span className="text-[10px] md:text-xs font-mono font-bold tracking-tight uppercase text-[#965839] opacity-80">
+                          {item.designation}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="shrink-0 w-8 h-8 rounded-full border border-[#8b5a2b]/30 flex items-center justify-center bg-[#8b5a2b]/5">
+                    <span className="text-[#8b5a2b] text-[10px] font-bold">CERT</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        </div>
+
+        <div className="mt-auto pt-8 flex justify-between items-center text-[10px] md:text-xs font-serif text-[#8b5a2b] opacity-50 font-bold tracking-widest border-t border-[#d4bc96]/50">
+          <span className="uppercase">Issue 2026 Archive</span>
+          <span>PG. {pageNum.toString().padStart(2, '0')}</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderBlankPage = () => (
+    <div className="w-full h-full bg-[#f4e8d1] flex items-center justify-center p-10 relative overflow-hidden" style={{ backgroundImage: "repeating-linear-gradient(135deg, rgba(205,164,123,0.04) 0px, rgba(205,164,123,0.04) 1px, transparent 1px, transparent 15px)" }}>
+         <div className="absolute left-0 top-0 bottom-0 w-16 bg-linear-to-r from-black/10 to-transparent opacity-40"></div>
+         <div className="absolute right-0 top-0 bottom-0 w-24 bg-linear-to-l from-black/20 to-transparent"></div>
+         <div className="border-2 border-[#d4bc96]/30 px-10 py-6 bg-[#fdfaf5] shadow-sm transform -rotate-1 opacity-20">
+            <span className="text-[#8b5a2b] font-serif text-2xl uppercase tracking-[0.6em] font-bold">Chronicles</span>
+         </div>
+    </div>
+  );
 
   return (
-    <section className="relative w-full min-h-[120dvh] overflow-hidden flex flex-col items-center justify-center py-20 px-2 md:px-8 lg:py-32">
-      
-      {/* Background Dots with Top Fade to blend seamlessly with hero */}
+    <section 
+      className="relative min-h-screen bg-[#fdfaf5] py-24 px-4 flex flex-col items-center overflow-hidden"
+      style={{ 
+        backgroundImage: 'radial-gradient(circle, rgba(139, 90, 43, 0.15) 1.5px, transparent 1.5px)',
+        backgroundSize: '32px 32px',
+        backgroundPosition: 'center center'
+      }}
+    >
+      <button 
+        onClick={spread === 0 ? openCover : undefined}
+        className={`z-30 font-mono tracking-[0.4em] text-[10px] uppercase mb-16 transition-all duration-500 ${spread === 0 ? 'text-[#8b5a2b] opacity-100 hover:scale-110 cursor-pointer animate-pulse' : 'text-gray-400 opacity-20 cursor-default'}`}
+      >
+         {spread > 0 ? "Chronicle in Progress" : "Click to Unlock the tome"}
+      </button>
+
       <div 
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="relative perspective-[3000px] transition-all duration-1000 ease-[cubic-bezier(0.645,0.045,0.355,1)] w-[95vw] sm:w-[650px] md:w-[850px] lg:w-[1050px] h-[500px] sm:h-[600px] md:h-[750px]"
         style={{ 
-          backgroundImage: 'radial-gradient(rgba(0,0,0,0.08) 2px, transparent 2px)', 
-          backgroundSize: '24px 24px',
-          maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%)'
+            transformStyle: "preserve-3d",
+            transform: spread === 0 ? "translateX(-25%)" : "translateX(0)"
         }}
-      />
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes bookmarkPulse {
-          0%, 100% { transform: translateY(-50%) translateX(0) translateZ(-1px); }
-          50% { transform: translateY(-50%) translateX(8px) translateZ(-1px); }
-        }
-        @keyframes pageTentLiftRight {
-          0%, 100% { transform: rotateY(0deg); }
-          50% { transform: rotateY(-3deg); }
-        }
-        @keyframes pageTentLiftLeft {
-          0%, 100% { transform: rotateY(0deg); }
-          50% { transform: rotateY(3deg); }
-        }
-        @keyframes paperclipGlint {
-          0%, 100% { transform: translateX(-50%) rotate(7deg); }
-          50% { transform: translateX(-50%) rotate(11deg) translateY(-1px); }
-        }
-      `}} />
-      {/* Desk Lighting/Vignette */}
-      <div className="absolute inset-0 pointer-events-none  z-0"></div>
-
-      {/* BACKGROUND PROPS (Hidden on smaller screens) */}
-      
-      {/* Right Glasses */}
-      <div className="group absolute top-[8%] right-[8%] hidden lg:block z-0 opacity-90 transition-transform duration-500 hover:-translate-y-1 hover:rotate-[10deg]" style={{ transform: "rotate(12deg)", filter: 'drop-shadow(10px 16px 16px rgba(0,0,0,0.18))' }}>
-         <svg width="190" height="92" viewBox="0 0 190 92" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="frameMetal" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#655d58" />
-                <stop offset="28%" stopColor="#1f1b18" />
-                <stop offset="52%" stopColor="#8b8178" />
-                <stop offset="100%" stopColor="#241f1c" />
-              </linearGradient>
-              <linearGradient id="lensTint" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="rgba(210,220,226,0.42)" />
-                <stop offset="100%" stopColor="rgba(120,132,140,0.15)" />
-              </linearGradient>
-            </defs>
-            <ellipse cx="52" cy="44" rx="31" ry="27" fill="url(#lensTint)" stroke="url(#frameMetal)" strokeWidth="5"/>
-            <ellipse cx="138" cy="44" rx="31" ry="27" fill="url(#lensTint)" stroke="url(#frameMetal)" strokeWidth="5"/>
-            <path d="M82 43C89 38 101 38 108 43" stroke="url(#frameMetal)" strokeWidth="4.5" strokeLinecap="round"/>
-            <path d="M22 39L6 14" stroke="url(#frameMetal)" strokeWidth="5" strokeLinecap="round"/>
-            <path d="M168 39L184 14" stroke="url(#frameMetal)" strokeWidth="5" strokeLinecap="round"/>
-            <path d="M36 31C41 24 47 22 57 23" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" className="transition-opacity duration-300 group-hover:opacity-90" />
-            <path d="M122 31C127 24 133 22 143 23" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" className="transition-opacity duration-300 group-hover:opacity-90" />
-         </svg>
-      </div>
-
-      {/* Left Keyboard Edge */}
-      <div
-        ref={keyboardRef}
-        className={`group absolute top-[31%] w-[820px] h-[380px] hidden xl:flex pointer-events-auto transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          keyboardEngaged
-            ? "left-1/2 z-30 -translate-x-1/2 translate-y-[34px] rotate-0"
-            : "left-[-190px] z-0 -translate-x-9 -rotate-[8deg]"
-        }`}
       >
-        <div className="relative w-full h-full">
-          <div
-            className={`absolute bottom-3 h-12 rounded-full bg-black/15 blur-md transition-all duration-700 ${
-              keyboardEngaged ? "left-14 right-14 opacity-90" : "inset-x-24 opacity-100"
-            }`}
-          />
-          <div
-            className={`absolute inset-0 origin-center drop-shadow-[18px_22px_28px_rgba(0,0,0,0.16)] transition-transform duration-700 ${
-              keyboardEngaged ? "scale-[1.24]" : "scale-[0.98]"
-            }`}
-          >
-            <KeyboardDemo
-              className="h-full min-h-0 py-0 md:min-h-0"
-              onKeyInteraction={() => setKeyboardEngaged(true)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <p className={`z-10 text-gray-500 font-mono tracking-widest text-[10px] mt-12 md:mt-0 md:text-sm uppercase mb-8 md:mb-12 transition-opacity duration-1000 ${page > 0 ? "opacity-100" : "opacity-80"}`}>
-         {page > 0 ? "← Explore the Tome →" : "Open the Tome"}
-      </p>
-
-      {/* Book Container - Huge height */}
-      <div 
-        className="relative perspective-[4000px] transition-transform duration-[1200ms] ease-[cubic-bezier(0.645,0.045,0.355,1)] w-[85vw] sm:w-[400px] md:w-[500px] lg:w-[650px] h-[600px] sm:h-[650px] md:h-[800px]"
-        style={{ transform: page === 0 ? "translateX(0%)" : "translateX(50%)" }}
-      >
-        
-        {/* Book Base (Back Cover) - Visible behind all pages */}
-        <div 
-          className="absolute inset-0 md:-inset-2 bg-[#dcb994] rounded-md shadow-2xl z-0 border border-[#9c7145]"
-          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E\")" }}
-        >
-            {/* Dark Spine center gap */}
-            <div className="absolute left-0 md:-left-4 lg:-left-6 top-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-black/40 via-[#8b5a2b] to-black/20 border-r border-[#8b5a2b]/50 z-0"></div>
-            {/* Faux paper edges (thickness) */}
-            <div className="absolute top-1 bottom-1 right-0 left-4 md:left-12 bg-[#dfc9b1] rounded-r shadow-[4px_0px_0_#b89467,6px_0px_0_#9a7a52] z-0"></div>
-        </div>
-
-        {/* The entire interior block, shifted slightly right to account for spine */}
-        <div className="absolute inset-y-0 right-0 left-[2%] md:left-[5%] perspective-[4000px]" style={{ transformStyle: "preserve-3d" }}>
-
-          {/* 1. SPREAD 2 (Right Page - Experience / Studies) - Static bottom layer */}
-          <div className="absolute inset-0 origin-left flex justify-end" style={{ transform: "translateZ(0px)" }}>
-             {/* Left side is hidden practically by spine, but this is the right face */}
-             <div className="w-full h-full bg-[#f4e8d1] flex flex-col relative z-0 overflow-hidden rounded-r-xl border-y border-r border-[#d4bc96]" style={{ backgroundImage: "radial-gradient(#dcb180 1px, transparent 1px)", backgroundSize: "40px 40px" }}>
-                <div className="absolute top-0 left-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-transparent to-black/30 z-0 pointer-events-none"></div>
-                
-                  <div className="relative z-10 p-6 md:p-12 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden flex flex-col" onScroll={(e) => setScrolled2(e.currentTarget.scrollTop > 10)}>
-                    <h2 className="text-2xl md:text-5xl text-[#382818] font-bold mb-6 md:mb-10 font-serif tracking-tight border-b-2 border-[#b89467] pb-4 uppercase">{copy.aboutTimelineTitle}</h2>
-                    
-                    <div className="space-y-6 md:space-y-10 pl-2">
-                        {copy.aboutTimelineEntries.map((entry, index) => (
-                          <div
-                            key={`${entry.role}-${entry.organization}-${index}`}
-                            className={`relative pl-6 md:pl-8 border-l-2 border-[#8b5a2b]/60 ${index === copy.aboutTimelineEntries.length - 1 ? "pb-2" : ""}`}
-                          >
-                            <div className="absolute top-1.5 -left-[5px] w-2.5 h-2.5 rounded-full bg-[#8b5a2b] shadow-[0_0_5px_#8b5a2b]"></div>
-                            <h3 className="text-lg md:text-2xl font-bold text-[#4a3320] font-serif">{entry.role}</h3>
-                            <p className="text-[#965839] text-[10px] md:text-sm font-mono font-semibold tracking-widest my-1 uppercase">
-                              {entry.organization} • {entry.duration}
-                            </p>
-                            <p className="text-[#5c4636] text-xs md:text-base mt-2 leading-relaxed">{entry.copy}</p>
-                          </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-auto pt-10 flex justify-end items-center opacity-70">
-                         <span className="font-serif text-[#8b5a2b] font-bold">Pg. 02</span>
-                    </div>
-                  </div>
-
-                  {/* Scroll Hint overlay for SPREAD 2 */}
-                  <div className={`absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center text-[#8b5a2b] transition-opacity duration-700 pointer-events-none z-20 ${!scrolled2 && page === 2 ? 'opacity-80 animate-bounce' : 'opacity-0'}`}>
-                      <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold mb-1 font-serif">Scroll</span>
-                      <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-                  </div>
+        <div className={`absolute inset-y-0 right-0 z-0 bg-[#dcb994] rounded shadow-[0_45px_100px_-20px_rgba(0,0,0,0.5)] border border-[#9c7145] overflow-hidden transition-all duration-1000 ${spread === 0 ? 'left-1/2' : 'left-0'}`}>
+             <div className={`absolute left-0 top-0 bottom-0 w-10 md:w-16 bg-linear-to-r from-black/40 via-[#8b5a2b] to-black/40 z-10 border-r border-black/10 transition-opacity duration-1000 ${spread === 0 ? 'opacity-0' : 'opacity-100'}`}></div>
+             <div className="absolute inset-0 opacity-15" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}></div>
+             
+             <div className="flex h-full">
+                <div className={`w-1/2 h-full bg-[#e8ccad] border-r border-[#9c7145]/20 transition-opacity duration-1000 ${spread === 0 ? 'opacity-0' : 'opacity-30'}`}></div>
+                <div className="w-1/2 h-full bg-[#f4e8d1] flex items-center justify-center opacity-30">
+                    <span className="font-serif italic text-xs text-[#8b5a2b] tracking-widest uppercase">The End of the Tome</span>
+                </div>
              </div>
-          </div>
+        </div>
 
-          {/* 2. PAGE 1 FLIPPER */}
-          <div 
-              className="absolute inset-0 origin-left transition-transform duration-[1200ms] ease-[cubic-bezier(0.645,0.045,0.355,1)]"
-              style={{ transformStyle: "preserve-3d", transform: page >= 2 ? "rotateY(-180deg) translateZ(-10px)" : "rotateY(0deg) translateZ(10px)" }}
-          >
-             <div className="w-full h-full origin-left" style={{ transformStyle: "preserve-3d", animation: page === 1 ? 'pageTentLiftRight 3s infinite ease-in-out' : (page === 2 ? 'pageTentLiftLeft 3s infinite ease-in-out' : 'none') }}>
-              {/* FRONT FACE: Page 1 (Prologue & Image) */}
-              <div 
-                className="absolute inset-0 bg-[#f4e8d1] border-y border-r border-[#d4bc96] flex flex-col justify-start items-center rounded-r cursor-pointer z-10 overflow-hidden" 
-                style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(0deg)", backgroundImage: "radial-gradient(#dcb180 1px, transparent 1px)", backgroundSize: "40px 40px" }} 
-                onClick={turnToPage2}
-              >
-                 <div className="absolute top-0 left-0 bottom-0 w-8 md:w-16 bg-gradient-to-r from-black/20 to-transparent z-0 pointer-events-none"></div>
-                 
-<div className="relative z-10 w-full h-full p-8 md:p-12 lg:p-16 overflow-y-auto [&::-webkit-scrollbar]:hidden text-[#382818] flex flex-col" onScroll={(e) => setScrolled1(e.currentTarget.scrollTop > 10)}>
-                    
-                    {/* Attached Photo with Paperclip ON THE TOP */}
-                    <div className="relative self-center md:self-end md:-mr-4 mb-8 transform rotate-3 mt-2 md:mt-0 z-20">
-                        {/* Photo Border / Polaroid effect */}
-                        <div className="group relative w-40 h-52 md:w-56 md:h-64 bg-[#fffcf5] p-2 md:p-3 shadow-[2px_6px_15px_rgba(0,0,0,0.15)] border border-[#e0cfa9] transition-transform duration-500 hover:-translate-y-1">
-                            {/* Paperclip */}
-                            <div
-                              className="absolute -top-6 left-1/2 w-6 h-12 bg-transparent border-[3px] border-[#9ca3af] rounded-full shadow-[1px_2px_3px_rgba(0,0,0,0.2)] z-30 transition-transform duration-300 group-hover:scale-[1.04]"
-                              style={{
-                                transform: "translateX(-50%) rotate(7deg)",
-                                transformOrigin: "top center",
-                                backgroundImage: "linear-gradient(to right, #c9c9c9, #f3f3f3 45%, #a6a6a6)",
-                                animation: "paperclipGlint 3.2s ease-in-out infinite",
-                              }}
-                            ></div>
-                            <div
-                              className="absolute -top-3 left-1/2 w-3 h-8 bg-transparent border-t-[3px] border-l-[3px] border-r-[3px] border-[#7e7e7e] rounded-t-full z-10"
-                              style={{ transform: "translateX(-50%) rotate(7deg)" }}
-                            ></div>
-                            
-                            {/* Profile Image */}
-                            <div className="relative w-full h-full overflow-hidden grayscale-[20%] sepia-[30%] contrast-[1.1]">
-                                <Image src={copy.aboutBookImage} alt="Abin Varghese" fill className="object-cover object-top" unoptimized />
-                            </div>
+        <div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
+            {[...Array(totalSpreads + 1)].map((_, i) => {
+                const zIndex = 100 - i;
+                const isFlipped = spread > i;
+                return (
+                    <div 
+                        key={i}
+                        className="absolute inset-y-0 right-0 w-1/2 origin-left transition-transform duration-1400 ease-[cubic-bezier(0.645,0.045,0.355,1)] cursor-pointer"
+                        style={{ 
+                            transformStyle: "preserve-3d", 
+                            transform: isFlipped ? "rotateY(-180deg)" : "rotateY(0deg)",
+                            zIndex: isFlipped ? i : zIndex,
+                            pointerEvents: (spread === i || spread === i + 1) ? 'auto' : 'none'
+                        }}
+                        onClick={spread === i ? (i === 0 ? openCover : nextSpread) : (spread === i + 1 ? prevSpread : undefined)}
+                    >
+                        <div 
+                            className="absolute inset-0 bg-[#dcb994] shadow-md border-y border-r border-[#a87b51] flex flex-col overflow-hidden" 
+                            style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "translateZ(1px)" }}
+                        >
+                            {i === 0 ? (
+                                <div className="relative w-full h-full flex flex-col items-center justify-center p-8 text-center bg-[#dcb994]">
+                                    <div className="absolute inset-6 md:inset-10 border-2 border-[#8b5a2b]/30 pointer-events-none"></div>
+                                    <div className="absolute left-0 top-0 bottom-0 w-10 bg-linear-to-r from-black/20 via-black/10 to-transparent"></div>
+                                    <div className="w-20 h-20 md:w-28 md:h-28 mb-10 rounded-full border-4 border-[#8b5a2b]/40 flex items-center justify-center bg-[#cda47b] shadow-inner transform -rotate-12 transition-transform hover:rotate-0 duration-700">
+                                        <svg className="w-10 h-10 md:w-14 md:h-14 text-[#5c3a21] opacity-70" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l4.5 9h-9L12 2zm0 2.5L9.5 9h5L12 4.5zm0 15.5l-4.5-9h9L12 20zM11 17.5l2.5-4.5h-5L12 17.5z"/></svg>
+                                    </div>
+                                    <h1 className="text-[#382010] text-3xl md:text-5xl font-serif uppercase mb-8 leading-tight tracking-[0.08em] font-bold">
+                                        The Magical<br/><span className="text-[#8b5a2b]">Chronicles</span>
+                                    </h1>
+                                    <div className="w-32 h-[2px] bg-[#8b5a2b] opacity-40 mb-8 mx-auto"></div>
+                                    <span className="text-[#5c3a21] text-xs md:text-sm font-serif tracking-[0.4em] font-bold opacity-80 decoration-wavy">ABIN VARGHESE</span>
+                                </div>
+                            ) : (
+                                pages[i-1] ? renderPage(pages[i-1], i) : <div className="w-full h-full bg-[#f4e8d1]" />
+                            )}
+                        </div>
+
+                        <div 
+                            className="absolute inset-0 bg-[#f4e8d1] shadow-md border-y border-l border-[#d4bc96] flex flex-col overflow-hidden" 
+                            style={{ transform: "rotateY(180deg) translateZ(1px)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+                        >
+                            {i === 0 ? (
+                                <div className="w-full h-full flex items-center justify-center bg-[#f4e8d1] p-12 relative" style={{ backgroundImage: "repeating-linear-gradient(135deg, rgba(205,164,123,0.06) 0px, rgba(205,164,123,0.06) 1px, transparent 1px, transparent 12px)" }}>
+                                    <div className="absolute right-0 top-0 bottom-0 w-20 bg-linear-to-l from-black/20 via-black/10 to-transparent"></div>
+                                    <div className="border border-[#cda47b]/40 px-12 py-6 bg-[#fdfaf5]/80 shadow-sm transform -rotate-2 backdrop-blur-[1px]">
+                                        <span className="text-[#8b5a2b] font-serif text-3xl opacity-40 uppercase tracking-[0.6em] font-bold">Ex Libris</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                renderBlankPage()
+                            )}
                         </div>
                     </div>
-
-                    <h2 className="text-3xl md:text-5xl font-bold mb-6 font-serif text-center md:text-left text-[#4a331e]">{copy.aboutIntroTitle}</h2>
-
-                    <div className="text-[15px] md:text-[1.2rem] lg:text-[1.3rem] leading-[2.2] space-y-6 flex-grow font-serif relative z-10">
-                        {introParagraphs.map((paragraph, index) => (
-                          <p
-                            key={`${paragraph.slice(0, 24)}-${index}`}
-                            className={index === 0 ? "first-letter:text-6xl first-letter:font-bold first-letter:text-[#8b5a2b] first-letter:mr-2 first-letter:float-left first-letter:-mt-1 shadow-sm" : ""}
-                          >
-                            {paragraph}
-                          </p>
-                        ))}
-                    </div>
-
-                    <div className="flex items-center justify-end mt-12 font-serif text-[#b88645] opacity-70">
-                          <span>Pg. 01</span>
-                    </div>
-                  </div>
-                   
-                   {/* Scroll Hint overlay for Page 1 */}
-                   <div className={`absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center text-[#8b5a2b] transition-opacity duration-700 pointer-events-none z-20 ${!scrolled1 && page === 1 ? 'opacity-80 animate-bounce' : 'opacity-0'}`}>
-                        <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold mb-1 font-serif">Scroll</span>
-                        <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-                   </div>
-              </div>
-              {/* BACK FACE: Blank Parchment (Left side when open Page 2) */}
-              <div 
-                className="absolute inset-0 bg-[#f4e8d1] border-y border-l border-[#d4bc96] rounded-l cursor-pointer z-0 overflow-hidden shadow-[-4px_0_15px_rgba(0,0,0,0.1)_inset]" 
-                style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }} 
-                onClick={turnToPage1}
-              >
-                 <div className="absolute top-0 right-0 bottom-0 w-12 bg-gradient-to-l from-black/20 to-transparent z-0 pointer-events-none border-r border-[#d4bc96]"></div>
-                 {/* No text context - just vintage texture! */}
-                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `repeating-linear-gradient(45deg, #dcb180 0px, #dcb180 2px, transparent 2px, transparent 10px)` }}></div>
-                 
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 text-[#8b5a2b] text-4xl mb-6 font-serif text-center">
-                    ( Intentionally Blank )
-                 </div>
-              </div>
-             </div>
-          </div>
-
-          {/* 3. COVER FLIPPER */}
-          <div 
-              className="absolute inset-y-[-10px] right-[-10px] left-[-20px] transition-transform duration-[1400ms] ease-[cubic-bezier(0.645,0.045,0.355,1)]"
-              style={{ transformOrigin: "20px center", transformStyle: "preserve-3d", transform: page >= 1 ? "rotateY(-180deg) translateZ(-5px)" : "rotateY(0deg) translateZ(20px)" }}
-          >
-              {/* Bookmark Ribbon - Temptation to open */}
-                    <div className={`absolute top-1/2 -translate-y-1/2 -right-10 md:-right-14 w-16 md:w-20 h-10 md:h-12 bg-[#b24c4c] shadow-[10px_2px_15px_rgba(0,0,0,0.4)] transition-opacity duration-1000 origin-left flex flex-row items-center justify-start pl-4 md:pl-5 z-[5] cursor-pointer hover:bg-[#c95b5b]
-                        ${page === 0 ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-                        style={{ clipPath: "polygon(0 0, 100% 0, 85% 50%, 100% 100%, 0 100%)", animation: page === 0 ? 'bookmarkPulse 2s infinite ease-in-out' : 'none', transform: 'translateY(-50%) translateZ(-1px)' }}
-                        onClick={openCover}
-                    >
-                        <div className="absolute left-2 w-2 h-2 rounded-full bg-[#f4e8d1] opacity-50 shadow-[0_0_5px_rgba(255,255,255,0.8)_inset]"></div>
-                        <span className="text-[#f4e8d1] text-[10px] md:text-xs font-serif tracking-[0.2em] opacity-90 drop-shadow-md font-bold">OPEN</span>
-                    </div>
-
-                  {/* FRONT COVER (Grainy Paper/Leather) */}
-              <div 
-                className="absolute inset-0 bg-[#dcb994] rounded-r-xl border-y-[3px] border-r-[3px] border-[#a87b51] shadow-[15px_15px_40px_rgba(0,0,0,0.3)] flex flex-col items-center justify-center cursor-pointer hover:shadow-[20px_20px_50px_rgba(0,0,0,0.4)] transition-shadow duration-500 z-10 overflow-hidden" 
-                style={{ 
-                  backfaceVisibility: "hidden", 
-                  WebkitBackfaceVisibility: "hidden", 
-                  transform: "rotateY(0deg)",
-                  backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E\")"
-                }} 
-                onClick={openCover}
-              >
-                    {/* Crease near spine */}
-                  <div className="absolute left-1 md:left-4 top-0 bottom-0 w-4 md:w-8 border-r border-[#a87b51]/60 bg-gradient-to-r from-black/20 to-transparent shadow-[2px_0_5px_rgba(0,0,0,0.1)]"></div>
-                  
-                  {/* Outer Border */}
-                  <div className="absolute inset-4 md:inset-8 border-2 border-[#8b5a2b] opacity-60 rounded flex items-center justify-center pointer-events-none">
-                     <div className="absolute inset-2 border border-[#8b5a2b] opacity-40"></div>
-                  </div>
-
-                  {/* Center Emblem & Title */}
-                  <div className="relative z-20 flex flex-col items-center max-w-[85%] text-center mt-8">
-                      <div className="w-16 h-16 md:w-20 md:h-20 mb-8 rounded-full border-2 border-[#8b5a2b] flex items-center justify-center bg-[#cda47b] shadow-[inset_0_0_10px_rgba(0,0,0,0.1)]">
-                          <svg className="w-8 h-8 md:w-10 md:h-10 text-[#5c3a21] opacity-80" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 2l4.5 9h-9L12 2zm0 2.5L9.5 9h5L12 4.5zm0 15.5l-4.5-9h9L12 20zM11 17.5l2.5-4.5h-5L12 17.5z"/>
-                          </svg>
-                      </div>
-                      
-                      <h1 className="text-[#382010] text-3xl md:text-5xl lg:text-5xl font-serif tracking-wide uppercase mb-6 leading-tight drop-shadow-sm">
-                         The Magical<br/>Chronicles
-                      </h1>
-                      
-                      <div className="w-24 h-[1px] bg-[#8b5a2b] my-4 opacity-50"></div>
-                      
-                      <h2 className="text-[#5c3a21] text-xs md:text-sm lg:text-base font-serif tracking-[0.2em] uppercase pt-4 font-bold opacity-80">
-                         Abin Varghese
-                      </h2>
-                  </div>
-              </div>
-
-              {/* COVER BACK (Inside Cover - Blank Textured - Left side when Opened Page 1) */}
-              <div 
-                className="absolute inset-0 bg-[#d4b492] rounded-l-xl border-y-[3px] border-l-[3px] border-[#a87b51] flex flex-col z-0 shadow-[-15px_15px_40px_rgba(0,0,0,0.3)] cursor-pointer" 
-                style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
-                onClick={closeBook} 
-              >
-                  {/* Inside cover paper lining layout */}
-                  <div className="absolute inset-3 md:inset-6 bg-[#f4e8d1] border border-[#cda47b] shadow-[inset_0_0_20px_rgba(0,0,0,0.05)] opacity-90 overflow-hidden" style={{ backgroundImage: "repeating-linear-gradient(45deg, #f4e8d1, #f4e8d1 10px, #efe0c4 10px, #efe0c4 20px)" }}>
-                     <div className="w-full h-full flex items-center justify-center pointer-events-none">
-                         <div className="border border-[#cda47b] px-8 py-4 bg-[#fdfaf5] shadow-sm">
-                            <span className="text-[#8b5a2b] font-serif text-2xl font-bold opacity-50 uppercase tracking-[0.4em]">Ex Libris</span>
-                         </div>
-                     </div>
-                  </div>
-              </div>
-          </div>
-
+                );
+            })}
         </div>
 
+        <div className={`absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[4px] bg-black/20 z-200 transition-opacity duration-1000 ${spread > 0 ? 'opacity-100' : 'opacity-0'} pointer-events-none`}></div>
+      </div>
+
+      <div className="mt-24 flex flex-col items-center gap-10 z-50">
+          <div className="flex gap-8 md:gap-14 items-center">
+            <button 
+                onClick={prevSpread} 
+                disabled={spread === 0}
+                className="group flex items-center gap-4 px-8 py-3 bg-[#fdfaf5]/60 border border-[#8b5a2b]/30 text-[#8b5a2b] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] disabled:opacity-5 transition-all hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] hover:-translate-x-1 shadow-sm hover:shadow-md cursor-pointer rounded-full"
+            >
+                <span className="text-sm">←</span> Prev
+            </button>
+            
+            <div className="w-px h-8 bg-[#8b5a2b]/20"></div>
+            
+            <button 
+                onClick={nextSpread} 
+                disabled={spread > totalSpreads}
+                className="group flex items-center gap-4 px-8 py-3 bg-[#fdfaf5]/60 border border-[#8b5a2b]/30 text-[#8b5a2b] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] disabled:opacity-5 transition-all hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] hover:translate-x-1 shadow-sm hover:shadow-md cursor-pointer rounded-full"
+            >
+                Next <span className="text-sm">→</span>
+            </button>
+          </div>
       </div>
 
     </section>

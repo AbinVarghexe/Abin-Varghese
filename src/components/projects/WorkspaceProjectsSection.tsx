@@ -37,7 +37,7 @@ interface WorkspaceProjectsSectionProps {
   workspace: WorkspaceFilter;
 }
 
-const CARD_RATIO = 'aspect-video w-full';
+const CARD_RATIO = 'h-full w-full';
 
 const CARD_HEIGHTS = [
   'h-[220px]',
@@ -333,7 +333,7 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
   return (
     <div className="grid grid-cols-12 gap-4 auto-rows-[210px] md:auto-rows-[220px] xl:auto-rows-[240px]">
       {projects.map((project, index) => (
-        <div key={project.id} className={getTileClass(index)}>
+        <div key={project.id} className={`${getTileClass(index)} h-full overflow-hidden`}>
           <WorkspaceProjectCard project={project} index={index} />
         </div>
       ))}

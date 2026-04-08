@@ -38,6 +38,7 @@ export default async function AboutPage() {
           aboutBookImage: siteCopy.aboutBookImage,
           aboutTimelineTitle: siteCopy.aboutTimelineTitle,
           aboutTimelineEntries: siteCopy.aboutTimelineEntries,
+          homeReviewsItems: siteCopy.homeReviewsItems,
         }}
       />
       <div className="relative z-20 -mt-28">
