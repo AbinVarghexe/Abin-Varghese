@@ -231,9 +231,11 @@ function FloatingDots() {
 const Herosection = ({
   data: initialData,
   homeLinks,
+  statusLine,
 }: {
   data: HeroContent;
   homeLinks: Pick<HomeContent, 'socialLinks' | 'pageLinks'>;
+  statusLine: string;
 }) => {
   const { previewData, isPreviewing } = usePreview();
   const sectionRef = useRef<HTMLElement>(null);
@@ -246,11 +248,11 @@ const Herosection = ({
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen w-full bg-transparent pb-16"
+      className="pointer-events-none relative min-h-screen w-full bg-transparent pb-16"
     >
       {/* ── Layer 1: Background (z-0) ─────────────────────────────── */}
       <div 
-        className="absolute inset-0 z-0"
+        className="pointer-events-none absolute inset-0 z-0"
         style={{
           maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
@@ -435,7 +437,7 @@ const Herosection = ({
               className="mt-5 flex items-center gap-2 text-sm text-slate-400"
             >
               <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
-              Available for freelance &amp; full-time opportunities.
+              {statusLine}
             </motion.p>
           </motion.div>
 

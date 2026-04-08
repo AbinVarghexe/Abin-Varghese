@@ -6,7 +6,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import MilesStickerBoard from "@/components/about/MilesStickerBoard";
 
 
-const TypewriterSection = () => {
+const TypewriterSection = ({ quote }: { quote: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -18,7 +18,7 @@ const TypewriterSection = () => {
 
   // Paper animation and typing effect
   const [typedText, setTypedText] = useState("");
-  const fullText = `"Design is how it works."\n\n— Steve Jobs`;
+  const fullText = quote;
   const typewriterFont = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
   const paperWidth = 370;
   const paperHeight = 360;

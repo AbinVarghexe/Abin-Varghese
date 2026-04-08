@@ -9,6 +9,8 @@ import {
   useTransform,
 } from "framer-motion";
 import Image from "next/image";
+import { splitAccentHeading } from "@/lib/accent-heading";
+import type { SiteCopyContent } from "@/lib/site-copy-content";
 
 interface Tool {
   id: string;
@@ -103,26 +105,19 @@ const tools: Tool[] = [
   },
 ];
 
-const categories = [
-  { id: "design", name: "Design Tools", description: "UI/UX & Prototyping" },
-  {
-    id: "video",
-    name: "Motion/VideoEditing",
-    description: "Motion Graphics & VFX",
-  },
-  {
-    id: "development",
-    name: "Development Tools",
-    description: "Frontend & Creative Coding",
-  },
-];
+type CreativeToolboxProps = {
+  heading: string;
+  intro: string;
+  categories: SiteCopyContent["homeToolCategories"];
+};
 
-const CreativeToolbox = () => {
+const CreativeToolbox = ({ heading, intro, categories }: CreativeToolboxProps) => {
   const [selectedCategory, setSelectedCategory] = useState(categories[0].id);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const { scrollY } = useScroll();
   const rotate = useTransform(scrollY, [0, 1500], [0, 45]);
+  const headingParts = splitAccentHeading(heading);
 
   const currentCategory =
     categories.find((c) => c.id === selectedCategory) || categories[0];
@@ -131,7 +126,7 @@ const CreativeToolbox = () => {
   );
 
   return (
-    <section className="relative z-20 pt-28 pb-24 md:pb-16 bg-transparent pointer-events-none">
+    <section className="relative z-20 pt-28 pb-24 md:pb-16 bg-transparent">
       <div className="px-4 md:px-8 lg:px-16 xl:px-32 py-4 relative">
         {/* Background Element */}
         <motion.div
@@ -148,13 +143,13 @@ const CreativeToolbox = () => {
 
         <div className="w-full mb-8 relative z-10">
           <h2 className="text-4xl md:text-5xl font-bold pb-2 text-black mt-12 mb-2 tracking-tight">
-            My Creative <span className="text-blue-600 font-serif italic font-medium">Toolbox</span>
+            {headingParts.before}
+            {headingParts.accent ? (
+              <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
+            ) : null}
+            {headingParts.after}
           </h2>
-          <p className="text-black/70">
-            A curated collection of tools and technologies I use to bring ideas
-            to life,
-            <br className="hidden md:block" /> from design to development.
-          </p>
+          <p className="text-black/70">{intro}</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 relative z-10">

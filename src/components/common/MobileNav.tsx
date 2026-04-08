@@ -1,37 +1,18 @@
 'use client';
 
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { gsap } from 'gsap';
-import { ThemeToggle } from '../common/Themetoggle';
 
 interface MobileNavProps {
   className?: string;
 }
 
 export const MobileNav = ({ className = '' }: MobileNavProps) => {
-  const [isLightMode, setIsLightMode] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLAnchorElement>(null);
-
-  // Check theme state
-  useEffect(() => {
-    const checkTheme = () => {
-      setIsLightMode(!document.documentElement.classList.contains('dark'));
-    };
-
-    checkTheme();
-
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   // GSAP animations
   useEffect(() => {
@@ -65,20 +46,19 @@ export const MobileNav = ({ className = '' }: MobileNavProps) => {
     });
   }, []);
 
-  // Update border and background colors when theme changes
   useEffect(() => {
     if (!containerRef.current) return;
 
     gsap.to(containerRef.current, {
-      borderColor: isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
-      backgroundColor: isLightMode ? 'rgba(236, 236, 236, 0.7)' : 'rgba(10, 10, 10, 0.7)',
+      borderColor: 'rgba(0, 0, 0, 0.1)',
+      backgroundColor: 'rgba(236, 236, 236, 0.7)',
       duration: 0.3,
       ease: 'power2.inOut',
     });
-  }, [isLightMode]);
+  }, []);
 
   return (
-    <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 z-50 ${className}`}>
+    <div className={`fixed top-10 left-1/2 transform -translate-x-1/2 z-[110] ${className}`}>
       <div
         ref={containerRef}
         className="flex items-center justify-between gap-6 px-6! py-3! rounded-full shadow-lg min-w-[350px] border"
@@ -103,9 +83,6 @@ export const MobileNav = ({ className = '' }: MobileNavProps) => {
             priority
           />
         </Link>
-
-        {/* Theme Toggle Button */}
-        <ThemeToggle className="p-2!" />
       </div>
     </div>
   );

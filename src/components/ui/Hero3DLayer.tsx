@@ -358,7 +358,10 @@ function Model() {
           onPointerOut={() => setHovered(false)}
           onDoubleClick={(e) => {
             e.stopPropagation();
-            openJarvis();
+            const dragDist = dragStartPos.current.distanceTo(new THREE.Vector2(mouse.x, mouse.y));
+            if (dragDist < 0.05) {
+              openJarvis();
+            }
           }}
         >
           <sphereGeometry args={[2.5, 16, 16]} /> 
@@ -375,7 +378,11 @@ function Model() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
-                className="pointer-events-none select-none relative"
+                className="pointer-events-auto select-none relative cursor-pointer"
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  openJarvis();
+                }}
               >
                 {/* Floating "To and Fro" Layer */}
                 <motion.div

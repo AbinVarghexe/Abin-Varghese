@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -33,26 +33,6 @@ export const ScrollingBanner = ({
   const bottomBannerRef = useRef<HTMLDivElement>(null);
   const topContentRef = useRef<HTMLDivElement>(null);
   const bottomContentRef = useRef<HTMLDivElement>(null);
-
-  // Add state to determine light/dark mode preference on client
-  const [isLightMode, setIsLightMode] = useState<boolean>(true);
-
-  // Check theme state
-  useEffect(() => {
-    const checkTheme = () => {
-      setIsLightMode(!document.documentElement.classList.contains('dark'));
-    };
-
-    checkTheme();
-
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     const topContent  = topContentRef.current;
@@ -150,9 +130,9 @@ export const ScrollingBanner = ({
         style={{
           transform: 'translate(-50%, -50%)',
           transformOrigin: 'center center',
-          backgroundColor: isLightMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-          borderTop: `1px solid ${isLightMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
-          borderBottom: `1px solid ${isLightMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
         }}
       >
         <div
@@ -160,8 +140,8 @@ export const ScrollingBanner = ({
           className="inline-flex items-center px-4 py-2 md:px-8 md:py-4 font-medium text-base md:text-2xl whitespace-nowrap will-change-transform"
         >
           {duplicatedItems.map((item, index) => (
-            <span key={`top-${index}`} className="inline-flex items-center mx-2 md:mx-8" style={{ color: isLightMode ? '#111827' : '#ffffff' }}>
-              <span className="text-lg md:text-3xl mx-2 md:mx-4" style={{ color: isLightMode ? '#111827' : '#ffffff' }}>✦</span>
+            <span key={`top-${index}`} className="inline-flex items-center mx-2 md:mx-8" style={{ color: '#111827' }}>
+              <span className="text-lg md:text-3xl mx-2 md:mx-4" style={{ color: '#111827' }}>✦</span>
               {item}
             </span>
           ))}
@@ -175,19 +155,19 @@ export const ScrollingBanner = ({
         style={{
           transform: 'translate(-50%, -50%)',
           transformOrigin: 'center center',
-          backgroundColor: isLightMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-          borderTop: `1px solid ${isLightMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
-          borderBottom: `1px solid ${isLightMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.2)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
         }}
       >
         <div
           ref={bottomContentRef}
           className="inline-flex items-center px-4 py-2 md:px-8 md:py-4 font-medium text-base md:text-2xl whitespace-nowrap will-change-transform"
-          style={{ color: isLightMode ? '#111827' : '#ffffff' }}
+          style={{ color: '#111827' }}
         >
           {duplicatedItems.map((item, index) => (
-            <span key={`bottom-${index}`} className="inline-flex items-center mx-2 md:mx-8" style={{ color: isLightMode ? '#111827' : '#ffffff' }}>
-              <span className="text-lg md:text-3xl mx-2 md:mx-4" style={{ color: isLightMode ? '#111827' : '#ffffff' }}>✦</span>
+            <span key={`bottom-${index}`} className="inline-flex items-center mx-2 md:mx-8" style={{ color: '#111827' }}>
+              <span className="text-lg md:text-3xl mx-2 md:mx-4" style={{ color: '#111827' }}>✦</span>
               {item}
             </span>
           ))}

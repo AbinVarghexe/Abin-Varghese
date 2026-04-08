@@ -1,54 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Star, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { splitAccentHeading } from '@/lib/accent-heading';
+import type { SiteCopyReviewItem } from '@/lib/site-copy-content';
 
-interface Testimonial {
-  id: number;
+interface ReviewItem {
+  id: string;
   name: string;
   content: string;
   rating: number;
   designation?: string;
 }
-
-const testimonials: Testimonial[] = [
-  {
-    id: 1,
-    name: 'Roohika',
-    content: "I'm happy to be healthy and fit. I lost 12 kgs in just 3 months and feel so much smarter and more popular now! My relatives don't even recognise me. Your speciality is the school tiffin food.\n\nThank you so much!",
-    rating: 5,
-    designation: 'CEO, Wellness Solutions',
-  },
-  {
-    id: 2,
-    name: 'Stephen A.',
-    content: 'Within minutes the friendly sales assistant had secured me a spectacular restaurant at The Pullman Hotel which was right slap bang in the M&S Bank Arena limit, a 2 second walk !!!',
-    rating: 5,
-    designation: 'Product Designer, Indie Inc.',
-  },
-  {
-    id: 3,
-    name: 'Barry W.',
-    content: 'Really useful system. We got an amazing service for our company hotel bookings for our up and coming events.',
-    rating: 5,
-    designation: 'Co-Founder, Tech Harbor',
-  },
-  {
-    id: 4,
-    name: 'Sarah J.',
-    content: "Super professional, organised and great to work with. These guys were invaluable on our last major project. Can't recommend enough.",
-    rating: 5,
-    designation: 'Project Lead, Creative Agency',
-  },
-  {
-    id: 5,
-    name: 'Simon F.',
-    content: 'Sorted accommodation in Scotland for me and were very timely and professional. Excellent rates and more discounted than anywhere else :)',
-    rating: 5,
-    designation: 'Director, Logistics Group',
-  },
-];
 
 const BlueGradientBackground = () => (
   <svg width="0" height="0" className="absolute">
@@ -61,13 +25,24 @@ const BlueGradientBackground = () => (
   </svg>
 );
 
+const sparkleConfigs = [
+  { x: "12%", y: "18%", duration: 7.4, delay: 0.6 },
+  { x: "22%", y: "66%", duration: 9.1, delay: 1.4 },
+  { x: "33%", y: "32%", duration: 8.2, delay: 2.2 },
+  { x: "48%", y: "74%", duration: 10.3, delay: 0.9 },
+  { x: "58%", y: "20%", duration: 7.8, delay: 3.1 },
+  { x: "71%", y: "52%", duration: 11.2, delay: 2.7 },
+  { x: "82%", y: "24%", duration: 8.6, delay: 4.1 },
+  { x: "90%", y: "68%", duration: 9.7, delay: 1.9 },
+];
+
 const PaperClip = () => (
   <svg width="40" height="80" viewBox="0 0 40 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute -left-4 -top-8 rotate-12 z-50 drop-shadow-md">
     <path d="M12 25V55C12 60.5228 16.4772 65 22 65C27.5228 65 32 60.5228 32 55V15C32 9.47715 27.5228 5 22 5C16.4772 5 12 9.47715 12 15V50C12 52.7614 14.2386 55 17 55C19.7614 55 22 52.7614 22 50V25" stroke="url(#blueGradient)" strokeWidth="4" strokeLinecap="round" />
   </svg>
 );
 
-const BackgroundAnimations = () => {
+function BackgroundAnimations() {
   const starsList = [
     { x: 100, y: 150, size: 2, connects: [1, 2] },
     { x: 300, y: 220, size: 3, connects: [2, 3] },
@@ -124,13 +99,13 @@ const BackgroundAnimations = () => {
       
       {/* Floating Sparkle Particles */}
       <div className="absolute inset-0">
-        {[...Array(8)].map((_, i) => (
+        {sparkleConfigs.map((sparkle, i) => (
           <motion.div
             key={`sparkle-${i}`}
             className="absolute"
-            initial={{ x: `${10 + Math.random() * 80}%`, y: `${10 + Math.random() * 80}%`, opacity: 0 }}
+            initial={{ x: sparkle.x, y: sparkle.y, opacity: 0 }}
             animate={{ y: [null, '-15%'], opacity: [0, 0.4, 0], scale: [0.5, 1, 0.5] }}
-            transition={{ duration: 7 + Math.random() * 5, repeat: Infinity, delay: Math.random() * 10 }}
+            transition={{ duration: sparkle.duration, repeat: Infinity, delay: sparkle.delay }}
           >
             <div className="w-1 h-1 bg-blue-300 rounded-full blur-[1px]" />
           </motion.div>
@@ -138,7 +113,7 @@ const BackgroundAnimations = () => {
       </div>
     </div>
   );
-};
+}
 
 const ReviewCard = ({ 
   testimonial, 
@@ -147,7 +122,7 @@ const ReviewCard = ({
   activeIndex,
   onClick
 }: { 
-  testimonial: Testimonial, 
+  testimonial: ReviewItem, 
   index: number, 
   total: number, 
   activeIndex: number,
@@ -211,42 +186,37 @@ const ReviewCard = ({
   );
 };
 
-export default function ReviewsSection() {
-  const [mounted, setMounted] = useState(false);
+type ReviewsSectionProps = {
+  heading: string;
+  intro: string;
+  items: SiteCopyReviewItem[];
+};
+
+export default function ReviewsSection({ heading, intro, items }: ReviewsSectionProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
-  
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"]
-  });
-
-  const yBackground = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const headingParts = splitAccentHeading(heading);
 
   const handleNext = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % testimonials.length);
-  }, []);
+    setActiveIndex((prev) => (prev + 1) % items.length);
+  }, [items.length]);
 
   const handlePrev = useCallback(() => {
-    setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  }, []);
+    setActiveIndex((prev) => (prev - 1 + items.length) % items.length);
+  }, [items.length]);
 
   useEffect(() => {
-    if (!mounted || isPaused) return;
+    if (isPaused || items.length <= 1) return;
 
     const interval = setInterval(() => {
       handleNext();
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [mounted, isPaused, handleNext]);
+  }, [isPaused, handleNext, items.length]);
 
-  if (!mounted) return <div className="h-[600px] w-full" />;
+  if (items.length === 0) return null;
 
   return (
     <section 
@@ -254,8 +224,8 @@ export default function ReviewsSection() {
       id="reviews" 
       className="relative z-20 py-24 px-4 md:px-8 lg:px-20 w-full overflow-hidden"
     >
-
       <BlueGradientBackground />
+      <BackgroundAnimations />
       
       <div className="relative z-20">
         <div className="w-full mb-16 relative">
@@ -282,11 +252,14 @@ export default function ReviewsSection() {
             className="w-full flex flex-col items-start px-4 md:px-8 lg:px-16 xl:px-32 pl-[40px] md:pl-[40px] lg:pl-[40px] xl:pl-[calc(8rem+40px)] relative z-10"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-black mb-2 tracking-tight">
-              Client <span className="text-blue-600 font-serif italic font-medium">Testimonials</span>
+              {headingParts.before}
+              {headingParts.accent ? (
+                <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
+              ) : null}
+              {headingParts.after}
             </h2>
             <p className="text-black/70 text-base max-w-[600px] leading-relaxed">
-              A curated collection of feedback from clients and partners I've had the pleasure 
-              of working with to bring their visions to life, from design to development.
+              {intro}
             </p>
           </motion.div>
         </div>
@@ -309,12 +282,12 @@ export default function ReviewsSection() {
             onMouseLeave={() => setIsPaused(false)}
           >
             <AnimatePresence mode="popLayout">
-              {testimonials.map((testimonial, index) => (
+              {items.map((testimonial, index) => (
                 <ReviewCard 
                   key={testimonial.id} 
                   testimonial={testimonial} 
                   index={index}
-                  total={testimonials.length}
+                  total={items.length}
                   activeIndex={activeIndex}
                   onClick={handleNext}
                 />

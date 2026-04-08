@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { splitAccentHeading } from '@/lib/accent-heading';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -34,16 +35,18 @@ const CONFIG: Record<State, Record<CardId, object>> = {
 const EASE = 'power2.out';
 const DUR  = 0.38;
 
-export default function AboutSection() {
+type AboutSectionProps = {
+  heading: string;
+  body: string;
+  ctaLabel: string;
+};
+
+export default function AboutSection({ heading, body, ctaLabel }: AboutSectionProps) {
   const textRef   = useRef<HTMLDivElement>(null);
   const stackRef  = useRef<HTMLDivElement>(null);
   const leftRef   = useRef<HTMLDivElement>(null);
   const rightRef  = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLDivElement>(null);
-
-  const refMap: Record<CardId, React.RefObject<HTMLDivElement | null>> = {
-    left: leftRef, right: rightRef, center: centerRef,
-  };
 
   /* ──────────────────────────────────────────────────────────
    * applyState — fires on every hover event
@@ -54,7 +57,12 @@ export default function AboutSection() {
   const applyState = useCallback((state: State) => {
     const cfg = CONFIG[state];
     (['left', 'right', 'center'] as const).forEach((id) => {
-      const el = refMap[id].current;
+      const el =
+        id === 'left'
+          ? leftRef.current
+          : id === 'right'
+            ? rightRef.current
+            : centerRef.current;
       if (!el) return;
       gsap.to(el, {
         ...cfg[id],
@@ -63,7 +71,7 @@ export default function AboutSection() {
         overwrite: 'auto',   // ← kills any conflicting in-progress tween
       });
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ──────────────────────────────────────────────────────────
    * Mount effect — wrapped in gsap.context so React strict-mode
@@ -149,12 +157,14 @@ export default function AboutSection() {
 
     return () => ctx.revert(); // clean up all tweens + ScrollTriggers atomically
 
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
+
+  const headingParts = splitAccentHeading(heading);
 
   return (
     <section
       id="about"
-      className="relative z-20 w-full px-4 md:px-8 lg:px-20 py-16 md:py-28 overflow-visible pointer-events-none"
+      className="relative z-20 w-full px-4 md:px-8 lg:px-20 py-16 md:py-28 overflow-visible"
       style={{ backgroundColor: 'transparent' }}
     >
       {/* Faint bg sparkle */}
@@ -171,16 +181,15 @@ export default function AboutSection() {
         {/* ── Left column: text ── */}
         <div ref={textRef} className="flex flex-col gap-6 w-full lg:w-[55%] pointer-events-auto">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-black">
-            About <span className="text-blue-600 font-serif italic font-medium">Me</span>
+            {headingParts.before}
+            {headingParts.accent ? (
+              <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
+            ) : null}
+            {headingParts.after}
           </h2>
 
           <p className="text-black/70 text-lg leading-relaxed max-w-[560px]">
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry&apos;s standard dummy text
-            ever since the 1500s, when an unknown printer took a galley of type and
-            scrambled it to make a type specimen book. It has survived not only five
-            centuries, but also the leap into electronic typesetting, remaining
-            essentially unchanged.
+            {body}
           </p>
 
           <Link
@@ -207,7 +216,7 @@ export default function AboutSection() {
               el.style.transform = 'scale(1)';
             }}
           >
-            <span style={{ minWidth: '80px', textAlign: 'center' }}>More about</span>
+            <span style={{ minWidth: '80px', textAlign: 'center' }}>{ctaLabel}</span>
             <span
               className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
               style={{ width: '46.949px', height: '46.949px' }}

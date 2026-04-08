@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo } from "react";
 import Image from "next/image";
 import LogoCarousel from "./LogoCarousel";
 
@@ -26,23 +26,6 @@ interface BrandsSectionProps {
 
 const BrandsSection = ({ logos }: BrandsSectionProps) => {
   const displayLogos = logos && logos.length > 0 ? logos : partnerLogos;
-  const [isLightMode, setIsLightMode] = useState<boolean>(true);
-
-  useEffect(() => {
-    const checkTheme = () => {
-      setIsLightMode(!document.documentElement.classList.contains("dark"));
-    };
-
-    checkTheme();
-
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <section className="relative z-20 w-full px-4 md:px-8 lg:px-16 py-8">

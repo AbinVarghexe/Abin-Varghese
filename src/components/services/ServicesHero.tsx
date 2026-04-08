@@ -4,7 +4,7 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import Image from 'next/image';
 
-const ServicesHero = () => {
+const ServicesHero = ({ title }: { title: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   
   // ── Mouse Tracking for 2.5D Illusion ────────────────────────
@@ -188,7 +188,7 @@ const ServicesHero = () => {
           transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
           className="text-[10vw] md:text-[11rem] font-bold text-black uppercase tracking-tighter leading-none select-none text-center px-6"
         >
-          Services
+          {title}
         </motion.h1>
       </motion.div>
 

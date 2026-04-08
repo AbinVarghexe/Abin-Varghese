@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { 
   Check, 
   X, 
-  Sparkles, 
   LayoutGrid, 
   CreditCard, 
   RefreshCw, 
@@ -14,6 +13,8 @@ import {
   ArrowUpRight
 } from "lucide-react";
 import Link from "next/link";
+import { splitAccentHeading } from "@/lib/accent-heading";
+import type { SiteCopyComparisonFeature } from "@/lib/site-copy-content";
 
 interface ComparisonRowProps {
   icon: React.ReactNode;
@@ -53,14 +54,36 @@ const ComparisonRow = ({ icon, label, others, me }: ComparisonRowProps) => (
   </div>
 );
 
-export default function WhyChooseMe() {
-  const features = [
-    { icon: <LayoutGrid className="w-5 h-5" />, label: "Customizable Design", others: true, me: true },
-    { icon: <CreditCard className="w-5 h-5" />, label: "Seamless Integration", others: false, me: true },
-    { icon: <RefreshCw className="w-5 h-5" />, label: "Advanced Automation", others: true, me: true },
-    { icon: <ShieldCheck className="w-5 h-5" />, label: "Premium Security", others: true, me: true },
-    { icon: <Globe className="w-5 h-5" />, label: "Global Scalability", others: true, me: true },
-  ];
+const featureIcons = [
+  <LayoutGrid className="w-5 h-5" key="layout" />,
+  <CreditCard className="w-5 h-5" key="credit" />,
+  <RefreshCw className="w-5 h-5" key="refresh" />,
+  <ShieldCheck className="w-5 h-5" key="shield" />,
+  <Globe className="w-5 h-5" key="globe" />,
+];
+
+type WhyChooseMeProps = {
+  eyebrow: string;
+  heading: string;
+  intro: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  features: SiteCopyComparisonFeature[];
+};
+
+export default function WhyChooseMe({
+  eyebrow,
+  heading,
+  intro,
+  ctaLabel,
+  ctaUrl,
+  features,
+}: WhyChooseMeProps) {
+  const headingParts = splitAccentHeading(heading);
+  const featureRows = features.map((feature, index) => ({
+    ...feature,
+    icon: featureIcons[index % featureIcons.length],
+  }));
 
   return (
     <section className="relative w-full py-10 px-4 md:px-8 lg:px-20 bg-transparent overflow-hidden">
@@ -84,7 +107,7 @@ export default function WhyChooseMe() {
             viewport={{ once: true }}
             className="px-4 py-1.5 rounded-full border border-zinc-100 bg-white/50 backdrop-blur-sm text-sm font-bold text-blue-500 uppercase tracking-widest mb-6"
           >
-            Me vs Others
+            {eyebrow}
           </motion.div>
           
           <motion.h2
@@ -93,8 +116,11 @@ export default function WhyChooseMe() {
             viewport={{ once: true }}
             className="text-4xl md:text-6xl font-bold pb-2 text-black tracking-tight"
           >
-            Why I Beat <br className="md:hidden" />
-            <span className="text-blue-600 font-serif italic font-medium">Every Competitor</span> 
+            {headingParts.before}
+            {headingParts.accent ? (
+              <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
+            ) : null}
+            {headingParts.after}
           </motion.h2>
         </div>
 
@@ -110,12 +136,11 @@ export default function WhyChooseMe() {
             className="flex flex-col items-start gap-8 px-4"
           >
             <p className="text-lg text-zinc-500 leading-relaxed max-w-xl">
-              I deliver premium quality results with a focus on high-performance and seamless user experience. 
-              Compare my approach with standard industry practices.
+              {intro}
             </p>
 
             <Link
-              href="/"
+              href={ctaUrl}
               className="group inline-flex items-center no-underline transition-all duration-300"
               style={{
                 gap: '15.945px',
@@ -141,7 +166,7 @@ export default function WhyChooseMe() {
                 el.style.transform = 'scale(1)';
               }}
             >
-              <span className="min-w-[80px] text-center">Get Started</span>
+              <span className="min-w-[80px] text-center">{ctaLabel}</span>
               <span
                 className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
                 style={{ width: '46.949px', height: '46.949px' }}
@@ -183,7 +208,7 @@ export default function WhyChooseMe() {
                 <div className="absolute right-0 top-0 bottom-0 w-[31%] bg-linear-to-b from-blue-500 to-indigo-600 z-0" />
                 
                 <div className="relative z-10">
-                  {features.map((feature, idx) => (
+                  {featureRows.map((feature, idx) => (
                     <ComparisonRow 
                       key={idx}
                       icon={feature.icon}

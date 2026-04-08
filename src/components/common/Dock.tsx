@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -20,24 +20,6 @@ interface DockProps {
 export const Dock: React.FC<DockProps> = ({ items = [], className = '' }) => {
   const pathname = usePathname();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [isLightMode, setIsLightMode] = useState(false);
-  
-  // Check theme state
-  useEffect(() => {
-    const checkTheme = () => {
-      setIsLightMode(!document.documentElement.classList.contains('dark'));
-    };
-
-    checkTheme();
-
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
-    return () => observer.disconnect();
-  }, []);
   
   // Determine active index based on current pathname
   const activeIndex = items.findIndex(item => item.link === pathname);
@@ -53,20 +35,18 @@ export const Dock: React.FC<DockProps> = ({ items = [], className = '' }) => {
           y: 100, 
           opacity: 0,
           borderWidth: '1px',
-          borderColor: isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+          borderColor: 'rgba(0, 0, 0, 0.1)',
         }}
         animate={{ 
           y: 0, 
           opacity: 1,
           borderWidth: '1px',
-          borderColor: isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+          borderColor: 'rgba(0, 0, 0, 0.1)',
         }}
         transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         style={{
           borderStyle: 'solid',
-          backgroundColor: isLightMode 
-            ? 'rgba(236, 236, 236, 0.7)' 
-            : 'rgba(10, 10, 10, 0.7)',
+          backgroundColor: 'rgba(236, 236, 236, 0.7)',
           backdropFilter: 'blur(16px) saturate(180%)',
           WebkitBackdropFilter: 'blur(16px) saturate(180%)',
         }}
@@ -77,7 +57,6 @@ export const Dock: React.FC<DockProps> = ({ items = [], className = '' }) => {
             item={item}
             isActive={activeIndex === i}
             isHovered={hoveredIndex === i}
-            isLightMode={isLightMode}
             onHover={() => setHoveredIndex(i)}
             onLeave={() => setHoveredIndex(null)}
           />
@@ -91,7 +70,6 @@ interface DockIconProps {
   item: DockItem;
   isActive: boolean;
   isHovered: boolean;
-  isLightMode: boolean;
   onHover: () => void;
   onLeave: () => void;
 }
@@ -100,17 +78,15 @@ const DockIcon: React.FC<DockIconProps> = ({
   item, 
   isActive, 
   isHovered, 
-  isLightMode,
   onHover, 
   onLeave 
 }) => {
   // Scale animation based on whether the icon is hovered or active
   const iconScale = isHovered ? 1.4 : isActive ? 1.2 : 1;
   
-  // Dynamic colors based on theme
-  const activeColor = isLightMode ? '#111827' : '#ffffff';
-  const inactiveColor = isLightMode ? '#6b7280' : '#9ca3af';
-  const indicatorColor = isLightMode ? '#111827' : '#ffffff';
+  const activeColor = '#111827';
+  const inactiveColor = '#6b7280';
+  const indicatorColor = '#111827';
   
   // Use m instead of motion
   const MotionDiv = m.div;

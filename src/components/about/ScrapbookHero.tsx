@@ -3,9 +3,11 @@ import Link from "next/link";
 import AboutHeroMusic from "@/components/about/AboutHeroMusic";
 
 import type { AboutContent } from "@/lib/about-content-defaults";
+import type { SiteCopyContent } from "@/lib/site-copy-content";
 
 type ScrapbookHeroProps = {
   content: AboutContent;
+  copy: Pick<SiteCopyContent, "aboutStickyNote" | "aboutLowerRightNote" | "aboutFooterTag">;
 };
 
 type SideImageCard = {
@@ -46,7 +48,7 @@ function SideImage({ imageUrl, href, alt, className, aspectClassName, imageClass
   return <div className={className}>{content}</div>;
 }
 
-export default function ScrapbookHero({ content }: ScrapbookHeroProps) {
+export default function ScrapbookHero({ content, copy }: ScrapbookHeroProps) {
   const sideImages: SideImageCard[] = [
     {
       imageUrl: content.aboutInstagramImage1,
@@ -109,9 +111,12 @@ export default function ScrapbookHero({ content }: ScrapbookHeroProps) {
 
       <div className="absolute top-0 right-4 md:right-32 w-48 md:w-56 h-36 bg-[#eadfcd] shadow-md transform rotate-1 p-5 flex flex-col justify-end z-10">
         <p className="text-[#a53f3f] font-mono text-xs md:text-sm uppercase tracking-widest leading-loose font-semibold pr-4 whitespace-nowrap">
-          Notes from
-          <br />a creative
-          <br />to a creative.
+          {copy.aboutStickyNote.split("\n").map((line, index) => (
+            <span key={index}>
+              {line}
+              {index < copy.aboutStickyNote.split("\n").length - 1 ? <br /> : null}
+            </span>
+          ))}
         </p>
       </div>
 
@@ -134,17 +139,12 @@ export default function ScrapbookHero({ content }: ScrapbookHeroProps) {
         style={{ fontFamily: "var(--font-poppins), sans-serif" }}
       >
         <p>
-          The world will tell you to be this or that. And sometimes, it&apos;s hard to choose your own path
-          with all the pressure, expectations, and &quot;shoulds.&quot;
-        </p>
-        <p className="mt-4">
-          But you&apos;re more than what you think you are. It&apos;s never too late to start, to create, or
-          to become the person your younger self dreamed of being.
+          {copy.aboutLowerRightNote}
         </p>
       </div>
 
       <div className="absolute bottom-10 left-4 md:left-16 text-[9px] md:text-xs font-mono font-bold tracking-widest text-[#222] opacity-70 z-20 uppercase">
-        <p>ISSUE NOVEMBER 2025 &nbsp;&nbsp;&nbsp; @THEHYBRIDDESIGNER.NP</p>
+        <p>{copy.aboutFooterTag}</p>
       </div>
     </section>
   );

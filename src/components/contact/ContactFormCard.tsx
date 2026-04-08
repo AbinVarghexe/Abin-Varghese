@@ -57,7 +57,7 @@ export default function ContactFormCard({ isEnabled }: ContactFormCardProps) {
   return (
     <form
       onSubmit={onSubmit}
-      className="relative bg-white/60 dark:bg-white/[0.05] border-[3px] border-white dark:border-white/20 backdrop-blur-xl p-6 sm:p-8 md:px-[32.6px] md:py-[24px] rounded-[35px] flex flex-col gap-[12px] w-full lg:w-[684px] shadow-[0_16px_40px_-5px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_-5px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.1)] hover:shadow-[0_20px_50px_-5px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_30px_60px_-10px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.2)] transition-shadow duration-500 overflow-hidden"
+      className="relative bg-white/60 border-[3px] border-white backdrop-blur-xl p-6 sm:p-8 md:px-[32.6px] md:py-[24px] rounded-[35px] flex flex-col gap-[12px] w-full lg:w-[684px] shadow-[0_16px_40px_-5px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_50px_-5px_rgba(0,0,0,0.15)] transition-shadow duration-500 overflow-hidden"
     >
       <div
         className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-0"
@@ -74,7 +74,7 @@ export default function ContactFormCard({ isEnabled }: ContactFormCardProps) {
           value={name}
           onChange={(event) => setName(event.target.value)}
           placeholder="Name"
-          className="contact-input w-full border-[2px] border-black/5 dark:border-[rgba(180,180,180,0.3)] rounded-[22px] pl-[31.7px] pr-[20px] text-[15.8px] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-[#d0d0d0] focus:outline-none focus:border-black/20 dark:focus:border-white/50 transition-all duration-300 font-medium h-[70px] bg-black/[0.02] dark:bg-transparent"
+          className="contact-input w-full border-[2px] border-black/5 rounded-[22px] pl-[31.7px] pr-[20px] text-[15.8px] text-black placeholder:text-black/40 focus:outline-none focus:border-black/20 transition-all duration-300 font-medium h-[70px] bg-black/[0.02]"
         />
 
         <input
@@ -83,7 +83,7 @@ export default function ContactFormCard({ isEnabled }: ContactFormCardProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Email"
-          className="contact-input w-full border-[2px] border-black/5 dark:border-[rgba(180,180,180,0.3)] rounded-[22px] pl-[26.4px] pr-[20px] text-[15.8px] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-[#d0d0d0] focus:outline-none focus:border-black/20 dark:focus:border-white/50 transition-all duration-300 font-medium h-[70px] bg-black/[0.02] dark:bg-transparent"
+          className="contact-input w-full border-[2px] border-black/5 rounded-[22px] pl-[26.4px] pr-[20px] text-[15.8px] text-black placeholder:text-black/40 focus:outline-none focus:border-black/20 transition-all duration-300 font-medium h-[70px] bg-black/[0.02]"
         />
       </div>
 
@@ -92,7 +92,7 @@ export default function ContactFormCard({ isEnabled }: ContactFormCardProps) {
         value={subject}
         onChange={(event) => setSubject(event.target.value)}
         placeholder="Subject (optional)"
-        className="contact-input relative z-10 w-full border-[2px] border-black/5 dark:border-[rgba(180,180,180,0.3)] rounded-[22px] px-[26.4px] text-[15.8px] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-[#d0d0d0] focus:outline-none focus:border-black/20 dark:focus:border-white/50 transition-all duration-300 font-medium h-[60px] bg-black/[0.02] dark:bg-transparent"
+        className="contact-input relative z-10 w-full border-[2px] border-black/5 rounded-[22px] px-[26.4px] text-[15.8px] text-black placeholder:text-black/40 focus:outline-none focus:border-black/20 transition-all duration-300 font-medium h-[60px] bg-black/[0.02]"
       />
 
       <textarea
@@ -101,13 +101,13 @@ export default function ContactFormCard({ isEnabled }: ContactFormCardProps) {
         value={message}
         onChange={(event) => setMessage(event.target.value)}
         placeholder="Message"
-        className="contact-input w-full relative z-10 border-[2px] border-black/5 dark:border-[rgba(180,180,180,0.3)] rounded-[22px] px-[40.8px] pt-[29.5px] pb-[20px] text-[15.8px] text-black dark:text-white placeholder:text-black/40 dark:placeholder:text-[#d0d0d0] focus:outline-none focus:border-black/20 dark:focus:border-white/50 transition-all duration-300 resize-none font-medium h-[309px] bg-black/[0.02] dark:bg-transparent"
+        className="contact-input w-full relative z-10 border-[2px] border-black/5 rounded-[22px] px-[40.8px] pt-[29.5px] pb-[20px] text-[15.8px] text-black placeholder:text-black/40 focus:outline-none focus:border-black/20 transition-all duration-300 resize-none font-medium h-[309px] bg-black/[0.02]"
       />
 
       <button
         type="submit"
         disabled={!isEnabled || submitting}
-        className="group overflow-hidden w-full bg-black dark:bg-white text-white dark:text-black font-semibold text-[17.6px] uppercase h-[70px] rounded-[34.8px] border-[2px] border-black dark:border-[rgba(180,180,180,0.3)] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 relative z-10 flex items-center justify-center tracking-wide"
+        className="group overflow-hidden w-full bg-black text-white font-semibold text-[17.6px] uppercase h-[70px] rounded-[34.8px] border-[2px] border-black disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-300 relative z-10 flex items-center justify-center tracking-wide"
       >
         <span className="relative z-20 flex items-center justify-center gap-2">
           {isEnabled ? (submitting ? "Submitting..." : "Submit") : "Form Disabled"}
@@ -115,7 +115,7 @@ export default function ContactFormCard({ isEnabled }: ContactFormCardProps) {
         </span>
       </button>
 
-      {status ? <p className="relative z-10 text-sm text-black/70 dark:text-white/80">{status}</p> : null}
+      {status ? <p className="relative z-10 text-sm text-black/70">{status}</p> : null}
     </form>
   );
 }

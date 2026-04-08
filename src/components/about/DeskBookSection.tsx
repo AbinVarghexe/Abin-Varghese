@@ -3,18 +3,23 @@
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import KeyboardDemo from "@/components/about/keyboard-demo";
+import type { SiteCopyContent } from "@/lib/site-copy-content";
 
-export default function DeskBookSection() {
+type DeskBookSectionProps = {
+  copy: Pick<
+    SiteCopyContent,
+    "aboutIntroTitle" | "aboutIntroBody" | "aboutBookImage" | "aboutTimelineTitle" | "aboutTimelineEntries"
+  >;
+};
+
+export default function DeskBookSection({ copy }: DeskBookSectionProps) {
   // 0: Closed, 1: Opened Page 1, 2: Flipped to Page 2
   const [page, setPage] = useState(0);
-  const [mounted, setMounted] = useState(false);
   const [scrolled1, setScrolled1] = useState(false);
   const [scrolled2, setScrolled2] = useState(false);
   const [keyboardEngaged, setKeyboardEngaged] = useState(false);
   const keyboardRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  
-  useEffect(() => setMounted(true), []);
 
   const playBookSound = useCallback((type: "open" | "turn" | "close") => {
     if (typeof window === "undefined") return;
@@ -76,8 +81,10 @@ export default function DeskBookSection() {
   const openCover = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("open"); setPage(1); };
   const turnToPage2 = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("turn"); setPage(2); };
   const turnToPage1 = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("turn"); setPage(1); };
-
-  if (!mounted) return null;
+  const introParagraphs = copy.aboutIntroBody
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 
   return (
     <section className="relative w-full min-h-[120dvh] overflow-hidden flex flex-col items-center justify-center py-20 px-2 md:px-8 lg:py-32">
@@ -200,22 +207,22 @@ export default function DeskBookSection() {
                 <div className="absolute top-0 left-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-transparent to-black/30 z-0 pointer-events-none"></div>
                 
                   <div className="relative z-10 p-6 md:p-12 h-full overflow-y-auto [&::-webkit-scrollbar]:hidden flex flex-col" onScroll={(e) => setScrolled2(e.currentTarget.scrollTop > 10)}>
-                    <h2 className="text-2xl md:text-5xl text-[#382818] font-bold mb-6 md:mb-10 font-serif tracking-tight border-b-2 border-[#b89467] pb-4 uppercase">Chronicles of Work</h2>
+                    <h2 className="text-2xl md:text-5xl text-[#382818] font-bold mb-6 md:mb-10 font-serif tracking-tight border-b-2 border-[#b89467] pb-4 uppercase">{copy.aboutTimelineTitle}</h2>
                     
                     <div className="space-y-6 md:space-y-10 pl-2">
-                        <div className="relative pl-6 md:pl-8 border-l-2 border-[#8b5a2b]/60">
+                        {copy.aboutTimelineEntries.map((entry, index) => (
+                          <div
+                            key={`${entry.role}-${entry.organization}-${index}`}
+                            className={`relative pl-6 md:pl-8 border-l-2 border-[#8b5a2b]/60 ${index === copy.aboutTimelineEntries.length - 1 ? "pb-2" : ""}`}
+                          >
                             <div className="absolute top-1.5 -left-[5px] w-2.5 h-2.5 rounded-full bg-[#8b5a2b] shadow-[0_0_5px_#8b5a2b]"></div>
-                            <h3 className="text-lg md:text-2xl font-bold text-[#4a3320] font-serif">Master of Spells (Frontend Dev)</h3>
-                            <p className="text-[#965839] text-[10px] md:text-sm font-mono font-semibold tracking-widest my-1 uppercase">Order of Tech • 2023 - Present</p>
-                            <p className="text-[#5c4636] text-xs md:text-base mt-2 leading-relaxed">Conjuring intricate web architectures, mastering React incantations, and weaving animations that captivate mortals.</p>
-                        </div>
-                        
-                        <div className="relative pl-6 md:pl-8 border-l-2 border-[#8b5a2b]/60 pb-2">
-                            <div className="absolute top-1.5 -left-[5px] w-2.5 h-2.5 rounded-full bg-[#8b5a2b] shadow-[0_0_5px_#8b5a2b]"></div>
-                            <h3 className="text-lg md:text-2xl font-bold text-[#4a3320] font-serif">Alchemist of Design</h3>
-                            <p className="text-[#965839] text-[10px] md:text-sm font-mono font-semibold tracking-widest my-1 uppercase">Creative Guild • 2021 - 2023</p>
-                            <p className="text-[#5c4636] text-xs md:text-base mt-2 leading-relaxed">Transmuting wild wireframes into golden interactive prototypes. Charting User Experience journeys across dimensions.</p>
-                        </div>
+                            <h3 className="text-lg md:text-2xl font-bold text-[#4a3320] font-serif">{entry.role}</h3>
+                            <p className="text-[#965839] text-[10px] md:text-sm font-mono font-semibold tracking-widest my-1 uppercase">
+                              {entry.organization} • {entry.duration}
+                            </p>
+                            <p className="text-[#5c4636] text-xs md:text-base mt-2 leading-relaxed">{entry.copy}</p>
+                          </div>
+                        ))}
                     </div>
 
                     <div className="mt-auto pt-10 flex justify-end items-center opacity-70">
@@ -268,24 +275,22 @@ export default function DeskBookSection() {
                             
                             {/* Profile Image */}
                             <div className="relative w-full h-full overflow-hidden grayscale-[20%] sepia-[30%] contrast-[1.1]">
-                                <Image src="/about/abin-varghese.png" alt="Abin Varghese" fill className="object-cover object-top" unoptimized />
+                                <Image src={copy.aboutBookImage} alt="Abin Varghese" fill className="object-cover object-top" unoptimized />
                             </div>
                         </div>
                     </div>
 
-                    <h2 className="text-3xl md:text-5xl font-bold mb-6 font-serif text-center md:text-left text-[#4a331e]">Prologue</h2>
+                    <h2 className="text-3xl md:text-5xl font-bold mb-6 font-serif text-center md:text-left text-[#4a331e]">{copy.aboutIntroTitle}</h2>
 
                     <div className="text-[15px] md:text-[1.2rem] lg:text-[1.3rem] leading-[2.2] space-y-6 flex-grow font-serif relative z-10">
-                        <p className="first-letter:text-6xl first-letter:font-bold first-letter:text-[#8b5a2b] first-letter:mr-2 first-letter:float-left first-letter:-mt-1 shadow-sm">
-                            Greetings. I am Abin, a creative developer blending logic with imagination. 
-                        </p>
-                        <p>
-                            In a realm cluttered with generic utility blocks, I strive to craft digital artifacts that feel like magic. 
-                            The web should not be a chore to navigate, but an experience to behold.
-                        </p>
-                        <p>
-                            Join me as we turn the pages of modern web craftsmanship, weaving elegant interfaces, seamless interactions, and unforgettable journeys.
-                        </p>
+                        {introParagraphs.map((paragraph, index) => (
+                          <p
+                            key={`${paragraph.slice(0, 24)}-${index}`}
+                            className={index === 0 ? "first-letter:text-6xl first-letter:font-bold first-letter:text-[#8b5a2b] first-letter:mr-2 first-letter:float-left first-letter:-mt-1 shadow-sm" : ""}
+                          >
+                            {paragraph}
+                          </p>
+                        ))}
                     </div>
 
                     <div className="flex items-center justify-end mt-12 font-serif text-[#b88645] opacity-70">

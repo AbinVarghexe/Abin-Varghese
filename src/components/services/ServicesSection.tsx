@@ -4,12 +4,13 @@ import React, { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import { ArrowUpRight, Sparkles } from 'lucide-react';
-import { StripedPattern } from "@/components/magicui/striped-pattern";
 import Folder from '@/components/ui/Folder';
 import { OrbitingCircles } from '@/components/ui/orbiting-circles';
+import { splitAccentHeading } from '@/lib/accent-heading';
+import type { Service } from '@/constants/services';
 
 // ─── Services Data ─────────────────────────────────────────────────────────
-const services = [
+const homeServiceCards = [
   {
     id: 'uiux' as const,
     title: 'UI / UX Design',
@@ -53,6 +54,32 @@ const services = [
   },
 ];
 
+interface ServicesSectionProps {
+  heading: string;
+  intro: string;
+  services: Service[];
+}
+
+function resolveServiceContent(
+  services: Service[],
+  ids: string[],
+  fallback: (typeof homeServiceCards)[number]
+) {
+  const matched = ids
+    .map((id) => services.find((item) => item.id === id))
+    .find(Boolean);
+
+  if (!matched) {
+    return fallback;
+  }
+
+  return {
+    ...fallback,
+    title: matched.title,
+    description: matched.description,
+  };
+}
+
 // ─── Lottie fetch hook ──────────────────────────────────────────────────────
 function useLottieData(url?: string) {
   const [animationData, setAnimationData] = useState<unknown>(null);
@@ -81,12 +108,33 @@ const folderPapers: React.ReactNode[] = [
   </div>,
 ];
 
+const vfxParticleConfigs = [
+  { x: 32, y: 44, duration: 2.4, delay: 0.2 },
+  { x: 86, y: 102, duration: 3.1, delay: 1.5 },
+  { x: 128, y: 76, duration: 2.8, delay: 2.1 },
+  { x: 172, y: 148, duration: 3.4, delay: 0.9 },
+  { x: 218, y: 92, duration: 2.6, delay: 2.8 },
+  { x: 258, y: 126, duration: 3.2, delay: 1.2 },
+];
+
 // ─── Types ─────────────────────────────────────────────────────────────────
-type BaseService = (typeof services)[number];
+type BaseService = (typeof homeServiceCards)[number];
 type LottieService = BaseService & { lottieUrl: string; isTall?: boolean; isWide?: boolean; };
 
 // ─── Main Section ───────────────────────────────────────────────────────────
-export default function ServicesSection() {
+export default function ServicesSection({
+  heading,
+  intro,
+  services,
+}: ServicesSectionProps) {
+  const headingParts = splitAccentHeading(heading);
+  const sectionServices = [
+    resolveServiceContent(services, ['ui-ux-design'], homeServiceCards[0]),
+    resolveServiceContent(services, ['motion-graphics'], homeServiceCards[1]),
+    resolveServiceContent(services, ['video-editing', 'visual-effects'], homeServiceCards[2]),
+    resolveServiceContent(services, ['web-design', 'application'], homeServiceCards[3]),
+  ];
+
   return (
     <section id="services" className="relative z-20 pt-0 pb-24 px-4 md:px-8 lg:px-20 w-full bg-transparent overflow-hidden">
       <div className="max-w-[1200px] mx-auto">
@@ -100,16 +148,20 @@ export default function ServicesSection() {
           className="flex flex-col items-start text-left mb-10"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-black mb-2 tracking-tight">
-            My <span className="text-blue-600 font-serif italic font-medium">Services</span>
+            {headingParts.before}
+            {headingParts.accent ? (
+              <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
+            ) : null}
+            {headingParts.after}
           </h2>
           <p className="mt-4 text-black/70 text-lg max-w-2xl leading-relaxed">
-            Transforming ideas into digital reality through a blend of technical expertise and creative vision.
+            {intro}
           </p>
         </motion.div>
 
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[300px] md:auto-rows-[340px]">
-          {services.map(service => {
+          {sectionServices.map(service => {
             if (service.id === 'uiux') return <UIUXCard key={service.id} service={service} />;
             if (service.id === 'motion') return <MotionGraphicsCard key={service.id} service={service} />;
             if (service.id === 'video') return <VideoEditingCard key={service.id} service={service} />;
@@ -280,12 +332,6 @@ function MotionGraphicsCard({ service }: { service: BaseService }) {
 
 // ─── Video Editing Card ──────────────────────────────────────────────────
 function VideoEditingCard({ service }: { service: BaseService }) {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
   return (
     <CardShell service={service}>
       <div className="relative w-full h-full flex flex-col items-center justify-center pt-8 pb-32 px-6 overflow-hidden bg-transparent">
@@ -351,13 +397,13 @@ function VideoEditingCard({ service }: { service: BaseService }) {
 
         {/* Global VFX Elements */}
         <div className="absolute inset-0 pointer-events-none">
-          {isMounted && [...Array(6)].map((_, i) => (
+          {vfxParticleConfigs.map((particle, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 rounded-full bg-orange-400/30"
               initial={{ 
-                x: Math.random() * 300 - 150 + 150, 
-                y: Math.random() * 300 - 150 + 150, 
+                x: particle.x,
+                y: particle.y,
                 opacity: 0 
               }}
               animate={{ 
@@ -366,9 +412,9 @@ function VideoEditingCard({ service }: { service: BaseService }) {
                 scale: [0, 1, 0] 
               }}
               transition={{ 
-                duration: 2 + Math.random() * 2, 
+                duration: particle.duration, 
                 repeat: Infinity, 
-                delay: Math.random() * 5 
+                delay: particle.delay,
               }}
             />
           ))}

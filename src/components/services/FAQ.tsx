@@ -2,8 +2,10 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Minus, MessageCircle, HelpCircle, ArrowUpRight } from "lucide-react";
+import { Plus, Minus, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import { splitAccentHeading } from "@/lib/accent-heading";
+import type { SiteCopyFaqItem } from "@/lib/site-copy-content";
 
 interface FAQItemProps {
   question: string;
@@ -47,17 +49,25 @@ const FAQItem = ({ question, answer, isOpen, onClick }: FAQItemProps) => (
   </div>
 );
 
-export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+type FAQProps = {
+  eyebrow: string;
+  heading: string;
+  intro: string;
+  items: SiteCopyFaqItem[];
+  ctaText: string;
+  ctaLabel: string;
+};
 
-  const faqs = [
-    { question: "How do I sign up?", answer: "Getting started is simple. You can reach out through the contact form or book a direct discovery call through my calendar link." },
-    { question: "How much does it cost?", answer: "Pricing is value-based and depends on the scope of the project. I offer competitive rates for single projects as well as specialized retainers for ongoing creative support." },
-    { question: "How does it work with my business?", answer: "I act as an extension of your team. We start with a strategy workshop, followed by iterative design sprints and regular status updates." },
-    { question: "What makes this different?", answer: "A unique blend of performance marketing, high-fidelity design, and technical implementation that drives actual business results, not just 'pretty' visuals." },
-    { question: "How long does a website take?", answer: "A typical high-quality website project takes between 4 to 8 weeks depending on complexity, features, and content readiness." },
-    { question: "Is it compliant and secure?", answer: "Yes, I build with the latest security standards, WCAG accessibility compliance, and performance optimization as standard practice." },
-  ];
+export default function FAQ({
+  eyebrow,
+  heading,
+  intro,
+  items,
+  ctaText,
+  ctaLabel,
+}: FAQProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const headingParts = splitAccentHeading(heading);
 
   return (
     <section className="relative w-full pt-10 pb-20 px-4 md:px-8 lg:px-20 bg-transparent overflow-hidden">
@@ -81,7 +91,7 @@ export default function FAQ() {
             viewport={{ once: true }}
             className="px-4 py-1.5 rounded-full border border-zinc-100 bg-white/50 backdrop-blur-sm text-sm font-bold text-blue-500 uppercase tracking-widest mb-6"
           >
-            FAQs
+            {eyebrow}
           </motion.div>
           
           <motion.h2
@@ -90,8 +100,11 @@ export default function FAQ() {
             viewport={{ once: true }}
             className="text-4xl md:text-6xl font-bold pb-2 text-black tracking-tight"
           >
-            Curated <br className="md:hidden" />
-            <span className="text-blue-600 font-serif italic font-medium">Questions</span> 
+            {headingParts.before}
+            {headingParts.accent ? (
+              <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
+            ) : null}
+            {headingParts.after}
           </motion.h2>
           
           <motion.p
@@ -101,14 +114,13 @@ export default function FAQ() {
             transition={{ delay: 0.1 }}
             className="mt-6 text-zinc-500 text-lg max-w-xl leading-relaxed"
           >
-            Book a call or reach out anytime, we&apos;re here to help.
-            Clear answers to help you make informed decisions.
+            {intro}
           </motion.p>
         </div>
 
         {/* --- FAQ List: Single Column Alignment --- */}
         <div className="flex flex-col gap-4 w-full max-w-[800px] mb-12">
-          {faqs.map((faq, idx) => (
+          {items.map((faq, idx) => (
             <motion.div
               key={idx}
               initial={{ opacity: 0, scale: 0.98 }}
@@ -130,12 +142,12 @@ export default function FAQ() {
             initial={{ opacity: 0, scale: 0.98 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: faqs.length * 0.05 }}
+            transition={{ duration: 0.4, delay: items.length * 0.05 }}
             className="w-full"
           >
             <div className="bg-zinc-50 rounded-xl border border-zinc-200 p-6 flex flex-col sm:flex-row items-center justify-between gap-6 h-full">
               <span className="text-base font-semibold text-zinc-600 text-center sm:text-left">
-                Couldn&apos;t find an answer you&apos;re looking for?
+                {ctaText}
               </span>
               <Link
                 href="/contact"
@@ -164,7 +176,7 @@ export default function FAQ() {
                   el.style.transform = 'scale(1)';
                 }}
               >
-                Contact Me
+                {ctaLabel}
                 <span 
                   className="flex items-center justify-center rounded-full bg-white transition-transform duration-300 group-hover:scale-110"
                   style={{

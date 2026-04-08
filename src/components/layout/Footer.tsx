@@ -1,22 +1,66 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Instagram, Linkedin, Mail } from 'lucide-react';
+import { homeContentDefaults } from '@/lib/home-content-defaults';
+import {
+  siteCopyDefaults,
+  type PublicSiteShellContent,
+} from '@/lib/site-copy-content';
+import { contactSectionDefaults } from '@/lib/contact-content';
 
 export default function Footer() {
+  const [shellContent, setShellContent] = useState<PublicSiteShellContent>({
+    siteCopy: siteCopyDefaults,
+    socialLinks: homeContentDefaults.socialLinks,
+    contactSettings: contactSectionDefaults,
+  });
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadShellContent() {
+      try {
+        const response = await fetch("/api/site-shell", { cache: "no-store" });
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as PublicSiteShellContent;
+        if (!mounted) {
+          return;
+        }
+
+        setShellContent({
+          siteCopy: data.siteCopy || siteCopyDefaults,
+          socialLinks: data.socialLinks || homeContentDefaults.socialLinks,
+          contactSettings: data.contactSettings || contactSectionDefaults,
+        });
+      } catch {
+        // Keep defaults if the request fails.
+      }
+    }
+
+    void loadShellContent();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const navLinks = [
     { name: 'HOME', href: '/' },
     { name: 'PROJECTS', href: '/projects' },
-    { name: 'WHAT WE DO', href: '/services' },
+    { name: 'SERVICES', href: '/services' },
     { name: 'ABOUT ME', href: '/about' },
     { name: 'GET IN TOUCH', href: '/contact' },
   ];
 
   const socialLinks = [
-    { icon: <Instagram className="w-5 h-5" />, href: '#' },
-    { icon: <Linkedin className="w-5 h-5" />, href: '#' },
-    { icon: <Mail className="w-5 h-5" />, href: 'mailto:hello@abinvarghese.art' },
+    { icon: <Instagram className="w-5 h-5" />, href: shellContent.socialLinks.instagram },
+    { icon: <Linkedin className="w-5 h-5" />, href: shellContent.socialLinks.linkedin },
+    { icon: <Mail className="w-5 h-5" />, href: `mailto:${shellContent.siteCopy.footerEmail || shellContent.contactSettings.contactEmail}` },
   ];
 
   return (
@@ -34,18 +78,18 @@ export default function Footer() {
                 A
               </div>
               <div>
-                <p className="font-bold text-sm tracking-widest uppercase">UNIQUE DIGITAL EXPERIENCES</p>
-                <p className="font-bold text-sm tracking-widest uppercase text-black/50">// IMMERSIVE CRAFT</p>
+                <p className="font-bold text-sm tracking-widest uppercase">{shellContent.siteCopy.footerBrandEyebrow}</p>
+                <p className="font-bold text-sm tracking-widest uppercase text-black/50">{"// ABIN VARGHESE"}</p>
               </div>
             </div>
             
             <p className="text-black/60 text-sm max-w-sm leading-relaxed">
-              Founded by Abin Varghese, we unite decades of technical expertise as visionary developers and practical creators, redefining possibilities in the digital environment.
+              {shellContent.siteCopy.footerSupportCopy}
             </p>
 
             <div className="space-y-4 pt-4">
-              <p className="text-black/80 text-sm">88 Digital Way, Kochi, India</p>
-              <p className="text-black/80 text-sm">hello@abinvarghese.art</p>
+              <p className="text-black/80 text-sm">Idukki, Kerala, India</p>
+              <p className="text-black/80 text-sm">{shellContent.siteCopy.footerEmail || shellContent.contactSettings.contactEmail}</p>
               <div className="flex space-x-4 pt-2">
                 {socialLinks.map((link, idx) => (
                   <Link key={idx} href={link.href} className="text-black/60 hover:text-black transition-colors">
@@ -81,16 +125,18 @@ export default function Footer() {
           <div className="lg:col-span-4 flex flex-col justify-between lg:pl-12 pt-8 lg:pt-0">
             <div className="space-y-6">
               <h2 className="text-4xl md:text-5xl font-medium leading-tight">
-                Ready to kick start a discovery session?
+                {shellContent.siteCopy.footerCtaHeading}
               </h2>
               <p className="text-black/60 text-lg max-w-sm">
-                Share your ideas with us, and we'll begin turning your vision into reality today.
+                {shellContent.siteCopy.footerCtaCopy}
               </p>
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-end mt-20 text-xs tracking-widest text-black/40 uppercase">
-              <p>ABIN VARGHESE ART LTD 2026 ©</p>
-              <p className="mt-4 md:mt-0">DESIGN BY ORCHIDS</p>
+              <p>{shellContent.siteCopy.footerCopyright}</p>
+              {shellContent.siteCopy.footerCredit ? (
+                <p className="mt-4 md:mt-0">{shellContent.siteCopy.footerCredit}</p>
+              ) : null}
             </div>
           </div>
         </div>

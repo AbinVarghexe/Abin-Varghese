@@ -14,10 +14,9 @@ interface NavLinkProps {
   href: string;
   label: string;
   isActive: boolean;
-  isLightMode: boolean;
 }
 
-function NavLink({ href, label, isActive, isLightMode }: NavLinkProps) {
+function NavLink({ href, label, isActive }: NavLinkProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -27,14 +26,14 @@ function NavLink({ href, label, isActive, isLightMode }: NavLinkProps) {
         className={`relative text-[18px] transition-all duration-200 ${
           isActive ? 'font-semibold' : 'font-normal'
         }`}
-        style={{ color: isLightMode ? '#111827' : '#ffffff' }}
+        style={{ color: '#111827' }}
         onMouseEnter={(e) => {
           setIsHovered(true);
-          e.currentTarget.style.color = isLightMode ? '#374151' : '#d1d5db';
+          e.currentTarget.style.color = '#374151';
         }}
         onMouseLeave={(e) => {
           setIsHovered(false);
-          e.currentTarget.style.color = isLightMode ? '#111827' : '#ffffff';
+          e.currentTarget.style.color = '#111827';
         }}
       >
         <motion.span
@@ -49,7 +48,7 @@ function NavLink({ href, label, isActive, isLightMode }: NavLinkProps) {
         {!isActive && (
           <motion.span
             className="absolute -bottom-1 left-1/2 w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: isLightMode ? '#111827' : '#ffffff' }}
+            style={{ backgroundColor: '#111827' }}
             initial={{ scale: 0, x: '-50%', opacity: 0 }}
             animate={{ scale: isHovered ? 1 : 0, opacity: isHovered ? 1 : 0, x: '-50%' }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -79,7 +78,7 @@ const resumeOptions = [
 ];
 
 /* ─────────────────── Gradient CTA Button ─────────────────────── */
-function ResumeButton({ isLightMode }: { isLightMode: boolean }) {
+function ResumeButton() {
   const [open, setOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
@@ -195,10 +194,8 @@ function ResumeButton({ isLightMode }: { isLightMode: boolean }) {
             transition={{ type: 'spring', stiffness: 420, damping: 28 }}
             className="absolute right-0 mt-4 w-64 rounded-lg overflow-visible shadow-xl z-50"
             style={{
-              backgroundColor: isLightMode
-                ? 'rgba(255,255,255,0.95)'
-                : 'rgba(15,15,15,0.95)',
-              border: `1px solid ${isLightMode ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`,
+              backgroundColor: 'rgba(255,255,255,0.95)',
+              border: '1px solid rgba(0,0,0,0.08)',
               backdropFilter: 'blur(16px)',
             }}
           >
@@ -206,16 +203,14 @@ function ResumeButton({ isLightMode }: { isLightMode: boolean }) {
             <span
               className="absolute -top-[7px] right-6 w-3 h-3 rotate-45 z-[51]"
               style={{
-                backgroundColor: isLightMode
-                  ? 'rgba(255,255,255,0.95)'
-                  : 'rgba(15,15,15,0.95)',
-                borderLeft: `1px solid ${isLightMode ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`,
-                borderTop: `1px solid ${isLightMode ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)'}`,
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                borderLeft: '1px solid rgba(0,0,0,0.08)',
+                borderTop: '1px solid rgba(0,0,0,0.08)',
               }}
             />
             <p
               className="px-4 pt-3 pb-2 text-[11px] font-semibold uppercase tracking-widest"
-              style={{ color: isLightMode ? '#9ca3af' : '#6b7280' }}
+              style={{ color: '#9ca3af' }}
             >
               Download as
             </p>
@@ -240,12 +235,10 @@ function ResumeButton({ isLightMode }: { isLightMode: boolean }) {
                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                     className="flex items-center gap-3 px-4 py-3 cursor-pointer outline-none"
                     style={{
-                      color: isLightMode ? '#111827' : '#f9fafb',
+                      color: '#111827',
                       backgroundColor:
                         focusedIndex === idx
-                          ? isLightMode
-                            ? 'rgba(0,32,215,0.05)'
-                            : 'rgba(125,163,246,0.08)'
+                          ? 'rgba(0,32,215,0.05)'
                           : 'transparent',
                     }}
                     onMouseEnter={() => setFocusedIndex(idx)}
@@ -266,7 +259,7 @@ function ResumeButton({ isLightMode }: { isLightMode: boolean }) {
                       <span className="text-[14px] font-medium">{label}</span>
                       <span
                         className="text-[11px]"
-                        style={{ color: isLightMode ? '#6b7280' : '#9ca3af' }}
+                        style={{ color: '#6b7280' }}
                       >
                         {description}
                       </span>
@@ -274,7 +267,7 @@ function ResumeButton({ isLightMode }: { isLightMode: boolean }) {
 
                     <Download
                       className="ml-auto h-3.5 w-3.5 flex-shrink-0"
-                      style={{ color: isLightMode ? '#9ca3af' : '#6b7280' }}
+                      style={{ color: '#9ca3af' }}
                       strokeWidth={2}
                     />
                   </motion.a>
@@ -293,7 +286,6 @@ function ResumeButton({ isLightMode }: { isLightMode: boolean }) {
 /* ═══════════════════════ Navbar ═══════════════════════ */
 export default function Navbar() {
   const pathname = usePathname();
-  const [isLightMode, setIsLightMode] = useState(false);
 
   const navLinks = [
     { href: '/', label: 'Home' },
@@ -303,19 +295,9 @@ export default function Navbar() {
     { href: '/contact', label: 'Contact' },
   ];
 
-  useEffect(() => {
-    const checkTheme = () => {
-      setIsLightMode(!document.documentElement.classList.contains('dark'));
-    };
-    checkTheme();
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
   return (
     <>
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+      <div className="fixed top-0 left-0 right-0 z-[110] flex justify-center pointer-events-none">
         <motion.nav
           initial={{ opacity: 0, y: -100, scale: 0.9 }}
           animate={{
@@ -326,16 +308,16 @@ export default function Navbar() {
             height: '80px',
             borderRadius: '60px',
             borderWidth: '1px',
-            borderColor: isLightMode ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)',
+            borderColor: 'rgba(0,0,0,0.1)',
           }}
           transition={{ type: 'spring', stiffness: 260, damping: 30, opacity: { duration: 0.5 } }}
           className="w-full pointer-events-auto shadow-lg"
           style={{
             borderStyle: 'solid',
-            backgroundColor: isLightMode ? 'rgba(236,236,236,0.7)' : 'rgba(10,10,10,0.7)',
+            backgroundColor: 'rgba(236,236,236,0.7)',
             backdropFilter: 'blur(16px) saturate(180%)',
             WebkitBackdropFilter: 'blur(16px) saturate(180%)',
-            color: isLightMode ? '#111827' : '#ffffff',
+            color: '#111827',
           }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
@@ -364,13 +346,12 @@ export default function Navbar() {
                     href={link.href}
                     label={link.label}
                     isActive={pathname === link.href}
-                    isLightMode={isLightMode}
                   />
                 ))}
               </ul>
 
               {/* Gradient resume button */}
-              <ResumeButton isLightMode={isLightMode} />
+              <ResumeButton />
             </div>
           </div>
         </motion.nav>

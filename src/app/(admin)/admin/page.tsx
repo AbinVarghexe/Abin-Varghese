@@ -10,6 +10,7 @@ import {
   FolderKanban,
   Home,
   Layers3,
+  FileText,
   Mail,
   RefreshCw,
   User,
@@ -61,6 +62,14 @@ const sections = [
     href: "/admin/contact",
     icon: Mail,
     tone: "from-rose-300/25 via-pink-400/10 to-transparent border-rose-300/60",
+  },
+  {
+    title: "Content Section",
+    description:
+      "Edit the remaining site copy in one place, including about text, FAQ items, footer content, highlights, and global section intros.",
+    href: "/admin/content",
+    icon: FileText,
+    tone: "from-sky-300/25 via-blue-400/10 to-transparent border-sky-300/60",
   },
 ];
 

@@ -1,12 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, MessageSquare, ExternalLink, Cpu, Trash2, Rocket, Globe, Ghost, Zap, Mic, MicOff, Volume2 } from "lucide-react";
+import { X, MessageSquare, ExternalLink, Trash2, Globe, Zap, Mic, MicOff } from "lucide-react";
 import { useJarvisStore } from "@/store/useJarvisStore";
 import { AssistantIntent } from "@/lib/jarvis-engine";
 import JarvisWaveform from "./JarvisWaveform";
-import { colors, shadows } from "@/lib/design-system";
+import { colors } from "@/lib/design-system";
+
+type ProjectPreview = {
+  title: string;
+  tech?: string;
+};
+
+type AudioWindow = Window & {
+  webkitAudioContext?: typeof AudioContext;
+};
 
 /**
  * JarvisAssistant: A centered cinematic "Neural Stage" modal.
@@ -20,7 +30,8 @@ export default function JarvisAssistant() {
   const { isOpen, closeJarvis, messages, addMessage, isThinking, setThinking, clearHistory } = useJarvisStore();
   const [input, setInput] = useState("");
   const [currentIntent, setCurrentIntent] = useState<AssistantIntent>("none");
-  const [realProjects, setRealProjects] = useState<any[]>([]);
+  const [realProjects, setRealProjects] = useState<ProjectPreview[]>([]);
+  const [isMounted, setIsMounted] = useState(false);
   
   // Voice & Audio States
   const [isListening, setIsListening] = useState(false);
@@ -30,6 +41,10 @@ export default function JarvisAssistant() {
   const streamRef = useRef<MediaStream | null>(null);
 
   // Fetch real projects for contextual archive
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   useEffect(() => {
     fetch('/api/projects')
       .then(res => res.json())
@@ -41,30 +56,39 @@ export default function JarvisAssistant() {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      document.body.dataset.jarvisOpen = "true";
     } else {
       document.body.style.overflow = "auto";
+      delete document.body.dataset.jarvisOpen;
     }
     return () => {
       document.body.style.overflow = "auto";
+      delete document.body.dataset.jarvisOpen;
     };
   }, [isOpen]);
 
   // ── MICROPHONE ANALYZER ──────────────────────────────────
-  useEffect(() => {
-    if (isListening && isOpen) {
-      startRecording();
-    } else {
-      stopRecording();
-    }
-    return () => stopRecording();
-  }, [isListening, isOpen]);
+  const stopRecording = useCallback(() => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    void audioContextRef.current?.close();
+    streamRef.current = null;
+    audioContextRef.current = null;
+    analyzerRef.current = null;
+    setAudioLevel(0);
+  }, []);
 
-  const startRecording = async () => {
+  const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass =
+        window.AudioContext || (window as AudioWindow).webkitAudioContext;
+
+      if (!AudioContextClass) {
+        throw new Error("AudioContext is not available in this browser.");
+      }
+
       const ctx = new AudioContextClass();
       audioContextRef.current = ctx;
 
@@ -92,13 +116,17 @@ export default function JarvisAssistant() {
       console.error("Neural Microphone Link Failed:", err);
       setIsListening(false);
     }
-  };
+  }, [isListening]);
 
-  const stopRecording = () => {
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    audioContextRef.current?.close();
-    setAudioLevel(0);
-  };
+  useEffect(() => {
+    if (isListening && isOpen) {
+      void startRecording();
+    } else {
+      stopRecording();
+    }
+
+    return () => stopRecording();
+  }, [isListening, isOpen, startRecording, stopRecording]);
 
   // ── TEXT TO SPEECH (MALE PERSONALITY) ─────────────────────
   const speak = (text: string) => {
@@ -153,7 +181,7 @@ export default function JarvisAssistant() {
       
       // Speak the response immediately
       speak(data.text);
-    } catch (err: any) {
+    } catch {
       const errorText = "Neural link interrupted, sir. Awaiting reconnection.";
       addMessage(errorText, "assistant");
       speak(errorText);
@@ -162,18 +190,18 @@ export default function JarvisAssistant() {
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !isMounted) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-9999 flex items-center justify-center p-4 md:p-12 overflow-hidden">
+        <div className="fixed inset-0 z-[200] overflow-hidden">
            {/* Cinematic Backdrop with Global Isolation */}
            <motion.div 
              initial={{ opacity: 0 }}
              animate={{ opacity: 1 }}
              exit={{ opacity: 0 }}
-             className="absolute inset-0 bg-black/70 backdrop-blur-3xl"
+             className="absolute inset-0 bg-[#02030a]/78 backdrop-blur-3xl"
              onClick={closeJarvis}
            />
 
@@ -182,9 +210,15 @@ export default function JarvisAssistant() {
              initial={{ opacity: 0, scale: 0.9, y: 20 }}
              animate={{ opacity: 1, scale: 1, y: 0 }}
              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-             className="relative w-full max-w-6xl h-[85vh] bg-[#0e0e2c]/95 border border-white/10 rounded-[32px] overflow-hidden flex flex-col md:flex-row shadow-2xl"
+             transition={{ duration: 0.35, ease: "easeOut" }}
+             className="relative flex h-dvh w-full flex-col overflow-hidden border-white/10 bg-[#0e0e2c]/95 shadow-2xl md:flex-row md:border-l md:border-r"
              style={{ backgroundColor: colors.indigo }}
            >
+              <div className="pointer-events-none absolute inset-0">
+                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,32,215,0.22),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.08),transparent_32%)]" />
+                 <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:110px_110px]" />
+              </div>
+
               {/* Corner HUD Meta-Data */}
               <div className="absolute top-6 left-8 z-10 hidden md:block">
                  <div className="flex flex-col gap-1">
@@ -215,7 +249,7 @@ export default function JarvisAssistant() {
 
               {/* ── LEFT PANE: VOICE ENGINE ────────────────────────── */}
               <motion.div 
-                className="w-full md:w-[35%] flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/5 p-8 md:p-12 relative"
+                className="relative flex w-full flex-col items-center justify-center border-b border-white/5 p-8 md:w-[35%] md:border-b-0 md:border-r md:p-12"
               >
                  <div className="mb-8 w-full group cursor-pointer" onClick={() => setIsListening(true)}>
                     <JarvisWaveform isThinking={isThinking} volume={audioLevel} />
@@ -251,8 +285,8 @@ export default function JarvisAssistant() {
               </motion.div>
 
               {/* ── RIGHT PANE: KNOWLEDGE STAGE ────────────────────── */}
-              <div className="flex-1 flex flex-col overflow-hidden bg-white/2">
-                 <div className="flex-1 overflow-y-auto p-8 md:p-16 space-y-12 scrollbar-hide">
+              <div className="flex flex-1 flex-col overflow-hidden bg-white/2 backdrop-blur-xl">
+                 <div className="scrollbar-hide flex-1 overflow-y-auto p-8 md:p-16 space-y-12">
                     <AnimatePresence mode="wait">
                        <motion.div
                           key={currentIntent}
@@ -268,7 +302,7 @@ export default function JarvisAssistant() {
                                    <Globe size={48} className="animate-spin-slow" />
                                 </div>
                                 <h3 className="text-white/60 font-mono text-xs tracking-[0.5em] uppercase mb-4">Neural Interface Primary</h3>
-                                <p className="text-white/30 text-base max-w-sm font-light">"Who are you?", "What have you done?", or "Analyze skills." I am ready to synchronize.</p>
+                                <p className="text-white/30 text-base max-w-sm font-light">&quot;Who are you?&quot;, &quot;What have you done?&quot;, or &quot;Analyze skills.&quot; I am ready to synchronize.</p>
                              </div>
                           )}
 
@@ -333,7 +367,7 @@ export default function JarvisAssistant() {
                  </div>
 
                  {/* Neural Integrated Input Bar */}
-                 <div className="p-8 md:p-12 border-t border-white/5 bg-[#0e0e2c]">
+                 <div className="border-t border-white/5 bg-[#0e0e2c]/90 p-8 backdrop-blur-xl md:p-12">
                     <form onSubmit={handleSubmit} className="relative max-w-3xl mx-auto group">
                        <div className="absolute -inset-1.5 bg-[#0020d7] rounded-full blur-xl opacity-0 group-focus-within:opacity-20 transition-all duration-500" />
                        <input 
@@ -359,6 +393,7 @@ export default function JarvisAssistant() {
            </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

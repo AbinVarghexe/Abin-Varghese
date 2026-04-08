@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 
 /**
@@ -41,20 +41,6 @@ export default function SlidingRoleBanner({
 }: SlidingRoleBannerProps) {
   const stripRef   = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [isLightMode, setIsLightMode] = useState(true);
-
-  /* ── theme detection ── */
-  useEffect(() => {
-    const check = () =>
-      setIsLightMode(!document.documentElement.classList.contains('dark'));
-    check();
-    const obs = new MutationObserver(check);
-    obs.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-    return () => obs.disconnect();
-  }, []);
 
   /* ── scroll-delta marquee ── */
   useEffect(() => {
@@ -143,11 +129,9 @@ export default function SlidingRoleBanner({
           /* rotation applied via JS so resize updates it */
           transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
           transformOrigin: 'center center',
-          backgroundColor: isLightMode
-            ? 'rgba(255, 255, 255, 0.1)'
-            : 'rgba(0, 0, 0, 0.1)',
-          borderTop: `1px solid ${isLightMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
-          borderBottom: `1px solid ${isLightMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderTop: '1px solid rgba(255,255,255,0.2)',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
         }}
       >
         {/* Scrolling content — 2 copies for seamless wrap */}
@@ -161,13 +145,13 @@ export default function SlidingRoleBanner({
               key={i}
               className="inline-flex items-center"
               style={{
-                color: isLightMode ? '#111827' : '#ffffff',
+                color: '#111827',
                 padding: '0 32px',
               }}
             >
               <span
                 style={{
-                  color: isLightMode ? '#111827' : '#ffffff',
+                  color: '#111827',
                   fontSize: '1.5rem',
                   marginRight: '24px',
                 }}
