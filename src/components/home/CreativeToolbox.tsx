@@ -126,8 +126,8 @@ const CreativeToolbox = ({ heading, intro, categories }: CreativeToolboxProps) =
   );
 
   return (
-    <section className="relative z-20 pt-28 pb-24 md:pb-16 bg-transparent">
-      <div className="px-4 md:px-8 lg:px-16 xl:px-32 py-4 relative">
+    <section className="relative z-20 pt-12 md:pt-28 pb-24 md:pb-16 bg-transparent">
+      <div className="px-6 md:px-8 lg:px-16 xl:px-32 py-4 relative">
         {/* Background Element */}
         <motion.div
           style={{ rotate }}
@@ -141,15 +141,19 @@ const CreativeToolbox = ({ heading, intro, categories }: CreativeToolboxProps) =
           />
         </motion.div>
 
-        <div className="w-full mb-8 relative z-10">
-          <h2 className="text-4xl md:text-5xl font-bold pb-2 text-black mt-12 mb-2 tracking-tight">
+        <div className="w-full mb-8 px-4 lg:px-0 relative z-10 text-center lg:text-left">
+          <h2 className="text-4xl md:text-5xl font-bold pb-2 text-black mt-4 md:mt-12 mb-2 tracking-tight">
             {headingParts.before}
             {headingParts.accent ? (
               <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
             ) : null}
             {headingParts.after}
           </h2>
-          <p className="text-black/70">{intro}</p>
+          <p 
+            className="text-black/70 text-base md:text-lg text-justify [text-align-last:center] lg:text-left lg:[text-align-last:left]"
+          >
+            {intro}
+          </p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6 relative z-10">

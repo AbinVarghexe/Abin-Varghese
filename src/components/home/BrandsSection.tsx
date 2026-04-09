@@ -11,15 +11,6 @@ const partnerLogos = [
   "/uploads/logos/1775314941462-manna.png",
 ];
 
-// Brands array kept for legacy or other uses if needed, but carousel uses partnerLogos
-const brands = [
-  { name: "BLAUPUNKT", logo: "●" },
-  { name: "Incial", logo: "🦅" },
-  { name: "VOLTANT", logo: "⚡" },
-  { name: "BLAUPUNKT", logo: "●" },
-  { name: "Incial", logo: "🦅" },
-];
-
 interface BrandsSectionProps {
   logos?: string[];
 }
@@ -30,11 +21,10 @@ const BrandsSection = ({ logos }: BrandsSectionProps) => {
   return (
     <section className="relative z-20 w-full px-4 md:px-8 lg:px-16 py-8">
       <div
-        className="relative w-full rounded-[32px] px-6 md:px-12 pt-8 md:pt-16 pb-12 md:pb-20 overflow-hidden z-20"
+        className="relative w-full rounded-[32px] px-6 md:px-12 pt-6 md:pt-16 pb-14 md:pb-20 overflow-hidden z-20 border-[3px] md:border-[5px] border-[#C4C4C4]"
         style={{
           background: "linear-gradient(180deg, rgba(125,163,246,0.85) 0%, rgba(0,32,215,0.85) 100%)",
           backdropFilter: 'blur(8px)',
-          border: '5px solid #C4C4C4',
         }}
       >
         <div
@@ -77,7 +67,7 @@ const BrandsSection = ({ logos }: BrandsSectionProps) => {
         </div>
 
         <div className="text-center mb-12 relative z-10">
-          <h2 className="text-2xl md:text-4xl lg:text-[40px] font-bold text-white flex items-center justify-center gap-6">
+          <h2 className="text-2xl md:text-4xl lg:text-[40px] font-bold text-white flex flex-row items-center justify-center gap-2 md:gap-6">
             <span className="text-3xl md:text-5xl lg:text-6xl font-light">✧</span>
             <div className="flex items-center gap-2">
               <span className="text-white">Brands &</span>
@@ -85,13 +75,12 @@ const BrandsSection = ({ logos }: BrandsSectionProps) => {
             </div>
             <span className="text-3xl md:text-5xl lg:text-6xl font-light">✧</span>
           </h2>
-          <p className="text-white/80 text-sm md:text-base mt-4 max-w-lg mx-auto font-normal leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmo tempor incididunt ut labore
+          <p className="text-white/80 text-sm md:text-base mt-4 max-w-lg mx-auto font-normal leading-relaxed text-center">
+            Trusted Collaborations
           </p>
         </div>
 
-        <div className="relative z-10 mt-8 md:mt-12">
+        <div className="relative z-10 mt-14 md:mt-12">
           <LogoCarousel logos={displayLogos} showTitle={false} />
         </div>
       </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useRef, type ComponentType } from 'react';
-import { ArrowUpRight, Calendar, Github, Instagram, Linkedin } from 'lucide-react';
+import { ArrowUpRight, Calendar, Github, Instagram, Linkedin, ChevronDown } from 'lucide-react';
 import {
   motion,
   useMotionValue,
@@ -11,6 +11,7 @@ import {
 import { HeroContent } from '@/lib/hero-content-defaults';
 import { usePreview } from '@/lib/contexts/PreviewContext';
 import type { HomeContent } from '@/lib/home-content-defaults';
+import { ResumeDropdown } from '@/components/common/ResumeDropdown';
 
 /* ─────────────────────────────── data ──────────────────────────── */
 const dotPositions = [
@@ -118,16 +119,16 @@ function MagneticButton({
         whileHover={{ scale: 1.04, boxShadow: '0 18px 44px rgba(0,32,215,0.12)' }}
         whileTap={{ scale: 0.97 }}
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="inline-flex items-center gap-3 rounded-full border-[2.5px] border-[#929292] bg-white pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-slate-800 pointer-events-auto"
+        className="inline-flex items-center gap-3 rounded-full border-[2.5px] border-[#929292] bg-white pl-8 pr-1.5 md:pr-2 py-3 md:py-2.5 font-['Poppins',sans-serif] text-[13px] md:text-[15px] font-medium text-slate-800 pointer-events-auto"
       >
-        <span className="min-w-[80px] text-center">{label}</span>
+        <span className="min-w-[70px] md:min-w-[80px] text-center">{label}</span>
         {Icon && (
           <motion.span
             whileHover={{ rotate: 45 }}
             transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-            className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-slate-100"
+            className="flex h-[42px] md:h-10 w-[42px] md:w-10 items-center justify-center rounded-full bg-slate-100"
           >
-            <Icon className="h-5 w-5 text-slate-800" strokeWidth={2.2} />
+            <Icon className="h-4 md:h-4.5 w-4 md:w-4.5 text-slate-800" strokeWidth={2.2} />
           </motion.span>
         )}
       </motion.a>
@@ -149,16 +150,16 @@ function MagneticButton({
       whileHover={{ scale: 1.04, boxShadow: '0 22px 52px rgba(0,32,215,0.38)' }}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="inline-flex items-center gap-4 rounded-full border-[2.5px] border-[#929292] pl-8 pr-2.5 py-2.5 font-['Poppins',sans-serif] text-[15px] font-medium text-white pointer-events-auto"
+      className="inline-flex items-center gap-4 rounded-full border-[2.5px] border-[#929292] pl-8 pr-1.5 md:pr-2 py-3 md:py-2.5 font-['Poppins',sans-serif] text-[13px] md:text-[15px] font-medium text-white pointer-events-auto"
     >
-      <span className="min-w-[88px] text-center">{label}</span>
+      <span className="min-w-[70px] md:min-w-[88px] text-center">{label}</span>
       {Icon && (
         <motion.span
           whileHover={{ rotate: 45 }}
           transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-          className="flex h-[42px] w-[42px] items-center justify-center rounded-full bg-white"
+          className="flex h-[42px] md:h-10 w-[42px] md:w-10 items-center justify-center rounded-full bg-white"
         >
-          <Icon className="h-5 w-5 text-[#0020d7]" strokeWidth={2.4} />
+          <Icon className="h-4 md:h-4.5 w-4 md:w-4.5 text-[#0020d7]" strokeWidth={2.4} />
         </motion.span>
       )}
     </motion.a>
@@ -194,9 +195,9 @@ function SocialTile({
         transition: { type: 'spring', stiffness: 420, damping: 22 },
       }}
       whileTap={{ scale: 0.93 }}
-      className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-[20px] border border-white/90 bg-white shadow-[0_16px_38px_rgba(97,77,219,0.12)] pointer-events-auto"
+      className="flex h-14 w-14 md:h-16 md:w-16 cursor-pointer items-center justify-center rounded-[16px] md:rounded-[20px] border border-white/90 bg-white shadow-[0_16px_38px_rgba(97,77,219,0.12)] pointer-events-auto"
     >
-      <Icon className="h-7 w-7 text-slate-800" strokeWidth={2.2} />
+      <Icon className="h-6 w-6 md:h-7 md:w-7 text-slate-800" strokeWidth={2.2} />
     </motion.a>
   );
 }
@@ -248,7 +249,7 @@ const Herosection = ({
   return (
     <section
       ref={sectionRef}
-      className="pointer-events-none relative min-h-screen w-full bg-transparent pb-16"
+      className="pointer-events-none relative min-h-fit md:min-h-screen w-full bg-transparent pb-0 md:pb-16"
     >
       {/* ── Layer 1: Background (z-0) ─────────────────────────────── */}
       <div 
@@ -296,8 +297,8 @@ const Herosection = ({
       </div>
 
       {/* ── Layer 3: Foreground Text & UI (z-50) ───────────────────── */}
-      <div className="pointer-events-none relative z-50 flex min-h-full flex-col items-center justify-start px-4 md:px-6">
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-start pt-60 md:pt-80">
+      <div className="pointer-events-none relative z-20 flex min-h-full flex-col items-center justify-start px-4 md:px-6">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-start pt-44 md:pt-80">
           <motion.div
             variants={container}
             initial="hidden"
@@ -307,7 +308,7 @@ const Herosection = ({
             {/* headline */}
             <motion.h1
               variants={fadeUp}
-              className="pointer-events-auto max-w-4xl text-4xl font-semibold leading-[0.95] tracking-tighter text-[#0f1020] md:text-5xl lg:text-7xl"
+              className="pointer-events-auto max-w-4xl text-[48px] font-semibold leading-[0.9] tracking-tighter text-[#0f1020] md:text-5xl lg:text-7xl"
             >
             {data.heroGreeting.includes('👋') ? (
               data.heroGreeting.split('👋').map((part: string, i: number, arr: string[]) => (
@@ -349,7 +350,7 @@ const Herosection = ({
               </>
             )}
             <br />
-            <span className="mt-2 flex justify-center cursor-default text-4xl leading-[0.95] tracking-[-0.08em] md:mt-3 md:text-6xl lg:text-7xl">
+            <span className="mt-2 flex justify-center cursor-default text-[48px] leading-[0.9] tracking-[-0.08em] md:mt-3 md:text-6xl lg:text-7xl">
               {data.heroName.split('').map((char: string, index: number) => (
                 <motion.span
                   key={index}
@@ -380,7 +381,7 @@ const Herosection = ({
           {/* sub-copy */}
           <motion.p
             variants={fadeUp}
-            className="pointer-events-auto mt-6 max-w-4xl text-base leading-snug tracking-tight text-slate-600 md:mt-8 md:text-lg lg:text-xl"
+            className="pointer-events-auto mt-4 md:mt-8 max-w-[340px] md:max-w-4xl text-[16px] md:text-xl lg:text-2xl text-center leading-snug tracking-tight text-slate-600 sm:text-justify lg:text-center [text-align-last:center] lg:[text-align-last:auto]"
           >
             {data.heroSubcopy}
           </motion.p>
@@ -388,7 +389,7 @@ const Herosection = ({
           {/* audience pill */}
           <motion.div
             variants={scaleIn}
-            className="pointer-events-auto mt-10 flex w-[380px] cursor-default items-center rounded-full border border-slate-200 bg-white/70 py-2.5 shadow-sm backdrop-blur-md"
+            className="pointer-events-auto mt-6 md:mt-10 flex w-[300px] md:w-[380px] cursor-default items-center rounded-full border border-slate-200 bg-white/70 py-2 shadow-sm backdrop-blur-md"
           >
             <div 
               className="flex w-full overflow-hidden"
@@ -401,10 +402,10 @@ const Herosection = ({
               >
                 {[...Array(2)].map((_, i) => (
                   <div key={i} className="flex gap-8 pr-8">
-                    <p className="text-[14px] font-medium tracking-wide text-[#0020d7]">
+                    <p className="text-[12px] md:text-[14px] font-medium tracking-wide text-[#0020d7]">
                       {data.heroAvailabilityText}
                     </p>
-                    <p className="text-[14px] font-medium tracking-wide text-[#0020d7]">
+                    <p className="text-[12px] md:text-[14px] font-medium tracking-wide text-[#0020d7]">
                       {data.heroAvailabilityText}
                     </p>
                   </div>
@@ -416,9 +417,10 @@ const Herosection = ({
           {/* CTA buttons — Figma pill style */}
           <motion.div
             variants={fadeUp}
-            className="pointer-events-auto mt-8 flex flex-col items-center gap-4"
+            className="pointer-events-auto relative z-20 mt-6 md:mt-8 flex flex-col items-center gap-4"
           >
-            <div className="flex flex-col gap-4 sm:flex-row">
+            {/* Desktop Buttons */}
+            <div className="hidden md:flex flex-row gap-4">
               <MagneticButton
                 href={homeLinks.pageLinks.projects || data.heroCtaPrimaryUrl}
                 label={data.heroCtaPrimaryLabel}
@@ -432,9 +434,26 @@ const Herosection = ({
               />
             </div>
 
+            {/* Mobile Buttons: View Projects + Resume */}
+            <div className="flex md:hidden flex-row gap-3">
+              <MagneticButton
+                href={homeLinks.pageLinks.projects || data.heroCtaPrimaryUrl}
+                label="Projects"
+                icon={ArrowUpRight}
+              />
+              <ResumeDropdown align="center">
+                <MagneticButton
+                  href="#"
+                  label="Resume"
+                  icon={ArrowUpRight}
+                  secondary
+                />
+              </ResumeDropdown>
+            </div>
+
             <motion.p
               variants={fadeUp}
-              className="mt-5 flex items-center gap-2 text-sm text-slate-400"
+              className="mt-5 flex max-w-[280px] md:max-w-none items-center justify-center gap-2 text-center text-sm text-slate-400"
             >
               <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
               {statusLine}
@@ -444,7 +463,7 @@ const Herosection = ({
           {/* social icon tiles */}
           <motion.div
             variants={scaleIn}
-            className="pointer-events-auto mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6"
+            className="pointer-events-auto relative z-10 mt-8 md:mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6"
           >
             {(Object.keys(homeLinks.socialLinks) as Array<keyof HomeContent['socialLinks']>).map((key, index) => {
               const Icon = socialIconMap[key];

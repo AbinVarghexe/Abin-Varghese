@@ -136,28 +136,31 @@ export default function ServicesSection({
   ];
 
   return (
-    <section id="services" className="relative z-20 pt-0 pb-24 px-4 md:px-8 lg:px-20 w-full bg-transparent overflow-hidden">
+    <section 
+      id="services" 
+      className="relative z-10 pt-24 pb-6 px-4 md:px-8 lg:px-20 overflow-hidden"
+    >
       <div className="max-w-[1200px] mx-auto">
 
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-col items-start text-left mb-10"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold text-black mb-2 tracking-tight">
-            {headingParts.before}
-            {headingParts.accent ? (
-              <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
-            ) : null}
-            {headingParts.after}
-          </h2>
-          <p className="mt-4 text-black/70 text-lg max-w-2xl leading-relaxed">
-            {intro}
-          </p>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col items-center lg:items-start text-center lg:text-left w-full mb-12 relative z-10"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-black mb-6 tracking-tight">
+              {headingParts.before}
+              {headingParts.accent ? (
+                <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
+              ) : null}
+              {headingParts.after}
+            </h2>
+            <p className="text-black/70 text-base md:text-lg leading-relaxed max-w-3xl px-6 lg:px-0 text-justify lg:text-left [text-align-last:center] lg:[text-align-last:auto]">
+              {intro}
+            </p>
+          </motion.div>
 
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[300px] md:auto-rows-[340px]">
@@ -246,11 +249,11 @@ function CardShell({ service, children, className = '', onMouseEnter, onMouseLea
       </div>
 
       {/* Text block — transparent bg, sits on high-z */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 bg-transparent px-7 pb-7 pt-0">
+      <div className="absolute bottom-0 left-0 right-0 z-30 bg-transparent px-7 pb-7 pt-0 text-center md:text-left">
         <h3 className={`font-bold text-zinc-900 leading-tight ${(service as LottieService).isWide || (service as LottieService).isTall ? 'text-2xl' : 'text-xl'}`}>
           {service.title}
         </h3>
-        <p className="text-zinc-500 text-xs leading-tight line-clamp-2 mt-0.5">{service.description}</p>
+        <p className="text-zinc-500 text-xs leading-tight line-clamp-2 mt-0.5 mx-auto md:mx-0">{service.description}</p>
       </div>
     </motion.div>
   );

@@ -222,7 +222,7 @@ export default function ReviewsSection({ heading, intro, items }: ReviewsSection
     <section 
       ref={sectionRef}
       id="reviews" 
-      className="relative z-20 py-24 px-4 md:px-8 lg:px-20 w-full overflow-hidden"
+      className="relative z-20 pt-6 pb-24 px-4 md:px-8 lg:px-20 w-full overflow-hidden"
     >
       <BlueGradientBackground />
       <BackgroundAnimations />
@@ -249,16 +249,16 @@ export default function ReviewsSection({ heading, intro, items }: ReviewsSection
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="w-full flex flex-col items-start px-4 md:px-8 lg:px-16 xl:px-32 pl-[40px] md:pl-[40px] lg:pl-[40px] xl:pl-[calc(8rem+40px)] relative z-10"
+            className="w-full flex flex-col items-center lg:items-start text-center lg:text-left px-4 md:px-8 lg:px-16 xl:px-32 lg:pl-[40px] xl:pl-[calc(8rem+40px)] relative z-10 mb-12"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-black mb-2 tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-bold text-black mb-6 tracking-tight">
               {headingParts.before}
               {headingParts.accent ? (
                 <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
               ) : null}
               {headingParts.after}
             </h2>
-            <p className="text-black/70 text-base max-w-[600px] leading-relaxed">
+            <p className="text-black/70 text-base md:text-lg leading-relaxed max-w-3xl px-6 lg:px-0 text-justify lg:text-left [text-align-last:center] lg:[text-align-last:auto]">
               {intro}
             </p>
           </motion.div>
