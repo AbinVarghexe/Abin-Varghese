@@ -8,55 +8,40 @@ import CardSwap, { Card } from "@/components/effects/CardSwap";
 import { ArchGallery } from "@/components/ui/ArchGallery";
 import { MobileProjectStack } from "@/components/ui/MobileProjectStack";
 import { CreativeMobileStack } from "@/components/ui/CreativeMobileStack";
+import { SiteCopyCreativeCategory } from "@/lib/site-copy-content";
 
-const CREATIVE_CATEGORIES = [
-  {
-    title: "Motion Graphics",
-    description: "Bringing static designs to life with fluid animations and cinematic storytelling that captivates audiences.",
-    image: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=600"
-  },
-  {
-    title: "UI/UX Design",
-    description: "Crafting intuitive, user-centered interfaces that blend aesthetic beauty with seamless functional experiences.",
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600"
-  },
-  {
-    title: "Video Production",
-    description: "High-quality video editing and direction, focusing on rhythm, color grading, and impactful visual narratives.",
-    image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=600"
-  },
-  {
-    title: "VFX Animation",
-    description: "Creating mind-bending visual effects and high-fidelity animations for a truly immersive digital experience.",
-    image: "https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=600"
-  },
-  {
-    title: "3D Modeling",
-    description: "Developing detailed 3D assets and environments with realistic textures, lighting, and spatial depth.",
-    image: "https://images.unsplash.com/photo-1616423640778-28d1b53229bd?q=80&w=600"
-  },
-  {
-    title: "Visual Branding",
-    description: "Designing cohesive brand identities that tell a unique story through color, typography, and iconography.",
-    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=600"
-  },
-  {
-    title: "Character Design",
-    description: "Giving personality to digital entities through expressive character concepts and detailed illustrations.",
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600"
-  }
-];
+interface RecentProjectsProps {
+  heading: string;
+  intro: string;
+  webTitle: string;
+  webCopy: string;
+  webCtaLabel: string;
+  creativeTitle: string;
+  creativeCopy: string;
+  creativeCtaLabel: string;
+  creativeCategories: SiteCopyCreativeCategory[];
+}
 
-export default function RecentProjects() {
+export default function RecentProjects({
+  heading,
+  intro,
+  webTitle,
+  webCopy,
+  webCtaLabel,
+  creativeTitle,
+  creativeCopy,
+  creativeCtaLabel,
+  creativeCategories,
+}: RecentProjectsProps) {
   const [isHoveringCard, setIsHoveringCard] = useState(false);
   const [hoveredUrl, setHoveredUrl] = useState("Visit Site");
-  const [activeCreativeIndex, setActiveCreativeIndex] = useState(3);
+  const [activeCreativeIndex, setActiveCreativeIndex] = useState(0);
 
   // Use spring for smooth cursor following
   const cursorX = useSpring(-100, { stiffness: 400, damping: 28 });
   const cursorY = useSpring(-100, { stiffness: 400, damping: 28 });
 
-  const activeCategory = CREATIVE_CATEGORIES[activeCreativeIndex];
+  const activeCategory = creativeCategories[activeCreativeIndex] || creativeCategories[0];
 
   return (
     <section className="pt-24 pb-8 px-4 md:px-8 lg:px-20 w-full bg-transparent relative z-20">
@@ -84,11 +69,9 @@ export default function RecentProjects() {
 
         {/* HEADER SECTION */}
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left w-full mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-black">
-            My Recent <span className="text-blue-600 font-serif italic font-medium">Project&apos;s</span>
-          </h2>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-6 text-black" dangerouslySetInnerHTML={{ __html: heading.replace(/\[(.*?)\]/g, '<span class="text-blue-600 font-serif italic font-medium">$1</span>') }} />
           <p className="text-black/70 text-base md:text-lg leading-relaxed max-w-3xl px-6 lg:px-0 text-justify lg:text-left [text-align-last:center] lg:[text-align-last:auto]">
-            Exploring the intersection of high-performance engineering and creative visual storytelling across multiple digital disciplines.
+            {intro}
           </p>
         </div>
 
@@ -103,10 +86,10 @@ export default function RecentProjects() {
           {/* Section Heading */}
           <div className="flex flex-col gap-3 max-w-[800px] mb-0 items-start text-left px-6 lg:px-0">
             <h3 className="text-2xl md:text-3xl font-bold text-zinc-900">
-              Web Development
+              {webTitle}
             </h3>
             <p className="text-zinc-500 text-sm md:text-base leading-relaxed max-w-3xl text-left">
-              Building highly-performant, responsive web applications using modern technologies like React, Next.js, and Tailwind CSS. I specialize in turning complex requirements into seamless digital experiences.
+              {webCopy}
             </p>
           </div>
 
@@ -138,7 +121,7 @@ export default function RecentProjects() {
                     border: '1.5px solid rgba(255,255,255,0.1)',
                   }}
                 >
-                  <span className="mr-3">View Projects</span>
+                  <span className="mr-3">{webCtaLabel}</span>
                   <div className="flex h-8 w-8 items-center justify-center bg-white rounded-full transition-transform group-hover:rotate-45">
                     <ArrowUpRight className="text-[#0b0b0c] w-4 h-4" />
                   </div>
@@ -285,10 +268,10 @@ export default function RecentProjects() {
           {/* Section Heading */}
           <div className="flex flex-col gap-3 max-w-[800px] mb-4 items-start text-left px-6 lg:px-0">
             <h3 className="text-2xl md:text-3xl font-bold text-zinc-900">
-              Creative Stuff
+              {creativeTitle}
             </h3>
             <p className="text-zinc-500 text-sm md:text-base leading-relaxed max-w-3xl text-left">
-              Beyond engineering, I dive deep into visual aesthetics and digital artistry. From cinematic motion graphics to immersive 3D environments, these pieces represent my passion for pushing the boundaries of creative storytelling.
+              {creativeCopy}
             </p>
           </div>
 
@@ -297,7 +280,7 @@ export default function RecentProjects() {
              {/* Arched Gallery Background (Desktop Only) */}
              <div className="hidden lg:block absolute inset-0">
                <ArchGallery 
-                  categories={CREATIVE_CATEGORIES} 
+                  categories={creativeCategories} 
                   selectedIndex={activeCreativeIndex} 
                   onSelect={(idx: number) => setActiveCreativeIndex(idx)} 
                />
@@ -306,7 +289,7 @@ export default function RecentProjects() {
              {/* Mobile Stack (Mobile Only) */}
              <div className="lg:hidden absolute top-0 left-1/2 -translate-x-1/2 w-full flex justify-center pt-8">
                <CreativeMobileStack 
-                  items={CREATIVE_CATEGORIES}
+                  items={creativeCategories}
                   currentIndex={activeCreativeIndex}
                   onIndexChange={(idx: number) => setActiveCreativeIndex(idx)}
                />
@@ -319,7 +302,7 @@ export default function RecentProjects() {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => setActiveCreativeIndex((prev) => (prev - 1 + CREATIVE_CATEGORIES.length) % CREATIVE_CATEGORIES.length)}
+                      onClick={() => setActiveCreativeIndex((prev) => (prev - 1 + creativeCategories.length) % creativeCategories.length)}
                       className="w-10 h-10 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-sm hover:shadow-md transition-all"
                       aria-label="Previous"
                     >
@@ -331,7 +314,7 @@ export default function RecentProjects() {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => setActiveCreativeIndex((prev) => (prev + 1) % CREATIVE_CATEGORIES.length)}
+                      onClick={() => setActiveCreativeIndex((prev) => (prev + 1) % creativeCategories.length)}
                       className="w-10 h-10 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-sm hover:shadow-md transition-all"
                       aria-label="Next"
                     >
@@ -371,7 +354,7 @@ export default function RecentProjects() {
                      el.style.transform = 'scale(1)';
                    }}
                  >
-                   <span style={{ minWidth: '80px', textAlign: 'center' }}>Contact me</span>
+                   <span style={{ minWidth: '80px', textAlign: 'center' }}>{creativeCtaLabel}</span>
                    <span
                      className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
                      style={{ width: '38px', height: '38px' }}
