@@ -303,7 +303,7 @@ export const siteCopyDefaults: SiteCopyContent = {
   footerBrandEyebrow: "Design-led digital work by Abin Varghese.",
   footerSupportCopy:
     "Full-stack development, UI/UX design, branding, and creative visual work from Idukki, Kerala.",
-  footerEmail: "toabinvarghese@gmail.com",
+  footerEmail: process.env.CONTACT_EMAIL || "toabinvarghese@gmail.com",
   footerCtaHeading: "Have something in mind?",
   footerCtaCopy: "Let's talk.",
   footerCopyright: "ABIN VARGHESE 2026 ©",

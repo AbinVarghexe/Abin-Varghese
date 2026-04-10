@@ -43,7 +43,7 @@ export function PersonSchema() {
       "Python",
       "Hugging Face Models",
     ],
-    email: "mailto:toabinvarghese@gmail.com",
+    email: `mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || "toabinvarghese@gmail.com"}`,
     telephone: "+916282824259",
     image: getAbsoluteUrl("/profile.jpg"),
   };
