@@ -5,6 +5,7 @@ import "@/styles/globals.css";
 import { PersonSchema, WebSiteSchema } from "@/seo/schema";
 import { metadata as seoMetadata, viewport } from "@/seo/metadata";
 import ClientLayoutWrapper from "@/components/common/ClientLayoutWrapper";
+import { Analytics } from "@vercel/analytics/next";
 
 const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
@@ -48,6 +49,7 @@ export default function RootLayout({
         <ClientLayoutWrapper>
           {children}
         </ClientLayoutWrapper>
+        <Analytics />
       </body>
     </html>
   );
