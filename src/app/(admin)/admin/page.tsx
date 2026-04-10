@@ -14,6 +14,7 @@ import {
   Mail,
   RefreshCw,
   User,
+  Calendar,
 } from "lucide-react";
 
 const sections = [
@@ -24,6 +25,13 @@ const sections = [
     href: "/admin/home",
     icon: Home,
     tone: "from-blue-400/20 via-blue-500/10 to-transparent border-blue-300/60",
+  },
+  {
+    title: "Bookings",
+    description: "View upcoming real-time appointments pulled securely from your connected Cal.com account API integration.",
+    href: "/admin/bookings",
+    icon: Calendar,
+    tone: "from-purple-300/25 via-indigo-400/10 to-transparent border-indigo-300/60",
   },
   {
     title: "About Section",

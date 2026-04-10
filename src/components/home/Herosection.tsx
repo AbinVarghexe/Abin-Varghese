@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useRef, type ComponentType } from 'react';
+import { memo, useRef, type ComponentType, useState, useEffect } from 'react';
 import { ArrowUpRight, Calendar, Github, Instagram, Linkedin, ChevronDown } from 'lucide-react';
 import {
   motion,
@@ -100,6 +100,19 @@ function MagneticButton({
   const sx  = useSpring(x, { stiffness: 320, damping: 28 });
   const sy  = useSpring(y, { stiffness: 320, damping: 28 });
 
+  const isCalLink = href?.startsWith('https://cal.com/') || href?.startsWith('https://cal.me/');
+  let calLinkValue = undefined;
+  if (isCalLink) {
+    try {
+      const url = new URL(href);
+      // Remove leading and trailing slashes
+      calLinkValue = url.pathname.replace(/^\/+|\/+$/g, '');
+    } catch {
+      // In case URL parsing fails (e.g., malformed URL), fallback
+      calLinkValue = href.replace('https://cal.com/', '').replace('https://cal.me/', '').replace(/\/+$/, '');
+    }
+  }
+
   const handleMouse = (e: React.MouseEvent) => {
     const box = ref.current?.getBoundingClientRect();
     if (!box) return;
@@ -113,6 +126,11 @@ function MagneticButton({
       <motion.a
         ref={ref}
         href={href}
+        data-cal-link={calLinkValue}
+        data-cal-config='{"theme":"light"}'
+        onClick={(e) => {
+          if (isCalLink) e.preventDefault();
+        }}
         onMouseMove={handleMouse}
         onMouseLeave={reset}
         style={{ x: sx, y: sy }}
@@ -140,6 +158,11 @@ function MagneticButton({
     <motion.a
       ref={ref}
       href={href}
+      data-cal-link={calLinkValue}
+      data-cal-config='{"theme":"light"}'
+      onClick={(e) => {
+        if (isCalLink) e.preventDefault();
+      }}
       onMouseMove={handleMouse}
       onMouseLeave={reset}
       style={{
@@ -245,6 +268,24 @@ const Herosection = ({
   // Real-time override from admin panel
   const data = isPreviewing ? { ...initialData, ...previewData } : initialData;
   
+  const [availabilityText, setAvailabilityText] = useState(data.heroAvailabilityText);
+  const [isAvailable, setIsAvailable] = useState(true);
+
+  // Fetch real-time availability from Cal.com via our API route
+  useEffect(() => {
+    fetch('/api/cal/availability')
+      .then(res => res.json())
+      .then(json => {
+        if (json.available && json.message) {
+          setAvailabilityText(`✦ ${json.message}`);
+          setIsAvailable(true);
+        } else if (json.available === false) {
+          setAvailabilityText('✦ Fully booked right now');
+          setIsAvailable(false);
+        }
+      })
+      .catch(err => console.error("Could not fetch Cal.com availability:", err));
+  }, []);
 
   return (
     <section
@@ -402,11 +443,11 @@ const Herosection = ({
               >
                 {[...Array(2)].map((_, i) => (
                   <div key={i} className="flex gap-8 pr-8">
-                    <p className="text-[12px] md:text-[14px] font-medium tracking-wide text-[#0020d7]">
-                      {data.heroAvailabilityText}
+                    <p className={`text-[12px] md:text-[14px] font-medium tracking-wide ${isAvailable ? 'text-[#0020d7]' : 'text-orange-600'}`}>
+                      {availabilityText}
                     </p>
-                    <p className="text-[12px] md:text-[14px] font-medium tracking-wide text-[#0020d7]">
-                      {data.heroAvailabilityText}
+                    <p className={`text-[12px] md:text-[14px] font-medium tracking-wide ${isAvailable ? 'text-[#0020d7]' : 'text-orange-600'}`}>
+                      {availabilityText}
                     </p>
                   </div>
                 ))}
@@ -427,7 +468,7 @@ const Herosection = ({
                 icon={ArrowUpRight}
               />
               <MagneticButton
-                href={homeLinks.pageLinks.contact || data.heroCtaSecondaryUrl}
+                href={data.heroCtaSecondaryUrl}
                 label={data.heroCtaSecondaryLabel}
                 icon={Calendar}
                 secondary

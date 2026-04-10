@@ -7,6 +7,7 @@ import Footer from "@/components/layout/Footer";
 import MouseTrail from "@/components/ui/MouseTrail";
 import { MobileDock } from "@/components/common/MobileDock";
 import Preloader from "@/components/layout/Preloader";
+import CalEmbed from "@/components/common/CalEmbed";
 import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
@@ -160,6 +161,7 @@ export default function ClientLayoutWrapper({
 
   return (
     <>
+      <CalEmbed />
       <Preloader />
       <MouseTrail baseThickness={4} enableCustomCursor={true} enableFade={true} />
       
