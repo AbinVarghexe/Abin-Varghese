@@ -22,7 +22,7 @@ export async function sendContactEmail(data: ContactEmailData, targetEmail?: str
 
   try {
     const result = await resend.emails.send({
-      from: 'Portfolio Contact <onboarding@resend.dev>', // Update with your verified domain
+      from: 'Portfolio Contact <contact@abinvarghese.me>', // Updated with verified domain
       to: targetEmail || process.env.CONTACT_EMAIL || 'your-email@example.com',
       replyTo: email,
       subject: subject || `New message from ${name}`,
