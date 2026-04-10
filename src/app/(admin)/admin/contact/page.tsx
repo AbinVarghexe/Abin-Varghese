@@ -25,7 +25,7 @@ const defaultSettings: ContactSettings = {
   introText: "We promise to reply within 24 hours, every time.",
   instagramUrl: "https://instagram.com",
   linkedinUrl: "https://linkedin.com",
-  contactEmail: "toabinvarghes@gmail.com",
+  contactEmail: "toabinvarghese@gmail.com",
   formEnabled: true,
 };
 
