@@ -22,14 +22,60 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconX,
+  IconExternalLink,
+  IconArrowRight,
 } from '@tabler/icons-react';
 import type { WorkspaceProject } from '@/lib/github-projects';
 import { homePageDesignSystem } from '@/lib/home-page-design-system';
 import PinCard from '@/components/pinterest/PinCard';
 import { pinterestPins, type PinterestPin } from '@/lib/pinterest-content';
 import ProjectPreviewImage from '@/components/projects/ProjectPreviewImage';
+import { motion, AnimatePresence } from 'framer-motion';
+import ProjectGalleryCard from './ProjectGalleryCard';
 
 export type WorkspaceFilter = 'coding' | 'designing';
+
+const BEHANCE_PROJECTS = [
+  {
+    id: "behance-1",
+    url: "https://www.behance.net/embed/project/238218229?ilo0=1",
+    title: "Featured Brand Identity",
+    coverImage: "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=2071",
+    link: "https://www.behance.net/gallery/238218229/Project-Title"
+  },
+  {
+    id: "behance-2",
+    url: "https://www.behance.net/embed/project/238218229?ilo0=1", 
+    title: "Visual Identity Study",
+    coverImage: "https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&q=80&w=2070",
+    link: "#"
+  },
+  {
+    id: "behance-3",
+    url: "https://www.behance.net/embed/project/238218229?ilo0=1", 
+    title: "Kinetic Typography",
+    coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2064",
+    link: "#"
+  },
+  {
+    id: "behance-4",
+    url: "https://www.behance.net/embed/project/238218229?ilo0=1", 
+    title: "UI Design Exploration",
+    coverImage: "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=2070",
+    link: "#"
+  }
+];
+
+const FIGMA_PROJECTS = [
+  {
+    id: "figma-deal-six",
+    title: "DEALSIX Platform",
+    description: "A comprehensive digital ecosystem for logistics and commerce management. This design system focuses on high-density information architecture and clean user flows.",
+    url: "https://www.figma.com/design/UkvEzHwcZ8SHSIqmsOK1KE/DEALSIX?node-id=11-3075&t=NNUTESDtBLn3Vgun-1",
+    coverImage: "https://images.unsplash.com/photo-1551288049-bbbda5366a71?auto=format&fit=crop&q=80&w=2070",
+    tags: ["UI/UX Evolution", "Design System", "Logistics", "B2B Dashboard"]
+  }
+];
 
 interface WorkspaceProjectsSectionProps {
   projects: WorkspaceProject[];
@@ -53,31 +99,25 @@ const DESIGN_RETURN_QUERY = 'from=projects&workspace=designing';
 
 type DesignCategory =
   | 'All'
-  | 'Graphic design projects'
-  | 'Visual effects projects'
-  | 'UI/UX projects'
-  | 'Video editing projects'
-  | '3D design projects'
-  | 'Motion graphics projects';
+  | 'Graphic design'
+  | 'Web Design'
+  | 'Motion Graphics'
+  | 'VFX & 3D Animation';
 
 const DESIGN_CATEGORIES: DesignCategory[] = [
   'All',
-  'Graphic design projects',
-  'Visual effects projects',
-  'UI/UX projects',
-  'Video editing projects',
-  '3D design projects',
-  'Motion graphics projects',
+  'Graphic design',
+  'Web Design',
+  'Motion Graphics',
+  'VFX & 3D Animation',
 ];
 
 const DESIGN_CATEGORY_ICONS = {
   'All': LayoutGrid,
-  'Graphic design projects': Palette,
-  'Visual effects projects': Sparkles,
-  'UI/UX projects': Monitor,
-  'Video editing projects': Film,
-  '3D design projects': Box,
-  'Motion graphics projects': Video,
+  'Graphic design': Palette,
+  'Web Design': Monitor,
+  'Motion Graphics': Video,
+  'VFX & 3D Animation': Box,
 } as const;
 
 // Public demo links used when project-specific env URLs are not provided.
@@ -98,18 +138,14 @@ function matchesDesignCategory(pin: PinterestPin, category: DesignCategory) {
   const fingerprint = `${pin.title} ${pin.description} ${pin.board} ${pin.tags.join(' ')}`.toLowerCase();
 
   switch (category) {
-    case 'UI/UX projects':
+    case 'Graphic design':
+      return pin.mediaType === 'image' && /(graphic|branding|logo|collage|poster|typography|visual language)/.test(fingerprint);
+    case 'Web Design':
       return /(ui|ux|dashboard|component|design system|interface|app|prototype|wireframe|web|website|landing|frontend|ecommerce|cms|usability|user flow|journey|interaction)/.test(fingerprint);
-    case 'Visual effects projects':
-      return /(vfx|visual effect|cinematic|compositing|atmosphere|effects)/.test(fingerprint);
-    case 'Video editing projects':
-      return pin.mediaType === 'video' || /(video|editing|reel|loop|alpha|motion)/.test(fingerprint);
-    case 'Graphic design projects':
-      return /(graphic|branding|logo|collage|poster|typography|visual language)/.test(fingerprint);
-    case '3D design projects':
-      return pin.mediaType === 'model' || /(3d|model|render|mech|bot|geometry)/.test(fingerprint);
-    case 'Motion graphics projects':
-      return /(motion|animation|kinetic|transition|graphics|reel|loop)/.test(fingerprint);
+    case 'VFX & 3D Animation':
+      return (pin.mediaType === 'video' || pin.mediaType === 'model') && /(3d|model|render|mech|bot|geometry|blender|c4d|houdini|octane|vfx|visual effect|cinematic|compositing|atmosphere|effects|video|editing|simulation|particle|explosion|smoke|fire|nuke|maya)/.test(fingerprint);
+    case 'Motion Graphics':
+      return pin.mediaType === 'video' && /(motion|animation|kinetic|transition|graphics|reel|loop|after effects|lottie)/.test(fingerprint);
     default:
       return true;
   }
@@ -341,11 +377,12 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
   );
 }
 
-function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
+export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
+  const [activeTab, setActiveTab] = useState<DesignCategory>('All');
+  const [loadedFigmaIds, setLoadedFigmaIds] = useState<Set<string>>(new Set());
+  const [loadedBehanceIds, setLoadedBehanceIds] = useState<Set<string>>(new Set());
+  const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
   const design = homePageDesignSystem;
-
-  const [selectedCategories, setSelectedCategories] = useState<DesignCategory[]>(['All']);
-  const [showFilters, setShowFilters] = useState(true);
 
   const feedItems = useMemo(() => {
     const projectPins = projects.map((project, index) => {
@@ -370,6 +407,42 @@ function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }
       };
     });
 
+    const behancePins = BEHANCE_PROJECTS.map((project, index) => ({
+      id: `virtual-behance-${project.id}`,
+      href: project.link,
+      pin: {
+        id: project.id,
+        title: project.title,
+        description: "Featured Case Study",
+        mediaType: 'image' as const,
+        mediaPath: project.coverImage,
+        board: 'Case Studies',
+        author: 'Behance',
+        tags: ['branding', 'case-study'],
+        dominantColor: '#0057ff',
+        previewHeight: PROJECT_PIN_HEIGHTS[(index + 1) % PROJECT_PIN_HEIGHTS.length],
+        likes: 950,
+      }
+    }));
+
+    const figmaPins = FIGMA_PROJECTS.map((project, index) => ({
+      id: `virtual-figma-${project.id}`,
+      href: project.url,
+      pin: {
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        mediaType: 'image' as const,
+        mediaPath: project.coverImage,
+        board: 'Web Design',
+        author: 'Figma',
+        tags: project.tags,
+        dominantColor: '#1f5fff',
+        previewHeight: PROJECT_PIN_HEIGHTS[(index + 2) % PROJECT_PIN_HEIGHTS.length],
+        likes: 1100,
+      }
+    }));
+
     const visualPins = pinterestPins.map((pin) => ({
       id: `pin-${pin.id}`,
       href: `/pinterest/${pin.id}?${DESIGN_RETURN_QUERY}`,
@@ -377,130 +450,55 @@ function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }
     }));
 
     const mixed: Array<{ id: string; href: string; pin: PinterestPin }> = [];
-    const limit = Math.max(projectPins.length, visualPins.length);
+    const sources = [visualPins, projectPins, figmaPins, behancePins];
+    const maxLen = Math.max(...sources.map(s => s.length));
 
-    for (let index = 0; index < limit; index += 1) {
-      if (visualPins[index]) {
-        mixed.push(visualPins[index]);
-      }
-      if (projectPins[index]) {
-        mixed.push(projectPins[index]);
-      }
+    for (let i = 0; i < maxLen; i++) {
+      sources.forEach(source => {
+        if (source[i]) mixed.push(source[i]);
+      });
     }
 
     return mixed;
   }, [projects]);
 
   const filteredFeedItems = useMemo(() => {
-    if (selectedCategories.length === 0 || selectedCategories.includes('All')) {
+    if (activeTab === 'All') {
       return feedItems;
     }
+    return feedItems.filter((item) => matchesDesignCategory(item.pin, activeTab));
+  }, [feedItems, activeTab]);
 
-    return feedItems.filter((item) =>
-      selectedCategories.some((category) => matchesDesignCategory(item.pin, category))
-    );
-  }, [feedItems, selectedCategories]);
 
-  const chipItems = useMemo(
-    () =>
-      DESIGN_CATEGORIES.map((category) => ({
-        category,
-      })),
-    []
-  );
+  const itemsBeforeBehance = filteredFeedItems.slice(0, 20);
+  const showBehance = activeTab === 'Graphic design' && itemsBeforeBehance.length >= 20;
+  
+  const isPinterestLayout = [
+    'All',
+    'Graphic design', 
+    'Motion Graphics', 
+    'VFX & 3D Animation'
+  ].includes(activeTab);
 
-  const selectedFilterPills = useMemo(
-    () => selectedCategories.filter((category) => category !== 'All'),
-    [selectedCategories]
-  );
-
-  const uiUxEmbedCards = useMemo(() => {
-    const primarySource =
-      process.env.NEXT_PUBLIC_UIUX_FIGMA_URL ??
-      process.env.NEXT_PUBLIC_FIGMA_DESIGN_URL ??
-      DEMO_FIGMA_DESIGN_URL;
-    const secondarySource =
-      process.env.NEXT_PUBLIC_WEB_DESIGN_FIGMA_URL ??
-      process.env.NEXT_PUBLIC_UIUX_FIGMA_URL ??
-      process.env.NEXT_PUBLIC_FIGMA_DESIGN_URL ??
-      DEMO_FIGMA_WEBFLOW_URL;
-
-    return [
-      {
-        id: 'uiux-primary',
-        title: 'UI System Preview',
-        description: 'Interactive component and interface structure for UI implementation.',
-        sourceUrl: primarySource,
-        docsUrl: process.env.NEXT_PUBLIC_UIUX_IMPLEMENTATION_DOCS_URL ?? 'https://www.nngroup.com/articles/',
-      },
-      {
-        id: 'uiux-webflow',
-        title: 'Web UX Flow Preview',
-        description: 'Web page and interaction flow references for implementation planning.',
-        sourceUrl: secondarySource,
-        docsUrl: process.env.NEXT_PUBLIC_WEB_IMPLEMENTATION_DOCS_URL ?? 'https://nextjs.org/docs',
-      },
-    ].map((card) => ({
-      ...card,
-      embedUrl: toEmbedUrl(card.sourceUrl),
-    }));
-  }, []);
-
-  const hasUiUxSelected = useMemo(
-    () => selectedCategories.includes('UI/UX projects'),
-    [selectedCategories]
-  );
-
-  const hasNonUiUxSelected = useMemo(
-    () => selectedCategories.some((category) => category !== 'All' && category !== 'UI/UX projects'),
-    [selectedCategories]
-  );
-
-  const showUiUxEmbedSection = useMemo(
-    () => hasUiUxSelected && !selectedCategories.includes('All'),
-    [hasUiUxSelected, selectedCategories]
-  );
-
-  const showUiUxOnlyLayout = useMemo(
-    () => showUiUxEmbedSection && !hasNonUiUxSelected,
-    [showUiUxEmbedSection, hasNonUiUxSelected]
-  );
-
-  const feedItemsBelowUiUx = useMemo(() => {
-    if (showUiUxEmbedSection && hasNonUiUxSelected) {
-      return filteredFeedItems.filter((item) => !matchesDesignCategory(item.pin, 'UI/UX projects'));
-    }
-
-    return filteredFeedItems;
-  }, [filteredFeedItems, showUiUxEmbedSection, hasNonUiUxSelected]);
-
-  function toggleCategory(category: DesignCategory) {
-    setSelectedCategories((previous) => {
-      if (category === 'All') {
-        return ['All'];
-      }
-
-      const withoutAll = previous.filter((item) => item !== 'All') as DesignCategory[];
-
-      if (withoutAll.includes(category)) {
-        const remaining = withoutAll.filter((item) => item !== category) as DesignCategory[];
-        return remaining.length > 0 ? remaining : ['All'];
-      }
-
-      return [...withoutAll, category] as DesignCategory[];
-    });
-  }
-
-  function removeCategory(category: DesignCategory) {
-    setSelectedCategories((previous) => {
-      const remaining = previous.filter((item) => item !== 'All' && item !== category) as DesignCategory[];
-      return remaining.length > 0 ? remaining : ['All'];
-    });
-  }
+  const isWebDesignLayout = activeTab === 'Web Design';
 
   return (
-    <div>
+    <div className="relative">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee-scroll {
+          animation: marquee 40s linear infinite;
+        }
+        .animate-marquee-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}} />
+
       <div className="relative mt-4">
+        {/* ... existing header logic ... */}
         <div className="absolute right-1 top-1 hidden items-center gap-2 sm:flex">
           <a
             href="https://www.behance.net/toabinvarghese"
@@ -559,265 +557,307 @@ function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col gap-6 lg:h-[calc(100vh-13rem)] lg:flex-row lg:items-start">
-        <aside
-          className={`w-full min-w-0 rounded-xl border p-3 transition-[width] duration-300 sm:p-4 lg:sticky lg:top-24 lg:h-fit ${
-            showFilters ? 'lg:w-[270px] lg:min-w-[270px]' : 'lg:w-[76px] lg:min-w-[76px]'
-          }`}
-          style={{
-            borderColor: design.colors.border.card,
-            background: design.colors.surface,
-            boxShadow: design.shadows.subtle,
-            borderRadius: '14px',
-          }}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <p
-              className={`px-1 text-xs font-semibold uppercase tracking-[0.14em] ${showFilters ? '' : 'lg:hidden'}`}
-              style={{
-                color: design.colors.text.muted,
-                fontFamily: design.typography.families.sans,
-              }}
-            >
-              Filter Boards
-            </p>
-
+      {/* Filter Tabs */}
+      <div className="mt-12 mb-16 flex justify-center">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 bg-zinc-100/80 p-1.5 rounded-lg border border-black/[0.03]">
+          {DESIGN_CATEGORIES.map((category) => (
             <button
-              type="button"
-              onClick={() => setShowFilters((prev) => !prev)}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition"
-              aria-label={showFilters ? 'Hide filters sidebar' : 'Show filters sidebar'}
-              title={showFilters ? 'Hide filters sidebar' : 'Show filters sidebar'}
-              style={{
-                borderColor: design.colors.border.subtle,
-                background: design.colors.surfaceSoft,
-                color: design.colors.text.primary,
-              }}
+              key={category}
+              onClick={() => setActiveTab(category)}
+              className={`px-5 py-2 text-[14px] font-medium rounded-md transition-all duration-300 ease-out ${
+                activeTab === category 
+                  ? "bg-white text-[#1f5fff] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" 
+                  : "text-zinc-500 hover:text-zinc-900"
+              }`}
             >
-              {showFilters ? <IconChevronLeft size={20} stroke={1.9} /> : <IconChevronRight size={20} stroke={1.9} />}
+              {category === 'All' ? 'All Boards' : category}
             </button>
-          </div>
+          ))}
+        </div>
+      </div>
 
-          {showFilters ? (
-            <div className="mt-3 space-y-2 lg:max-h-[calc(100vh-20rem)] lg:overflow-y-auto lg:pr-1">
-              {chipItems.map((chip) => {
-                const isActive = selectedCategories.includes(chip.category);
-                const CategoryIcon = DESIGN_CATEGORY_ICONS[chip.category];
-                return (
-                  <button
-                    key={chip.category}
-                    type="button"
-                    onClick={() => toggleCategory(chip.category)}
-                    className="inline-flex w-full items-center gap-2 rounded-xl border px-2 py-2 pr-3 text-left text-sm font-semibold transition"
-                    style={{
-                      borderColor: isActive ? design.colors.brand.blueSoft : design.colors.border.subtle,
-                      background: design.colors.surfaceSoft,
-                      color: design.colors.text.secondary,
-                      fontFamily: design.typography.families.sans,
-                    }}
+      <div className="min-w-0 flex-1 px-1 sm:px-2">
+        <div className="pb-16 text-center">
+          {/* Main Feed Container */}
+          <div className="mx-auto max-w-7xl">
+            {isWebDesignLayout ? (
+              <div className="flex flex-col gap-24">
+                {FIGMA_PROJECTS.map((project, idx) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 40 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: idx * 0.2 }}
+                    className="group relative overflow-hidden rounded-[40px] border border-black/10 bg-white p-4 shadow-3xl transition-all hover:bg-zinc-50/50"
                   >
-                    <span
-                      className="inline-flex h-8 w-10 items-center justify-center rounded-md"
-                      style={{
-                        background: 'transparent',
-                        color: isActive ? design.colors.brand.blue : design.colors.text.secondary,
-                      }}
-                    >
-                      <CategoryIcon className="h-4 w-4" />
-                    </span>
-                    <span className="line-clamp-1">{chip.category}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="mt-3 space-y-2 lg:max-h-[calc(100vh-20rem)] lg:overflow-y-auto lg:pr-1">
-              {chipItems.map((chip) => {
-                const isActive = selectedCategories.includes(chip.category);
-                const CategoryIcon = DESIGN_CATEGORY_ICONS[chip.category];
-                return (
-                  <button
-                    key={chip.category}
-                    type="button"
-                    onClick={() => toggleCategory(chip.category)}
-                    className="inline-flex w-full items-center justify-center rounded-lg border p-1 transition"
-                    aria-label={chip.category}
-                    title={chip.category}
-                    style={{
-                      borderColor: isActive ? design.colors.brand.blueSoft : design.colors.border.subtle,
-                      background: design.colors.surfaceSoft,
-                      color: design.colors.text.secondary,
-                    }}
-                  >
-                    <span
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md"
-                      style={{
-                        background: 'transparent',
-                        color: isActive ? design.colors.brand.blue : design.colors.text.secondary,
-                      }}
-                    >
-                      <CategoryIcon className="h-4 w-4" />
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </aside>
-
-        <div className="min-w-0 flex-1 px-1 sm:px-2 lg:flex lg:h-full lg:flex-col">
-          {selectedFilterPills.length > 0 ? (
-            <div
-              className="z-20 rounded-xl border px-3 py-3 sm:px-4"
-              style={{
-                borderColor: design.colors.border.card,
-                background: design.colors.surface,
-                boxShadow: design.shadows.subtle,
-              }}
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                {selectedFilterPills.map((category) => {
-                  const CategoryIcon = DESIGN_CATEGORY_ICONS[category];
-                  return (
-                    <span
-                      key={`selected-${category}`}
-                      className="inline-flex items-center gap-2 rounded-full border px-2 py-1 pr-1 text-xs font-semibold sm:text-sm"
-                      style={{
-                        borderColor: design.colors.border.subtle,
-                        background: design.colors.surfaceSoft,
-                        color: design.colors.text.secondary,
-                      }}
-                    >
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md" style={{ color: design.colors.brand.blue }}>
-                        <CategoryIcon className="h-3.5 w-3.5" />
-                      </span>
-                      <span>{category}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeCategory(category)}
-                        aria-label={`Remove ${category}`}
-                        className="inline-flex h-6 w-6 items-center justify-center rounded-full border"
-                        style={{
-                          borderColor: design.colors.border.subtle,
-                          background: design.colors.surface,
-                          color: design.colors.text.secondary,
-                        }}
-                      >
-                        <IconX size={14} stroke={2} />
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="mt-4 pb-6 lg:flex-1 lg:overflow-y-auto lg:pr-1">
-            {showUiUxEmbedSection ? (
-              <div className="mb-6 grid grid-cols-1 gap-x-4 gap-y-10 xl:grid-cols-2">
-                {uiUxEmbedCards.map((card) => (
-                  <section
-                    key={card.id}
-                    className="rounded-xl border px-3 py-3 sm:px-4"
-                    style={{
-                      borderColor: design.colors.border.card,
-                      background: design.colors.surface,
-                      boxShadow: design.shadows.subtle,
-                    }}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="max-w-2xl">
-                        <h3
-                          className="text-base font-semibold sm:text-lg"
-                          style={{
-                            color: design.colors.text.primary,
-                            fontFamily: design.typography.families.sans,
-                          }}
-                        >
-                          {card.title}
-                        </h3>
-                        <p
-                          className="mt-1 text-xs sm:text-sm"
-                          style={{
-                            color: design.colors.text.body,
-                            fontFamily: design.typography.families.sans,
-                          }}
-                        >
-                          {card.description}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={card.sourceUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold sm:text-sm"
-                          style={{
-                            borderColor: design.colors.border.subtle,
-                            background: design.colors.surfaceSoft,
-                            color: design.colors.text.secondary,
-                          }}
-                        >
-                          Open Source
-                          <ArrowUpRight className="h-3.5 w-3.5" />
-                        </a>
-
-                        {card.docsUrl ? (
-                          <a
-                            href={card.docsUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold sm:text-sm"
-                            style={{
-                              borderColor: design.colors.border.subtle,
-                              background: design.colors.surfaceSoft,
-                              color: design.colors.text.secondary,
-                            }}
+                    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[32px] border border-black/5 bg-zinc-100 shadow-inner">
+                      <AnimatePresence mode="wait">
+                        {!loadedFigmaIds.has(project.id) ? (
+                          <motion.div
+                            key="cover"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 cursor-pointer group/facade"
+                            onClick={() => setLoadedFigmaIds(prev => new Set(prev).add(project.id))}
                           >
-                            Documentation
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          </a>
-                        ) : null}
+                            <img 
+                              src={project.coverImage} 
+                              className="h-full w-full object-cover transition-transform duration-700 group-hover/facade:scale-105"
+                              alt={project.title}
+                            />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover/facade:opacity-100 transition-opacity duration-300">
+                              <div className="bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl scale-95 group-hover/facade:scale-100 transition-transform">
+                                <MousePointer2 size={20} className="text-blue-600" />
+                                <span className="text-sm font-bold text-zinc-900">Click to Explore Prototype</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="iframe"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 bg-zinc-50"
+                          >
+                            <iframe 
+                              src={toEmbedUrl(project.url)} 
+                              className="absolute inset-0 h-full w-full border-0" 
+                              allowFullScreen 
+                              loading="lazy"
+                              onLoad={() => setReadyIds(prev => new Set(prev).add(project.id))}
+                            />
+                            {/* Loading State Facade */}
+                            {!readyIds.has(project.id) && (
+                              <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-zinc-50/50 backdrop-blur-[2px] animate-pulse">
+                                <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">Loading Figma...</div>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    
+                    <div className="mt-10 px-6 pb-8 text-left">
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {project.tags.map(tag => (
+                          <span key={tag} className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 rounded-md border border-blue-100">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <h3 className="text-3xl font-bold text-zinc-900 group-hover:text-[#1f5fff] transition-colors">
+                        {project.title}
+                      </h3>
+                      <p className="mt-3 text-lg text-zinc-500 max-w-2xl leading-relaxed">
+                        {project.description}
+                      </p>
+                      
+                      <div className="mt-8 flex items-center gap-4">
+                        <a 
+                          href={project.url}
+                          target="_blank"
+                          className="inline-flex items-center gap-2 rounded-full bg-[#1f5fff] px-8 py-3.5 text-sm font-bold text-white shadow-xl transition-all hover:-translate-y-1 hover:bg-[#164ecc] hover:shadow-2xl active:scale-95"
+                        >
+                          View Full Design <IconArrowRight size={18} />
+                        </a>
+                        <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400">
+                          <MousePointer2 size={14} className="animate-bounce" />
+                          Interactive Prototype
+                        </div>
                       </div>
                     </div>
-
-                    <div className="mt-4 aspect-video w-full overflow-hidden" style={{ borderRadius: '1rem', border: '1px solid rgba(0,0,0,0.1)' }}>
-                      <iframe
-                        title={card.title}
-                        src={card.embedUrl}
-                        className="h-full w-full bg-white"
-                        allowFullScreen
-                        loading="lazy"
-                      />
-                    </div>
-                  </section>
+                  </motion.div>
                 ))}
               </div>
-            ) : null}
+            ) : (
+              <div className={isPinterestLayout ? "columns-2 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 max-w-[1400px] mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-24 md:gap-y-32"}>
+                <AnimatePresence mode="popLayout">
+                  {itemsBeforeBehance.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
+                      {isPinterestLayout ? (
+                        <PinCard pin={item.pin} href={item.href} index={index} />
+                      ) : (
+                        <ProjectGalleryCard
+                          title={item.pin.title}
+                          category={item.pin.board}
+                          image={item.pin.mediaPath}
+                          link={item.href}
+                        />
+                      )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
 
-            {showUiUxOnlyLayout ? null : (
-              <>
-                {feedItemsBelowUiUx.length > 0 ? (
-                  <div className="columns-2 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
-                    {feedItemsBelowUiUx.map((item) => (
-                      <PinCard key={item.id} pin={item.pin} href={item.href} />
+          {/* Horizontal Behance Showcase Section */}
+          <AnimatePresence>
+            {showBehance && (
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden border-y border-black/5 bg-zinc-50/50 py-32"
+                style={{ clipPath: 'inset(0 0 0 0)' }}
+              >
+                <div className="mb-20 text-center">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0057ff]/10 text-[#0057ff] text-[10px] font-bold uppercase tracking-widest border border-blue-100">
+                    <IconBrandBehance size={14} /> Global Portfolio
+                  </span>
+                  <h3 className="mt-4 text-4xl font-bold text-zinc-900">Behance Case Studies</h3>
+                  <div className="mt-2 text-zinc-500">A continuous showcase of high-fidelity project explorations</div>
+                </div>
+
+                <div className="relative w-full overflow-hidden">
+                  <div className="flex w-fit animate-marquee-scroll gap-12 px-12 py-10" style={{ animationDuration: '45s' }}>
+                    {/* First Loop */}
+                    {BEHANCE_PROJECTS.map((project, idx) => (
+                      <div 
+                        key={`${project.id}-loop1`}
+                        className="group flex-shrink-0 w-[680px] overflow-hidden rounded-[32px] border border-black/5 bg-white shadow-2xl transition-all hover:scale-[1.02] hover:shadow-3xl"
+                      >
+                        <div className="flex items-center justify-between border-b border-black/5 bg-zinc-50/50 px-8 py-5">
+                          <div className="truncate text-base font-bold text-zinc-900">{project.title}</div>
+                          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition-colors group-hover:text-blue-600">
+                            {idx === 0 || loadedBehanceIds.has(project.id) ? 'View Project' : 'Explore Case Study'} <IconExternalLink size={16} />
+                          </div>
+                        </div>
+                        <div className="relative aspect-[16/10] w-full bg-zinc-100 overflow-hidden">
+                          <AnimatePresence mode="wait">
+                            {idx === 0 || loadedBehanceIds.has(project.id) ? (
+                              <motion.div
+                                key="iframe"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="absolute inset-0"
+                              >
+                                <iframe 
+                                  src={project.url} 
+                                  className="absolute inset-0 h-full w-full border-0 pointer-events-none"
+                                  loading="lazy"
+                                  onLoad={() => setReadyIds(prev => new Set(prev).add(project.id))}
+                                />
+                                {!readyIds.has(project.id) && (
+                                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-zinc-50/50 backdrop-blur-[2px] animate-pulse">
+                                    <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">Loading...</div>
+                                  </div>
+                                )}
+                                <a 
+                                  href={project.link} 
+                                  target="_blank" 
+                                  className="absolute inset-0 z-10" 
+                                />
+                              </motion.div>
+                            ) : (
+                              <motion.div
+                                key="cover"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 cursor-pointer group/behance-facade"
+                                onClick={() => setLoadedBehanceIds(prev => new Set(prev).add(project.id))}
+                              >
+                                <img 
+                                  src={project.coverImage} 
+                                  className="h-full w-full object-cover transition-transform duration-700 group-hover/behance-facade:scale-105"
+                                  alt={project.title}
+                                />
+                                <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover/behance-facade:opacity-100 transition-opacity duration-300">
+                                  <div className="bg-white/95 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-2 shadow-2xl">
+                                    <Sparkles size={16} className="text-blue-600 animate-pulse" />
+                                    <span className="text-sm font-bold text-zinc-900">Unlock Case Study</span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Second Loop for seamless transition */}
+                    {BEHANCE_PROJECTS.map((project, idx) => (
+                      <div 
+                        key={`${project.id}-loop2`}
+                        className="group flex-shrink-0 w-[680px] overflow-hidden rounded-[32px] border border-black/5 bg-white shadow-2xl transition-all hover:scale-[1.02] hover:shadow-3xl"
+                      >
+                        <div className="flex items-center justify-between border-b border-black/5 bg-zinc-50/50 px-8 py-5">
+                          <div className="truncate text-base font-bold text-zinc-900">{project.title}</div>
+                          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition-colors group-hover:text-blue-600">
+                            {idx === 0 || loadedBehanceIds.has(project.id) ? 'View Project' : 'Explore Case Study'} <IconExternalLink size={16} />
+                          </div>
+                        </div>
+                        <div className="relative aspect-[16/10] w-full bg-zinc-100 overflow-hidden">
+                          <AnimatePresence mode="wait">
+                            {idx === 0 || loadedBehanceIds.has(project.id) ? (
+                              <motion.div
+                                key="iframe"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="absolute inset-0"
+                              >
+                                <iframe 
+                                  src={project.url} 
+                                  className="absolute inset-0 h-full w-full border-0 pointer-events-none"
+                                  loading="lazy"
+                                  onLoad={() => setReadyIds(prev => new Set(prev).add(project.id))}
+                                />
+                                {!readyIds.has(project.id) && (
+                                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-zinc-50/50 backdrop-blur-[2px] animate-pulse">
+                                    <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">Loading...</div>
+                                  </div>
+                                )}
+                                <a 
+                                  href={project.link} 
+                                  target="_blank" 
+                                  className="absolute inset-0 z-10" 
+                                />
+                              </motion.div>
+                            ) : (
+                              <motion.div
+                                key="cover"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 cursor-pointer group/behance-facade"
+                                onClick={() => setLoadedBehanceIds(prev => new Set(prev).add(project.id))}
+                              >
+                                <img 
+                                  src={project.coverImage} 
+                                  className="h-full w-full object-cover transition-transform duration-700 group-hover/behance-facade:scale-105"
+                                  alt={project.title}
+                                />
+                                <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover/behance-facade:opacity-100 transition-opacity duration-300">
+                                  <div className="bg-white/95 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-2 shadow-2xl">
+                                    <Sparkles size={16} className="text-blue-600 animate-pulse" />
+                                    <span className="text-sm font-bold text-zinc-900">Unlock Case Study</span>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-black/20 bg-white/80 px-6 py-10 text-center">
-                    <p className="text-sm text-zinc-600 md:text-base">
-                      No pins found for {selectedFilterPills.length > 0 ? selectedFilterPills.join(', ') : 'your current selection'}. Try another filter.
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
+                </div>
 
-            <div className="pt-4 text-center text-xs text-zinc-500">
-              End of feed
-            </div>
-          </div>
+                {/* Button section removed */}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Portfolio version text removed */}
         </div>
       </div>
     </div>
