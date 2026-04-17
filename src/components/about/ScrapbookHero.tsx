@@ -3,7 +3,7 @@ import Link from "next/link";
 import AboutHeroMusic from "@/components/about/AboutHeroMusic";
 
 import type { AboutContent } from "@/lib/about-content-defaults";
-import type { SiteCopyContent } from "@/lib/site-copy-content";
+import type { SiteCopyContent } from "@/types/site-copy";
 
 type ScrapbookHeroProps = {
   content: AboutContent;

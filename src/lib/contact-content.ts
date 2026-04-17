@@ -1,29 +1,24 @@
-import prisma from "@/lib/prisma";
-
-export interface ContactSectionSettings {
-  introText: string;
-  instagramUrl: string;
-  linkedinUrl: string;
-  contactEmail: string;
-  formEnabled: boolean;
-}
+import { createClient } from "@/utils/supabase/server";
+import { 
+  type ContactSectionSettings, 
+  contactSectionDefaults 
+} from "@/types/contact";
 
 const CONTACT_SETTINGS_KEY = "contact_section_settings";
 
-const contactSectionDefaults: ContactSectionSettings = {
-  introText: "We promise to reply within 24 hours, every time.",
-  instagramUrl: "https://instagram.com",
-  linkedinUrl: "https://linkedin.com",
-  contactEmail: process.env.CONTACT_EMAIL || "toabinvarghese@gmail.com",
-  formEnabled: true,
-};
 
 export async function getContactSectionSettings(): Promise<ContactSectionSettings> {
-  const record = await prisma.siteContent.findUnique({
-    where: { key: CONTACT_SETTINGS_KEY },
-  });
+  const supabase = await createClient();
+  const { data: record, error } = await supabase
+    .from("site_content")
+    .select("value")
+    .eq("key", CONTACT_SETTINGS_KEY)
+    .single();
 
-  if (!record?.value) {
+  if (error || !record?.value) {
+    if (error && error.code !== "PGRST116") { // PGRST116 is code for 'no rows found'
+       console.error("Error fetching contact settings:", error);
+    }
     return contactSectionDefaults;
   }
 
@@ -46,11 +41,15 @@ export async function getContactSectionSettings(): Promise<ContactSectionSetting
 }
 
 export async function upsertContactSectionSettings(settings: ContactSectionSettings) {
-  await prisma.siteContent.upsert({
-    where: { key: CONTACT_SETTINGS_KEY },
-    update: { value: JSON.stringify(settings) },
-    create: { key: CONTACT_SETTINGS_KEY, value: JSON.stringify(settings) },
-  });
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(
+      { key: CONTACT_SETTINGS_KEY, value: JSON.stringify(settings) },
+      { onConflict: "key" }
+    );
+
+  if (error) throw error;
 }
 
 export { contactSectionDefaults };

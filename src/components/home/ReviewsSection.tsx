@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { splitAccentHeading } from '@/lib/accent-heading';
-import type { SiteCopyReviewItem } from '@/lib/site-copy-content';
+import type { SiteCopyReviewItem } from '@/types/site-copy';
 
 interface ReviewItem {
   id: string;

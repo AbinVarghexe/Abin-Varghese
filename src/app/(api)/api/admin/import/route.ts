@@ -17,7 +17,7 @@ import {
   upsertContactSectionSettings,
 } from "@/lib/contact-content";
 import { getServicesContent, upsertServicesContent } from "@/lib/services-content";
-import prisma from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
 import type { AboutContent } from "@/lib/about-content-defaults";
 import type { HeroContent } from "@/lib/hero-content-defaults";
 import type { HomeContent } from "@/lib/home-content-defaults";
@@ -45,6 +45,14 @@ const importSchema = z.object({
     projects: z.array(projectSchema).optional(),
   }),
 });
+
+// Helper to generate slug
+const generateSlug = (title: string) => {
+  return title
+    .toLowerCase()
+    .replace(/[^\w ]+/g, '')
+    .replace(/ +/g, '-');
+};
 
 function parseHeroPayload(input: Record<string, unknown>): HeroContent {
   return {
@@ -141,13 +149,14 @@ export async function GET() {
     return response;
   }
 
-  const [hero, home, about, settings, services, projects] = await Promise.all([
+  const supabase = await createClient();
+  const [hero, home, about, settings, services, projectsRes] = await Promise.all([
     getHeroContent(),
     getHomeContent(),
     getAboutContent(),
     getContactSectionSettings(),
     getServicesContent(),
-    prisma.project.findMany({ orderBy: { createdAt: "desc" } }),
+    supabase.from("projects").select("*").order("created_at", { ascending: false }),
   ]);
 
   return NextResponse.json({
@@ -159,7 +168,7 @@ export async function GET() {
       settings,
     },
     services,
-    projects,
+    projects: projectsRes.data || [],
   });
 }
 
@@ -194,19 +203,25 @@ export async function POST(request: NextRequest) {
     }
 
     if (payload.projects) {
-      await prisma.project.deleteMany();
-      await prisma.project.createMany({
-        data: payload.projects.map((project) => ({
-          title: project.title,
-          description: project.description,
-          content: project.content,
-          imageUrl: project.imageUrl,
-          demoUrl: project.demoUrl || null,
-          githubUrl: project.githubUrl || null,
-          tags: project.tags,
-          featured: project.featured || false,
-        })),
-      });
+      const supabase = await createClient();
+      // First clear all existing projects (as per original logic)
+      await supabase.from("projects").delete().neq("id", "00000000-0000-0000-0000-000000000000"); // Hack to delete all
+      
+      const insertData = payload.projects.map((project) => ({
+        title: project.title,
+        description: project.description,
+        content: project.content,
+        image_url: project.imageUrl,
+        live_url: project.demoUrl || null,
+        github_url: project.githubUrl || null,
+        tags: project.tags,
+        featured: project.featured || false,
+        slug: `${generateSlug(project.title)}-${Math.random().toString(36).substring(2, 7)}`,
+        workspace: 'coding'
+      }));
+
+      const { error } = await supabase.from("projects").insert(insertData);
+      if (error) throw error;
     }
 
     return NextResponse.json({ success: true });
@@ -218,6 +233,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.error("Import failed:", error);
     return NextResponse.json({ error: "Import failed" }, { status: 500 });
   }
 }

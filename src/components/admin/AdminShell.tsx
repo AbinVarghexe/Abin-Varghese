@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { signOut, useSession } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,6 +17,7 @@ import {
   User,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -28,10 +29,17 @@ const navItems = [
   { href: "/admin/import", label: "Import Section", icon: Database },
 ];
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+export default function AdminShell({ 
+  children,
+  user
+}: { 
+  children: React.ReactNode;
+  user?: SupabaseUser;
+}) {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  const router = useRouter();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const activeHref = useMemo(() => {
     if (pathname === "/admin") {
@@ -42,16 +50,21 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     return found?.href ?? "/admin";
   }, [pathname]);
 
+  const handleSignOut = async () => {
+    try {
+      setIsLoggingOut(true);
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.refresh();
+      router.push("/admin/login");
+    } catch (error) {
+      console.error("Sign out error:", error);
+      setIsLoggingOut(false);
+    }
+  };
+
   if (pathname.startsWith("/admin/login")) {
     return <>{children}</>;
-  }
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen bg-[#f7f4ef] flex items-center justify-center text-[#0020d7] font-mono">
-        Initializing Admin Console...
-      </div>
-    );
   }
 
   return (
@@ -135,9 +148,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           }`}
         >
           <div className={`flex items-center gap-3 overflow-hidden ${!isSidebarExpanded ? "justify-center" : ""}`}>
-            {session?.user?.image ? (
+            {user?.user_metadata?.avatar_url ? (
               <img
-                src={session.user.image}
+                src={user.user_metadata.avatar_url}
                 alt="User"
                 className="w-9 h-9 shrink-0 rounded-full border border-[var(--color-border-medium)]"
               />
@@ -150,10 +163,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             {isSidebarExpanded ? (
               <div className="flex flex-col flex-1 min-w-0">
                 <span className="text-sm font-medium text-[#0b0b0c] truncate">
-                  {session?.user?.name || "Admin"}
+                  {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Admin"}
                 </span>
                 <span className="text-[10px] text-[var(--color-text-body)] truncate">
-                  {session?.user?.email || "Unknown user"}
+                  {user?.email || "Unknown user"}
                 </span>
               </div>
             ) : null}
@@ -161,11 +174,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
           <button
             type="button"
-            onClick={() => signOut({ callbackUrl: "/admin/login" })}
-            className="p-2 hover:bg-[#f3f4f6] rounded-lg transition-colors text-[var(--color-text-body)] hover:text-[#0b0b0c] shrink-0"
+            onClick={handleSignOut}
+            disabled={isLoggingOut}
+            className="p-2 hover:bg-[#f3f4f6] rounded-lg transition-colors text-[var(--color-text-body)] hover:text-[#0b0b0c] shrink-0 disabled:opacity-50"
             title="Log Out"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className={`w-4 h-4 ${isLoggingOut ? "animate-pulse" : ""}`} />
           </button>
         </div>
       </aside>

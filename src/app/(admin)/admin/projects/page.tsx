@@ -2,16 +2,24 @@
 
 import { useEffect, useState } from "react";
 import AdminSectionWorkspace from "@/components/admin/AdminSectionWorkspace";
+import { uploadToStorage } from "@/lib/supabase";
+import { Image as ImageIcon, Link as LinkIcon, Upload as UploadIcon, X as XIcon, Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 type Project = {
   id: string;
   title: string;
   description: string;
-  content: string;
-  imageUrl: string;
-  demoUrl: string | null;
-  githubUrl: string | null;
+  content: string | null;
+  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST";
+  mediaType: "IMAGE" | "VIDEO" | "GIF" | "MODEL";
+  mediaUrl: string;
+  externalUrl: string | null;
+  iframeUrl: string | null;
+  category: string | null;
   tags: string[];
+  dominantColor: string | null;
+  previewHeight: number | null;
   featured: boolean;
   createdAt: string;
 };
@@ -20,10 +28,15 @@ type ProjectForm = {
   title: string;
   description: string;
   content: string;
-  imageUrl: string;
-  demoUrl: string;
-  githubUrl: string;
+  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST";
+  mediaType: "IMAGE" | "VIDEO" | "GIF" | "MODEL";
+  mediaUrl: string;
+  externalUrl: string;
+  iframeUrl: string;
+  category: string;
   tags: string;
+  dominantColor: string;
+  previewHeight: string;
   featured: boolean;
 };
 
@@ -31,10 +44,15 @@ const defaultForm: ProjectForm = {
   title: "",
   description: "",
   content: "",
-  imageUrl: "",
-  demoUrl: "",
-  githubUrl: "",
+  type: "CODE",
+  mediaType: "IMAGE",
+  mediaUrl: "",
+  externalUrl: "",
+  iframeUrl: "",
+  category: "",
   tags: "",
+  dominantColor: "",
+  previewHeight: "",
   featured: false,
 };
 
@@ -42,7 +60,31 @@ export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<ProjectForm>(defaultForm);
-  const [status, setStatus] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isFetchingGithub, setIsFetchingGithub] = useState(false);
+  const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const toastId = toast.loading("Uploading image...");
+
+    try {
+      const { url, error } = await uploadToStorage(file);
+      if (error) throw error;
+      if (url) {
+        setForm({ ...form, mediaUrl: url });
+        toast.success("Upload successful.", { id: toastId });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Upload failed.", { id: toastId });
+    } finally {
+      setIsUploading(false);
+    }
+  }
 
   async function loadProjects() {
     const response = await fetch("/api/admin/projects", { cache: "no-store" });
@@ -65,11 +107,16 @@ export default function AdminProjectsPage() {
     setForm({
       title: project.title,
       description: project.description,
-      content: project.content,
-      imageUrl: project.imageUrl,
-      demoUrl: project.demoUrl || "",
-      githubUrl: project.githubUrl || "",
+      content: project.content || "",
+      type: project.type,
+      mediaType: project.mediaType,
+      mediaUrl: project.mediaUrl,
+      externalUrl: project.externalUrl || "",
+      iframeUrl: project.iframeUrl || "",
+      category: project.category || "",
       tags: project.tags.join(", "),
+      dominantColor: project.dominantColor || "",
+      previewHeight: project.previewHeight?.toString() || "",
       featured: project.featured,
     });
   }
@@ -81,22 +128,159 @@ export default function AdminProjectsPage() {
 
   function parsePayload() {
     return {
-      title: form.title,
-      description: form.description,
-      content: form.content,
-      imageUrl: form.imageUrl,
-      demoUrl: form.demoUrl.trim() || null,
-      githubUrl: form.githubUrl.trim() || null,
+      title: form.title.trim() || null,
+      description: form.description.trim() || null,
+      content: form.content.trim() || null,
+      type: form.type,
+      mediaType: form.mediaType,
+      mediaUrl: form.mediaUrl.trim() || null,
+      externalUrl: form.externalUrl.trim() || null,
+      iframeUrl: form.iframeUrl.trim() || null,
+      category: form.category.trim() || null,
       tags: form.tags
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean),
+      dominantColor: form.dominantColor.trim() || null,
+      previewHeight: form.previewHeight ? parseInt(form.previewHeight) : null,
       featured: form.featured,
     };
   }
 
+  async function handleGithubFetch() {
+    const url = form.externalUrl;
+    const match = url.match(/github\.com\/([^/]+)\/([^/]+)/);
+    if (!match) {
+      toast.error("Invalid GitHub URL. Please use https://github.com/owner/repo");
+      return;
+    }
+
+    const [, owner, repo] = match;
+    const cleanRepo = repo.replace(/\.git$/, "");
+    
+    setIsFetchingGithub(true);
+    const toastId = toast.loading(`Fetching data for ${owner}/${cleanRepo}...`);
+
+    try {
+      // Fetch main repo info
+      const repoRes = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}`);
+      if (!repoRes.ok) throw new Error("Repo not found");
+      const repoData = await repoRes.json();
+
+      // Fetch topics (tags)
+      const topicsRes = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}/topics`, {
+        headers: { Accept: "application/vnd.github.mercy-preview+json" }
+      });
+      const topicsData = await topicsRes.json();
+      
+      const languagesRes = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}/languages`);
+      const languagesData = await languagesRes.json();
+      const languages = Object.keys(languagesData);
+
+      const combinedTags = Array.from(new Set([
+        ...languages,
+        ...(topicsData.names || []),
+        repoData.language
+      ])).filter(Boolean);
+
+      setForm((prev) => ({
+        ...prev,
+        title: prev.title || toTitleCase(cleanRepo),
+        description: prev.description || repoData.description || "",
+        tags: combinedTags.join(", "),
+        iframeUrl: prev.iframeUrl || repoData.homepage || "",
+      }));
+
+      toast.success("GitHub data fetched successfully!", { id: toastId });
+    } catch (err) {
+      toast.error("Failed to fetch GitHub data. check repo visibility.", { id: toastId });
+    } finally {
+      setIsFetchingGithub(false);
+    }
+  }
+
+  function toTitleCase(value: string): string {
+    return value
+      .replace(/[-_]+/g, " ")
+      .split(" ")
+      .filter(Boolean)
+      .map((s) => s[0].toUpperCase() + s.slice(1))
+      .join(" ");
+  }
+
+  async function handleAIDesignFetch() {
+    if (!form.externalUrl || !form.category) {
+      toast.warning("Please provide a link and select a category first.");
+      return;
+    }
+
+    setIsGeneratingContent(true);
+    const toastId = toast.loading("Step 1/2: ✨ Scraping project metadata...");
+
+    try {
+      // Step 1: Fetch Metadata
+      const metaRes = await fetch("/api/admin/projects/fetch-metadata", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: form.externalUrl }),
+      });
+
+      if (!metaRes.ok) throw new Error("Scraping failed");
+      const metaData = await metaRes.json();
+
+      setForm(prev => ({
+        ...prev,
+        title: metaData.title || prev.title,
+        mediaUrl: metaData.image || prev.mediaUrl,
+      }));
+
+      toast.loading("Step 2/2: 🪄 AI generating content...", { id: toastId });
+
+      // Step 2: Generate Content with Gemini
+      const genRes = await fetch("/api/admin/projects/generate-ai-content", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: metaData.title || form.title,
+          rawText: metaData.extractedText,
+          category: form.category,
+        }),
+      });
+
+      if (!genRes.ok) {
+        const errorData = await genRes.json();
+        throw new Error(errorData.error || "AI generation failed");
+      }
+
+      const aiData = await genRes.json();
+
+      setForm(prev => ({
+        ...prev,
+        description: aiData.description,
+        content: aiData.content,
+        tags: aiData.tags.join(", "),
+      }));
+
+      toast.success("✨ Project drafted successfully!", { id: toastId });
+    } catch (error: any) {
+      console.error(error);
+      toast.error(`Automation failed: ${error.message}. You may need to fill fields manually.`, { id: toastId });
+    } finally {
+      setIsGeneratingContent(false);
+    }
+  }
+
   async function saveProject() {
-    setStatus("Saving project...");
+    const hasMedia = form.mediaUrl.trim();
+    const hasExternal = form.externalUrl.trim();
+    const hasIframe = form.iframeUrl.trim();
+
+    if (!hasMedia && !hasExternal && !hasIframe) {
+      toast.error("Error: Please provide at least a Project Link or a Media Asset (Image/Video).");
+      return;
+    }
+
+    const toastId = toast.loading(selectedId ? "Updating project..." : "Creating project...");
 
     const method = selectedId ? "PUT" : "POST";
     const url = selectedId ? `/api/admin/projects/${selectedId}` : "/api/admin/projects";
@@ -108,12 +292,12 @@ export default function AdminProjectsPage() {
     });
 
     if (!response.ok) {
-      setStatus("Project save failed.");
+      toast.error("Project save failed.", { id: toastId });
       return;
     }
 
     await loadProjects();
-    setStatus("Project saved.");
+    toast.success(selectedId ? "Project updated successfully!" : "Project created successfully!", { id: toastId });
 
     if (!selectedId) {
       resetForm();
@@ -121,9 +305,10 @@ export default function AdminProjectsPage() {
   }
 
   async function deleteProject(id: string) {
+    const toastId = toast.loading("Deleting project...");
     const response = await fetch(`/api/admin/projects/${id}`, { method: "DELETE" });
     if (!response.ok) {
-      setStatus("Delete failed.");
+      toast.error("Delete failed.", { id: toastId });
       return;
     }
 
@@ -132,7 +317,7 @@ export default function AdminProjectsPage() {
     }
 
     await loadProjects();
-    setStatus("Project deleted.");
+    toast.success("Project deleted.", { id: toastId });
   }
 
   return (
@@ -190,71 +375,331 @@ export default function AdminProjectsPage() {
             {selectedId ? "Edit Project" : "Create Project"}
           </h3>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm">
-              <span className="text-[var(--color-text-body)]">Title</span>
-              <input
-                value={form.title}
-                onChange={(event) => setForm({ ...form, title: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, type: 'CODE' })}
+              className={`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all ${
+                form.type === 'CODE'
+                  ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
+                  : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)] hover:bg-white"
+              }`}
+            >
+              💻 Coding Project
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (form.type === 'CODE') setForm({ ...form, type: 'BEHANCE' });
+              }}
+              className={`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all ${
+                form.type !== 'CODE'
+                  ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm"
+                  : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)] hover:bg-white"
+              }`}
+            >
+              🎨 Designing Project
+            </button>
+          </div>
 
-            <label className="space-y-2 text-sm">
-              <span className="text-[var(--color-text-body)]">Image URL</span>
-              <input
-                value={form.imageUrl}
-                onChange={(event) => setForm({ ...form, imageUrl: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
+          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Dynamic Designing Mode Flow */}
+            {form.type !== 'CODE' && (
+              <div className="md:col-span-2 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl bg-zinc-50 border border-zinc-200 p-4">
+                  <div className="space-y-2 text-sm">
+                    <span className="font-semibold text-zinc-900">1. Select Design Category</span>
+                    <select
+                      value={form.category}
+                      onChange={(event) => {
+                        const cat = event.target.value;
+                        let newType = form.type;
+                        let newMediaType = form.mediaType;
 
-            <label className="space-y-2 text-sm md:col-span-2">
-              <span className="text-[var(--color-text-body)]">Short Description</span>
-              <textarea
-                rows={3}
-                value={form.description}
-                onChange={(event) => setForm({ ...form, description: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
+                        if (cat === "Web Design") {
+                          newType = "FIGMA";
+                        } else if (cat === "Motion Graphics" || cat === "VFX & 3D Animation") {
+                          newType = "PINTEREST";
+                          newMediaType = "VIDEO";
+                        } else if (cat === "Graphic design") {
+                          newType = "BEHANCE";
+                        }
 
-            <label className="space-y-2 text-sm md:col-span-2">
-              <span className="text-[var(--color-text-body)]">Detailed Content</span>
-              <textarea
-                rows={6}
-                value={form.content}
-                onChange={(event) => setForm({ ...form, content: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
+                        setForm({ ...form, category: cat, type: newType, mediaType: newMediaType as any });
+                      }}
+                      className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
+                    >
+                      <option value="">Select Category</option>
+                      <option value="Graphic design">Graphic design</option>
+                      <option value="Web Design">Web Design</option>
+                      <option value="Motion Graphics">Motion Graphics</option>
+                      <option value="VFX & 3D Animation">VFX & 3D Animation</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <span className="font-semibold text-zinc-900">2. Platform</span>
+                    <select
+                      value={form.type}
+                      onChange={(event) => setForm({ ...form, type: event.target.value as any })}
+                      className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
+                    >
+                      {form.category === "Graphic design" ? (
+                        <>
+                          <option value="BEHANCE">Behance Case Study</option>
+                          <option value="PINTEREST">Pinterest Pin</option>
+                        </>
+                      ) : form.category === "Web Design" ? (
+                        <>
+                          <option value="FIGMA">Figma Prototype</option>
+                          <option value="BEHANCE">Behance Case Study</option>
+                        </>
+                      ) : form.category === "Motion Graphics" || form.category === "VFX & 3D Animation" ? (
+                        <option value="PINTEREST">Pinterest Pin</option>
+                      ) : (
+                        <>
+                          <option value="BEHANCE">Behance Case Study</option>
+                          <option value="FIGMA">Figma Prototype</option>
+                          <option value="PINTEREST">Pinterest Pin</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
 
-            <label className="space-y-2 text-sm">
-              <span className="text-[var(--color-text-body)]">Demo URL</span>
-              <input
-                value={form.demoUrl}
-                onChange={(event) => setForm({ ...form, demoUrl: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
+                  {form.category && (
+                    <div className="md:col-span-2 space-y-2 text-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                      <span className="font-semibold text-zinc-900">3. Paste Project Link</span>
+                      <div className="flex gap-2">
+                        <input
+                          value={form.externalUrl}
+                          onChange={(event) => setForm({ ...form, externalUrl: event.target.value })}
+                          placeholder={form.type === 'BEHANCE' ? "https://behance.net/..." : "https://..."}
+                          className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAIDesignFetch}
+                          disabled={isGeneratingContent || !form.externalUrl}
+                          className="flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-zinc-800 disabled:opacity-50"
+                        >
+                          {isGeneratingContent ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Sparkles size={14} className="text-amber-400" />
+                          )}
+                          {isGeneratingContent ? "Generating..." : "Fetch & AI Draft"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {form.type === 'CODE' && (
+              <div className="md:col-span-2 space-y-6">
+                <div className="rounded-2xl bg-blue-50/50 border border-blue-100 p-4">
+                  <div className="space-y-2 text-sm">
+                    <span className="font-semibold text-blue-900">1. Paste GitHub Repository URL</span>
+                    <div className="flex gap-2">
+                      <input
+                        value={form.externalUrl}
+                        onChange={(event) => setForm({ ...form, externalUrl: event.target.value })}
+                        onBlur={() => {
+                          if (form.externalUrl.includes('github.com')) {
+                            handleGithubFetch();
+                          }
+                        }}
+                        placeholder="https://github.com/owner/repo"
+                        className="w-full rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleGithubFetch}
+                        disabled={isFetchingGithub || !form.externalUrl}
+                        className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-blue-700 disabled:opacity-50 shadow-sm"
+                      >
+                        {isFetchingGithub ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Sparkles size={14} className="text-white" />
+                        )}
+                        {isFetchingGithub ? "Fetching..." : "Fetch & Sync"}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-blue-600/70 font-medium px-1">
+                      This will automatically draft your Title, Description, Tags, and Live Link.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Sub-fields shown after category/fetch or for CODE mode */}
+            {(form.type === 'CODE' || form.category) && (
+              <>
+                <label className="space-y-2 text-sm md:col-span-2">
+                  <span className="text-[var(--color-text-body)]">Project Title</span>
+                  <input
+                    value={form.title}
+                    onChange={(event) => setForm({ ...form, title: event.target.value })}
+                    placeholder="My Awesome Project"
+                    className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                  />
+                </label>
 
-            <label className="space-y-2 text-sm">
-              <span className="text-[var(--color-text-body)]">GitHub URL</span>
-              <input
-                value={form.githubUrl}
-                onChange={(event) => setForm({ ...form, githubUrl: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
+                <div className="space-y-2 text-sm">
+                  <span className="text-[var(--color-text-body)]">Media Type</span>
+                  <select
+                    value={form.mediaType}
+                    onChange={(event) => setForm({ ...form, mediaType: event.target.value as any })}
+                    className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                  >
+                    {form.type === 'CODE' ? (
+                      <>
+                        <option value="IMAGE">Static Image</option>
+                        <option value="GIF">Animated GIF</option>
+                      </>
+                    ) : form.category === "VFX & 3D Animation" || form.category === "Motion Graphics" ? (
+                      <>
+                        <option value="VIDEO">Video</option>
+                        <option value="MODEL">3D Model (GLB/GLTF)</option>
+                        <option value="IMAGE">Static Image</option>
+                        <option value="GIF">Animated GIF</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="IMAGE">Static Image</option>
+                        <option value="VIDEO">Video</option>
+                        <option value="GIF">Animated GIF</option>
+                      </>
+                    )}
+                  </select>
+                </div>
 
-            <label className="space-y-2 text-sm md:col-span-2">
-              <span className="text-[var(--color-text-body)]">Tags (comma separated)</span>
-              <input
-                value={form.tags}
-                onChange={(event) => setForm({ ...form, tags: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
+                {form.type !== 'BEHANCE' && (
+                  <label className="space-y-2 text-sm md:col-span-2">
+                    <span className="text-[var(--color-text-body)] flex items-center justify-between">
+                      <span>{form.type === 'CODE' ? 'Project Thumbnail (Image or GIF)' : 'Media Asset (URL or Upload)'}</span>
+                      {isUploading && <Loader2 size={14} className="animate-spin text-blue-500" />}
+                    </span>
+                    <div className="flex gap-2">
+                      <input
+                        value={form.mediaUrl}
+                        onChange={(event) => setForm({ ...form, mediaUrl: event.target.value })}
+                        placeholder="https://..."
+                        className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                      />
+                      <div className="relative">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleUpload}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          disabled={isUploading}
+                        />
+                        <button
+                          type="button"
+                          className="flex h-full items-center rounded-xl border border-[var(--color-border-light)] bg-white px-3 hover:bg-[#f8f5f2]"
+                        >
+                          <UploadIcon size={16} className="text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
+                    {form.mediaUrl && (
+                      <div className="relative mt-2 aspect-video w-full max-w-[200px] overflow-hidden rounded-lg border">
+                        <img src={form.mediaUrl} alt="Preview" className="h-full w-full object-cover" />
+                        <button
+                          onClick={() => setForm({ ...form, mediaUrl: "" })}
+                          className="absolute top-1 right-1 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+                        >
+                          <XIcon size={12} />
+                        </button>
+                      </div>
+                    )}
+                  </label>
+                )}
+
+
+                {form.type !== 'PINTEREST' && (
+                  <label className="space-y-2 text-sm">
+                    <span className="text-[var(--color-text-body)]">
+                      {form.type === 'BEHANCE' 
+                        ? 'Behance Embed Code/URL' 
+                        : form.type === 'FIGMA' 
+                          ? 'Figma Prototype URL' 
+                          : form.type === 'CODE'
+                            ? 'Live Demo / Website URL'
+                            : 'Embed URL (Iframe)'}
+                    </span>
+                    <input
+                      value={form.iframeUrl}
+                      onChange={(event) => setForm({ ...form, iframeUrl: event.target.value })}
+                      placeholder="https://..."
+                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                    />
+                  </label>
+                )}
+
+                {form.type === 'CODE' && (
+                  <label className="space-y-2 text-sm">
+                    <span className="text-[var(--color-text-body)]">Technologies / Tags</span>
+                    <input
+                      value={form.tags}
+                      onChange={(event) => setForm({ ...form, tags: event.target.value })}
+                      placeholder="React, Next.js, etc."
+                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                    />
+                  </label>
+                )}
+
+                {form.type !== 'CODE' && (
+                  <label className="space-y-2 text-sm">
+                    <span className="text-[var(--color-text-body)]">Dominant Color (Hex)</span>
+                    <input
+                      value={form.dominantColor}
+                      onChange={(event) => setForm({ ...form, dominantColor: event.target.value })}
+                      placeholder="#1a1a1a"
+                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                    />
+                  </label>
+                )}
+
+                {/* Description - Hidden for Behance (as it uses embed title), but shown for Coding/Others */}
+                {form.type !== 'BEHANCE' && (
+                  <label className="space-y-2 text-sm md:col-span-2">
+                    <span className="text-[var(--color-text-body)]">Short Description</span>
+                    <textarea
+                      rows={3}
+                      value={form.description}
+                      onChange={(event) => setForm({ ...form, description: event.target.value })}
+                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                    />
+                  </label>
+                )}
+
+                {/* Case Study - Hide for Coding and Behance */}
+                {form.type !== 'CODE' && form.type !== 'BEHANCE' && (
+                  <label className="space-y-2 text-sm md:col-span-2">
+                    <span className="text-[var(--color-text-body)]">Detailed Case Study (Markdown)</span>
+                    <textarea
+                      rows={10}
+                      value={form.content}
+                      onChange={(event) => setForm({ ...form, content: event.target.value })}
+                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                    />
+                  </label>
+                )}
+
+                {form.type !== 'CODE' && (
+                  <label className="space-y-2 text-sm md:col-span-2">
+                    <span className="text-[var(--color-text-body)]">Tags (comma separated)</span>
+                    <input
+                      value={form.tags}
+                      onChange={(event) => setForm({ ...form, tags: event.target.value })}
+                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                    />
+                  </label>
+                )}
+              </>
+            )}
           </div>
 
           <label className="mt-4 inline-flex items-center gap-2 text-sm text-[#0b0b0c]">
@@ -282,8 +727,6 @@ export default function AdminProjectsPage() {
               Reset
             </button>
           </div>
-
-          {status ? <p className="mt-3 text-xs text-[var(--color-text-body)]">{status}</p> : null}
         </section>
       </div>
     </AdminSectionWorkspace>

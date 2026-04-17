@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { Code2, Palette } from 'lucide-react';
+import { Code2, Github, Palette } from 'lucide-react';
 import type { WorkspaceFilter } from '@/components/projects/WorkspaceProjectsSection';
 
 interface ProjectsHeroBannerProps {
@@ -159,6 +159,20 @@ export default function ProjectsHeroBanner({
               }}
             />
             <div className="pointer-events-none absolute inset-0 z-40 bg-linear-to-b from-black/8 via-transparent to-black/18" />
+
+          </div>
+
+          {/* GitHub Profile Button */}
+          <div className="absolute top-4 right-4 z-[60] md:top-6 md:right-6 lg:top-8 lg:right-8">
+            <a 
+              href="https://github.com/AbinVarghexe" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="group flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/20 shadow-lg backdrop-blur-xl transition-all hover:bg-white hover:scale-110 pointer-events-auto"
+              aria-label="Visit GitHub Profile"
+            >
+              <Github className="h-5 w-5 text-white group-hover:text-black transition-colors group-hover:rotate-12" />
+            </a>
           </div>
 
           <div className="absolute inset-x-0 bottom-4 z-50 px-4 md:bottom-5">

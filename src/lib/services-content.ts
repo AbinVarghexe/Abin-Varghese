@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import { createStaticClient } from "@/utils/supabase/static";
 import { services as servicesDefaults, type Service } from "@/constants/services";
 
 const SERVICES_CONTENT_KEY = "services_section_content_v1";
@@ -43,11 +43,17 @@ function normalizeService(raw: unknown, fallback: Service): Service {
 }
 
 export async function getServicesContent(): Promise<Service[]> {
-  const record = await prisma.siteContent.findUnique({
-    where: { key: SERVICES_CONTENT_KEY },
-  });
+  const supabase = createStaticClient();
+  const { data: record, error } = await supabase
+    .from("site_content")
+    .select("value")
+    .eq("key", SERVICES_CONTENT_KEY)
+    .single();
 
-  if (!record?.value) {
+  if (error || !record?.value) {
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching services content:", error);
+    }
     return servicesDefaults;
   }
 
@@ -82,11 +88,15 @@ export async function getServicesContent(): Promise<Service[]> {
 }
 
 export async function upsertServicesContent(services: Service[]) {
-  await prisma.siteContent.upsert({
-    where: { key: SERVICES_CONTENT_KEY },
-    update: { value: JSON.stringify(services) },
-    create: { key: SERVICES_CONTENT_KEY, value: JSON.stringify(services) },
-  });
+  const supabase = createStaticClient();
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(
+      { key: SERVICES_CONTENT_KEY, value: JSON.stringify(services) },
+      { onConflict: "key" }
+    );
+
+  if (error) throw error;
 }
 
 export async function getServiceBySlug(slug: string): Promise<Service | null> {

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Minus, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { splitAccentHeading } from "@/lib/accent-heading";
-import type { SiteCopyFaqItem } from "@/lib/site-copy-content";
+import type { SiteCopyFaqItem } from "@/types/site-copy";
 
 interface FAQItemProps {
   question: string;

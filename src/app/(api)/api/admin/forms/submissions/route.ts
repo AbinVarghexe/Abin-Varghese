@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-
 import { requireAdminSession } from "@/lib/admin-auth";
-import prisma from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
 
 export async function GET() {
   const { response } = await requireAdminSession();
@@ -9,9 +8,16 @@ export async function GET() {
     return response;
   }
 
-  const submissions = await prisma.contactSubmission.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const supabase = await createClient();
+  const { data: submissions, error } = await supabase
+    .from("contact_submissions")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Fetch submissions error:", error);
+    return NextResponse.json({ error: "Failed to fetch submissions" }, { status: 500 });
+  }
 
   return NextResponse.json({ submissions });
 }

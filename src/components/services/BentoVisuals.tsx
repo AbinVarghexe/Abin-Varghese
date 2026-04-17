@@ -212,66 +212,89 @@ export const VideoEditing = () => {
 // --- 3. Graphics Design ---
 export const GraphicDesign = () => {
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center p-8 overflow-hidden bg-transparent">
+    <div className="relative w-full h-full flex flex-col items-center justify-center pt-16 pb-32 px-8 overflow-hidden bg-transparent">
       {/* Artboard Background with Grid */}
       <div 
-        className="absolute inset-4 rounded-xl border border-zinc-200 bg-zinc-50/50 shadow-inner overflow-hidden"
+        className="absolute inset-x-4 top-8 bottom-12 rounded-lg border border-zinc-200 bg-zinc-50/50 shadow-inner overflow-hidden"
         style={{
           backgroundImage: `radial-gradient(circle, #cbd5e1 1px, transparent 1px)`,
-          backgroundSize: '20px 20px'
+          backgroundSize: '24px 24px'
         }}
       >
-        {/* Animated Pen Tool Path */}
-        <svg className="w-full h-full pointer-events-none opacity-40">
+        {/* Vertical Animated Pen Tool Path */}
+        <svg className="w-full h-full pointer-events-none opacity-40" preserveAspectRatio="none">
           <motion.path
-            d="M 50 150 Q 150 50 250 150 T 450 150"
+            d="M 100 50 C 50 150, 150 250, 100 350 S 150 550, 100 650"
             fill="transparent"
             stroke="#be4bdb"
             strokeWidth="3"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: [0, 1, 1, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
           />
-          {/* Bezier Nodes */}
-          {[50, 250, 450].map((x, i) => (
+          {/* Bezier Nodes for the vertical path */}
+          {[100, 350, 600].map((y, i) => (
             <motion.rect
               key={i}
-              x={x - 4}
-              y={146}
-              width="8"
-              height="8"
+              x={96}
+              y={y - 4}
+              width="10"
+              height="10"
               fill="white"
               stroke="#be4bdb"
               strokeWidth="2"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.8 }}
             />
           ))}
         </svg>
       </div>
 
-      {/* Floating Layer Cards (Illustrator Style) */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {/* Floating UI Elements Stacking Vertically */}
+      <div className="absolute inset-0 flex flex-col items-center justify-between py-20 pointer-events-none">
+        {/* Layer Panel (Right-ish) */}
         <motion.div 
-          className="absolute -right-2 top-1/4 w-32 h-40 bg-white rounded-lg border border-zinc-200 shadow-xl p-3 flex flex-col gap-2 opacity-90 scale-90"
-          animate={{ x: [0, -10, 0], rotate: [0, -2, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute right-4 top-[15%] w-36 h-56 bg-white rounded-lg border border-zinc-200 shadow-2xl p-4 flex flex-col gap-3 opacity-95"
+          animate={{ y: [0, -15, 0], x: [0, -5, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <div className="w-full h-2 rounded-full bg-zinc-100 mb-2" />
-          {[...Array(4)].map((_, i) => (
+          <div className="flex items-center justify-between mb-1">
+            <div className="w-12 h-2 rounded-full bg-zinc-200" />
+            <div className="w-3 h-3 rounded-sm bg-zinc-100" />
+          </div>
+          {[...Array(5)].map((_, i) => (
             <div key={i} className="flex gap-2 items-center">
-              <div className={`w-4 h-4 rounded ${i === 0 ? 'bg-be4bdb opacity-60' : 'bg-zinc-100'}`} style={i === 0 ? { backgroundColor: '#be4bdb' } : {}} />
-              <div className="flex-1 h-1.5 rounded-full bg-zinc-50" />
+              <div className="w-5 h-5 rounded bg-zinc-50 border border-zinc-100 flex items-center justify-center overflow-hidden">
+                {i === 0 && <div className="w-full h-full bg-be4bdb opacity-40" style={{ backgroundColor: '#be4bdb66' }} />}
+                {i === 2 && <div className="w-3 h-3 rounded-full bg-blue-400 opacity-40" />}
+              </div>
+              <div className={`h-1.5 rounded-full ${i === 0 ? 'bg-zinc-300 w-16' : 'bg-zinc-100 w-12'}`} />
             </div>
           ))}
         </motion.div>
 
+        {/* Toolbar (Left-ish) */}
         <motion.div 
-          className="absolute -left-4 bottom-1/4 w-28 h-28 bg-white rounded-lg border-2 border-dashed border-zinc-300 flex items-center justify-center opacity-80"
-          animate={{ scale: [0.95, 1, 0.95], rotate: [2, 0, 2] }}
+          className="absolute left-4 top-[10%] w-14 h-64 bg-zinc-900 rounded-md border border-zinc-800 shadow-2xl p-2 flex flex-col items-center gap-4 opacity-95"
+          animate={{ y: [0, 20, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        >
+           {[...Array(6)].map((_, i) => (
+            <div key={i} className={`w-8 h-8 rounded-md flex items-center justify-center ${i === 0 ? 'bg-be4bdb text-white' : 'bg-white/5'}`} style={i === 0 ? { backgroundColor: '#be4bdb' } : {}}>
+               <div className={`w-3 h-3 ${i === 0 ? 'bg-white' : 'bg-white/20'} rounded-sm`} />
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Color Palette (Floating) */}
+        <motion.div 
+          className="absolute left-10 bottom-[20%] w-48 h-12 bg-white rounded-full border border-zinc-200 shadow-lg p-2 flex gap-2 items-center px-4"
+          animate={{ x: [0, 10, 0], scale: [1, 1.05, 1] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <div className="w-12 h-12 rounded-full border-4 border-be4bdb/30" style={{ borderColor: '#be4bdb33' }} />
+          {['#be4bdb', '#3b5bdb', '#0c8599', '#f59e0b', '#f97316'].map((color, i) => (
+            <div key={i} className="w-6 h-6 rounded-full shadow-sm" style={{ backgroundColor: color }} />
+          ))}
         </motion.div>
       </div>
     </div>
@@ -291,9 +314,9 @@ export const UIUXDesign = () => {
   }, []);
 
   return (
-    <div className="w-full h-full flex items-center justify-center pb-24">
+    <div className="w-full h-full flex items-center justify-center">
       <motion.div
-        className="w-full h-full flex items-center justify-center"
+        className="w-full h-full flex items-center justify-center font-bold"
         animate={{
           y: isOpen ? 45 : 0, 
           rotateZ: isOpen ? -1 : 0,
@@ -308,7 +331,7 @@ export const UIUXDesign = () => {
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <Folder color="#3b5bdb" size={1.0} items={folderPapers} isOpen={isOpen} />
+          <Folder color="#3b5bdb" size={1.4} items={folderPapers} isOpen={isOpen} />
         </motion.div>
       </motion.div>
     </div>
@@ -392,8 +415,8 @@ const Scene = () => {
       <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
         <primitive 
           object={scene} 
-          scale={0.8} 
-          position={[0, -0.5, 0]} 
+          scale={0.9} 
+          position={[0, 0, 0]} 
           rotation={[0.3, 0.5, 0]} 
         />
       </Float>
@@ -404,7 +427,7 @@ const Scene = () => {
 
 export const ThreeDDesigning = () => {
   return (
-    <div className="w-full h-full pb-28">
+    <div className="w-full h-full">
       <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
         <Suspense fallback={null}>
           <Scene />

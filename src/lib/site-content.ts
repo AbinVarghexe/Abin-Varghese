@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
 import { aboutContentDefaults, type AboutContent } from "@/lib/about-content-defaults";
 import { heroContentDefaults, type HeroContent } from "@/lib/hero-content-defaults";
 import { homeContentDefaults, type HomeContent } from "@/lib/home-content-defaults";
@@ -41,12 +41,20 @@ const homeKeyMap = {
 } as const;
 
 export async function getAboutContent(): Promise<AboutContent> {
+  const supabase = await createClient();
   const keys = Object.values(aboutKeyMap);
-  const records = await prisma.siteContent.findMany({
-    where: { key: { in: keys } },
-  });
+  
+  const { data: records, error } = await supabase
+    .from("site_content")
+    .select("key, value")
+    .in("key", keys);
 
-  const values = new Map(records.map((record) => [record.key, record.value]));
+  if (error) {
+    console.error("Error fetching about content:", error);
+    return siteContentDefaults;
+  }
+
+  const values = new Map(records?.map((record) => [record.key, record.value]));
 
   return {
     aboutImage: values.get(aboutKeyMap.aboutImage) || siteContentDefaults.aboutImage,
@@ -62,12 +70,20 @@ export async function getAboutContent(): Promise<AboutContent> {
 }
 
 export async function getHeroContent(): Promise<HeroContent> {
+  const supabase = await createClient();
   const keys = Object.values(heroKeyMap);
-  const records = await prisma.siteContent.findMany({
-    where: { key: { in: keys } },
-  });
+  
+  const { data: records, error } = await supabase
+    .from("site_content")
+    .select("key, value")
+    .in("key", keys);
 
-  const values = new Map(records.map((record) => [record.key, record.value]));
+  if (error) {
+    console.error("Error fetching hero content:", error);
+    return siteContentDefaults;
+  }
+
+  const values = new Map(records?.map((record) => [record.key, record.value]));
 
   return {
     heroGreeting: values.get(heroKeyMap.heroGreeting) || siteContentDefaults.heroGreeting,
@@ -83,12 +99,20 @@ export async function getHeroContent(): Promise<HeroContent> {
 }
 
 export async function getHomeContent(): Promise<HomeContent> {
+  const supabase = await createClient();
   const keys = Object.values(homeKeyMap);
-  const records = await prisma.siteContent.findMany({
-    where: { key: { in: keys } },
-  });
+  
+  const { data: records, error } = await supabase
+    .from("site_content")
+    .select("key, value")
+    .in("key", keys);
 
-  const values = new Map(records.map((record) => [record.key, record.value]));
+  if (error) {
+    console.error("Error fetching home content:", error);
+    return siteContentDefaults;
+  }
+
+  const values = new Map(records?.map((record) => [record.key, record.value]));
 
   return {
     scrollingBannerItems: values.get(homeKeyMap.scrollingBannerItems) || siteContentDefaults.scrollingBannerItems,
@@ -131,42 +155,50 @@ export async function getHomeContent(): Promise<HomeContent> {
 }
 
 export async function upsertAboutContent(content: AboutContent) {
-  await prisma.$transaction(
-    Object.entries(aboutKeyMap).map(([field, key]) =>
-      prisma.siteContent.upsert({
-        where: { key },
-        update: { value: content[field as keyof AboutContent] },
-        create: { key, value: content[field as keyof AboutContent] },
-      })
-    )
-  );
+  const supabase = await createClient();
+  const entries = Object.entries(aboutKeyMap).map(([field, key]) => ({
+    key,
+    value: content[field as keyof AboutContent],
+  }));
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(entries, { onConflict: "key" });
+
+  if (error) throw error;
 }
 
 export async function upsertHeroContent(content: HeroContent) {
-  await prisma.$transaction(
-    Object.entries(heroKeyMap).map(([field, key]) =>
-      prisma.siteContent.upsert({
-        where: { key },
-        update: { value: content[field as keyof HeroContent] },
-        create: { key, value: content[field as keyof HeroContent] },
-      })
-    )
-  );
+  const supabase = await createClient();
+  const entries = Object.entries(heroKeyMap).map(([field, key]) => ({
+    key,
+    value: content[field as keyof HeroContent],
+  }));
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(entries, { onConflict: "key" });
+
+  if (error) throw error;
 }
 
 export async function upsertHomeContent(content: HomeContent) {
-  await prisma.$transaction(
-    Object.entries(homeKeyMap).map(([field, key]) => {
-      const value =
-        field === "scrollingLogos" || field === "socialLinks" || field === "pageLinks"
-          ? JSON.stringify(content[field as keyof HomeContent])
-          : content[field as keyof HomeContent];
-        
-      return prisma.siteContent.upsert({
-        where: { key },
-        update: { value: value as string },
-        create: { key, value: value as string },
-      });
-    })
-  );
+  const supabase = await createClient();
+  const entries = Object.entries(homeKeyMap).map(([field, key]) => {
+    const value =
+      field === "scrollingLogos" || field === "socialLinks" || field === "pageLinks"
+        ? JSON.stringify(content[field as keyof HomeContent])
+        : content[field as keyof HomeContent];
+      
+    return {
+      key,
+      value: value as string,
+    };
+  });
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(entries, { onConflict: "key" });
+
+  if (error) throw error;
 }

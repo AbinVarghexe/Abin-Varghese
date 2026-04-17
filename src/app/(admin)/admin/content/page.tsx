@@ -10,7 +10,8 @@ import {
   type SiteCopyFaqItem,
   type SiteCopyReviewItem,
   type SiteCopyTimelineEntry,
-} from "@/lib/site-copy-content";
+} from "@/types/site-copy";
+
 
 type ArraySectionProps<T> = {
   title: string;

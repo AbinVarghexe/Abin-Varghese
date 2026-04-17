@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { splitAccentHeading } from "@/lib/accent-heading";
-import type { SiteCopyComparisonFeature } from "@/lib/site-copy-content";
+import type { SiteCopyComparisonFeature } from "@/types/site-copy";
 
 interface ComparisonRowProps {
   icon: React.ReactNode;

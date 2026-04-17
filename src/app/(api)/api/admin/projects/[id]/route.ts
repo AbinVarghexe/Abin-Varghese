@@ -1,17 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
+
+export const dynamic = 'force-dynamic';
+
+import { createClient } from '@/utils/supabase/server';
 import { requireAdminSession } from '@/lib/admin-auth';
 import { z } from 'zod';
 
 const projectSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().min(1).optional(),
-  content: z.string().min(1).optional(),
-  imageUrl: z.string().url().optional(),
-  demoUrl: z.string().url().optional().nullable(),
-  githubUrl: z.string().url().optional().nullable(),
+  content: z.string().optional().nullable(),
+  type: z.enum(['CODE', 'FIGMA', 'BEHANCE', 'PINTEREST']).optional(),
+  mediaType: z.enum(['IMAGE', 'VIDEO', 'GIF', 'MODEL']).optional(),
+  mediaUrl: z.string().optional(),
+  externalUrl: z.string().optional().nullable(),
+  iframeUrl: z.string().optional().nullable(),
+  category: z.string().optional().nullable(),
   tags: z.array(z.string()).optional(),
+  dominantColor: z.string().optional().nullable(),
+  previewHeight: z.number().optional().nullable(),
   featured: z.boolean().optional(),
+  workspace: z.string().optional(),
 });
 
 // Get single project
@@ -26,11 +36,14 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const project = await prisma.project.findUnique({
-      where: { id },
-    });
+    const supabase = await createClient();
+    const { data: project, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-    if (!project) {
+    if (error || !project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
@@ -59,10 +72,38 @@ export async function PUT(
     const body = await request.json();
     const data = projectSchema.parse(body);
 
-    const project = await prisma.project.update({
-      where: { id },
-      data,
-    });
+    const supabase = await createClient();
+    
+    const updateData: any = {};
+    if (data.title) updateData.title = data.title;
+    if (data.description) updateData.description = data.description;
+    if (data.content !== undefined) updateData.content = data.content;
+    if (data.mediaUrl) updateData.media_url = data.mediaUrl;
+    if (data.externalUrl !== undefined) updateData.external_url = data.externalUrl;
+    if (data.iframeUrl !== undefined) updateData.iframe_url = data.iframeUrl;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.tags) updateData.tags = data.tags;
+    if (data.dominantColor !== undefined) updateData.dominant_color = data.dominantColor;
+    if (data.previewHeight !== undefined) updateData.preview_height = data.previewHeight;
+    if (data.featured !== undefined) updateData.featured = data.featured;
+    if (data.type) updateData.type = data.type;
+    if (data.mediaType) updateData.media_type = data.mediaType;
+    if (data.workspace) updateData.workspace = data.workspace;
+    updateData.updated_at = new Date().toISOString();
+
+    const { data: project, error } = await supabase
+      .from('projects')
+      .update(updateData)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) throw error;
+
+    // Multi-path revalidation to ensure both public and admin views are fresh
+    revalidatePath('/projects');
+    revalidatePath('/admin/projects');
+    revalidatePath('/', 'layout');
 
     return NextResponse.json({ project });
   } catch (error) {
@@ -93,9 +134,18 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    await prisma.project.delete({
-      where: { id },
-    });
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    // Multi-path revalidation to ensure both public and admin views are fresh
+    revalidatePath('/projects');
+    revalidatePath('/admin/projects');
+    revalidatePath('/', 'layout');
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import type { SiteCopyContent, SiteCopyTimelineEntry } from "@/lib/site-copy-content";
+import type { SiteCopyContent, SiteCopyTimelineEntry } from "@/types/site-copy";
 
 type DeskBookSectionProps = {
   copy: Pick<

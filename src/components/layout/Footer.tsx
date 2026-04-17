@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Instagram, Linkedin, Mail } from 'lucide-react';
 import { homeContentDefaults } from '@/lib/home-content-defaults';
-import {
-  siteCopyDefaults,
-  type PublicSiteShellContent,
-} from '@/lib/site-copy-content';
-import { contactSectionDefaults } from '@/lib/contact-content';
+import { 
+  siteCopyDefaults, 
+  type PublicSiteShellContent 
+} from '@/types/site-copy';
+import { contactSectionDefaults } from '@/types/contact';
+
 
 export default function Footer() {
   const [shellContent, setShellContent] = useState<PublicSiteShellContent>({

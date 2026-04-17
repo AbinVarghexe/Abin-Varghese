@@ -24,6 +24,7 @@ interface BentoCardProps {
   accentColor?: string;
   delay?: number;
   isLarge?: boolean;
+  mode?: 'vertical' | 'horizontal';
 }
 
 const BentoCard = ({ 
@@ -34,9 +35,10 @@ const BentoCard = ({
   className = '', 
   accentColor = '#3b82f6',
   delay = 0,
-  isLarge = false
+  isLarge = false,
+  mode = 'vertical'
 }: BentoCardProps) => (
-  <Link href={href} className="contents">
+  <Link href={href} className={className}>
     <motion.div
       variants={{
         initial: { opacity: 0, y: 30 },
@@ -45,12 +47,11 @@ const BentoCard = ({
       }}
       initial="initial"
       whileInView="visible"
-      viewport={{ once: true }}
       transition={{ duration: 0.5, delay }}
       whileHover="hover"
-      className={`group relative rounded-[28px] border-[5px] border-zinc-200 bg-white overflow-hidden transition-all hover:shadow-2xl hover:border-zinc-300 cursor-pointer flex flex-col ${className}`}
+      className={`group relative h-full rounded-xl border-[5px] border-zinc-200 bg-white overflow-hidden transition-all hover:shadow-2xl hover:border-zinc-300 cursor-pointer flex ${mode === 'horizontal' ? 'flex-col md:flex-row' : 'flex-col'}`}
     >
-      {/* Technical Stripe Background */}
+      {/* Technical Stripe Background ... */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.05] z-0" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id={`stripes-${title.replace(/\s+/g, '-').toLowerCase()}`} width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -59,9 +60,6 @@ const BentoCard = ({
         </defs>
         <rect width="100%" height="100%" fill={`url(#stripes-${title.replace(/\s+/g, '-').toLowerCase()})`} />
       </svg>
-
-      {/* Top Seamless Fade */}
-      <div className="absolute top-0 left-0 right-0 h-32 z-20 bg-linear-to-b from-white to-transparent opacity-80 pointer-events-none" />
 
       {/* Top Right Arrow Button */}
       <div className="absolute top-6 right-6 z-50 pointer-events-none">
@@ -89,23 +87,31 @@ const BentoCard = ({
       />
 
       {/* Core Illustration Layer */}
-      <div className="relative flex-1 z-10 flex items-center justify-center overflow-hidden">
+      <div className={`relative flex-1 z-10 flex items-center justify-center overflow-hidden ${mode === 'horizontal' ? 'md:order-2 h-64 md:h-full' : ''}`}>
         {children}
-      </div>
-
-      {/* Bottom text overlay with fade */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none">
-        <div className="w-full h-44" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.7) 40%, rgba(255,255,255,1) 100%)' }} />
+        
+        {/* Horizontal separation gradient - Only on horizontal mode dekstop */}
+        {mode === 'horizontal' && (
+          <div className="hidden md:block absolute inset-y-0 left-0 w-32 bg-linear-to-r from-white via-white/80 to-transparent z-20 pointer-events-none" />
+        )}
       </div>
 
       {/* Text block */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 bg-transparent px-7 pb-7 pt-0">
-        <h3 className={`font-bold text-zinc-900 leading-tight mb-1 ${isLarge ? 'text-2xl' : 'text-xl'}`}>
-          {title}
-        </h3>
-        <p className="text-zinc-500 text-[11px] leading-tight line-clamp-2">
-          {description}
-        </p>
+      <div className={`relative z-30 flex flex-col p-7 ${mode === 'horizontal' ? 'md:w-1/2 md:order-1 bg-white md:bg-transparent justify-end' : 'justify-end h-32'}`}>
+        {/* Bottom text overlay with fade - Only for vertical cards */}
+        {mode === 'vertical' && (
+          <div className="absolute inset-0 -top-24 z-20 pointer-events-none" 
+               style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.7) 40%, rgba(255,255,255,1) 100%)' }} />
+        )}
+        
+        <div className="relative z-30">
+          <h3 className={`font-bold text-zinc-900 leading-tight mb-2 ${mode === 'horizontal' ? 'text-2xl md:text-3xl' : isLarge ? 'text-2xl' : 'text-xl'}`}>
+            {title}
+          </h3>
+          <p className="text-zinc-500 text-sm leading-relaxed line-clamp-2 md:line-clamp-none">
+            {description}
+          </p>
+        </div>
       </div>
     </motion.div>
   </Link>
@@ -141,58 +147,37 @@ function resolveServiceCopy(
 }
 
 export default function BentoServices({ services }: BentoServicesProps) {
-  const motionGraphics = resolveServiceCopy(services, 'motion-graphics', {
-    title: 'Motion Graphics',
-    description: 'Breathe life into your brand with dynamic, smooth, and engaging animations that capture attention instantly.',
-    href: '/services/motion-graphics',
-    accentColor: '#7048e8',
+  const web = resolveServiceCopy(services, 'web', {
+    title: 'Web Design',
+    description: 'User-centric design systems that balance beauty with simplicity for the modern web.',
+    href: '/services/web',
+    accentColor: '#3b5bdb',
   });
 
-  const videoEditing = resolveServiceCopy(services, 'video-editing', {
-    title: 'Video Editing',
-    description: 'Professional storytelling through seamless cuts, color grading, and audio syncing for high-impact results.',
-    href: '/services/video-editing',
-    accentColor: '#f59e0b',
+  const motionVideo = resolveServiceCopy(services, 'motion-video-editing', {
+    title: 'Motion Graphics and Video Editing',
+    description: 'Breathe life into your brand with dynamic animations and professional storytelling through seamless cuts.',
+    href: '/services/motion-video-editing',
+    accentColor: '#7048e8',
   });
 
   const graphicsDesign = resolveServiceCopy(services, 'graphics-design', {
     title: 'Graphics Design',
-    description: 'Striking visual identities and marketing materials that resonate with your audience and elevate your brand.',
+    description: 'Striking visual identities and marketing materials that resonate with your audience.',
     href: '/services/graphics-design',
     accentColor: '#be4bdb',
   });
 
-  const uiUx = resolveServiceCopy(services, 'ui-ux-design', {
-    title: 'UI UX Design',
-    description: 'User-centric design systems that balance aesthetic beauty with intuitive functionality for digital products.',
-    href: '/services/ui-ux-design',
-    accentColor: '#3b5bdb',
-  });
-
-  const webDesign = resolveServiceCopy(services, 'web-design', {
-    title: 'Web Design',
-    description: 'High-performance, responsive websites built with modern frameworks to turn visitors into customers.',
-    href: '/services/web-design',
-    accentColor: '#0d9488',
-  });
-
-  const vfx = resolveServiceCopy(services, 'visual-effects', {
-    title: 'Visual Effects',
-    description: 'High-end cinematic compospositing and digital effects that blur the line between imagination and reality.',
-    href: '/services/visual-effects',
-    accentColor: '#e03131',
-  });
-
-  const threeD = resolveServiceCopy(services, 'three-d-designing', {
-    title: '3D Designing',
-    description: 'Immersive 3D environments and product visualizations that provide a realistic perspective of your vision.',
-    href: '/services/three-d-designing',
+  const threeDvfx = resolveServiceCopy(services, '3d-vfx', {
+    title: '3D Designing and VFX',
+    description: 'Immersive 3D environments and high-end cinematic compositing that push visual boundaries.',
+    href: '/services/3d-vfx',
     accentColor: '#0c8599',
   });
 
   return (
     <section className="relative w-full pt-32 pb-16 px-4 md:px-8 lg:px-20 bg-transparent overflow-hidden">
-      {/* Grid Overlay for the Bento Section */}
+      {/* Grid Overlay */}
       <div 
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
@@ -203,7 +188,6 @@ export default function BentoServices({ services }: BentoServicesProps) {
       />
       
       <div className="max-w-[1200px] mx-auto relative z-10">
-        
         {/* --- Header --- */}
         <div className="flex flex-col items-center text-center mb-16">
           <motion.div
@@ -237,102 +221,57 @@ export default function BentoServices({ services }: BentoServicesProps) {
           </motion.p>
         </div>
 
-        {/* --- Bento Grid (Corrected 2-3-2 Architecture) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* --- Bento Grid (Custom 2x2 Layout) --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[380px]">
           
-          {/* COLUMN 1: LEFT (2 Cards) */}
-          <div className="flex flex-col gap-4 h-[880px] md:h-[880px]">
-             {/* Card 1: Motion Graphics */}
-            <BentoCard
-              title={motionGraphics.title}
-              description={motionGraphics.description}
-              href={motionGraphics.href}
-              className="flex-[1.2]"
-              accentColor={motionGraphics.accentColor}
-              delay={0.1}
-            >
-              <MotionGraphics />
-            </BentoCard>
+          {/* Card 1: Web Design */}
+          <BentoCard
+            title={web.title}
+            description={web.description}
+            href={web.href}
+            accentColor={web.accentColor}
+            delay={0.1}
+            className="col-span-1"
+          >
+            <UIUXDesign />
+          </BentoCard>
 
-            {/* Card 2: Video Editing */}
-            <BentoCard
-              title={videoEditing.title}
-              description={videoEditing.description}
-              href={videoEditing.href}
-              className="flex-1"
-              accentColor={videoEditing.accentColor}
-              delay={0.2}
-            >
-              <VideoEditing />
-            </BentoCard>
-          </div>
+          {/* Card 2: Motion & Video */}
+          <BentoCard
+            title={motionVideo.title}
+            description={motionVideo.description}
+            href={motionVideo.href}
+            accentColor={motionVideo.accentColor}
+            delay={0.2}
+            className="col-span-1"
+          >
+            <MotionGraphics />
+          </BentoCard>
 
-          {/* COLUMN 2: MIDDLE (3 Cards) */}
-          <div className="flex flex-col gap-4 h-[880px] md:h-[880px]">
-            {/* Card 3: Graphics Design */}
-            <BentoCard
-              title={graphicsDesign.title}
-              description={graphicsDesign.description}
-              href={graphicsDesign.href}
-              className="flex-1"
-              accentColor={graphicsDesign.accentColor}
-              delay={0.3}
-            >
-              <GraphicDesign />
-            </BentoCard>
+          {/* Card 3: Graphics Design (Tall - row span 2) */}
+          <BentoCard
+            title={graphicsDesign.title}
+            description={graphicsDesign.description}
+            href={graphicsDesign.href}
+            accentColor={graphicsDesign.accentColor}
+            delay={0.3}
+            className="col-span-1 md:row-span-2"
+          >
+            <GraphicDesign />
+          </BentoCard>
 
-            {/* Card 4: UI UX Design */}
-            <BentoCard
-              title={uiUx.title}
-              description={uiUx.description}
-              href={uiUx.href}
-              className="flex-1"
-              accentColor={uiUx.accentColor}
-              delay={0.4}
-            >
-              <UIUXDesign />
-            </BentoCard>
-
-            {/* Card 5: Web Design */}
-            <BentoCard
-              title={webDesign.title}
-              description={webDesign.description}
-              href={webDesign.href}
-              className="flex-1"
-              accentColor={webDesign.accentColor}
-              delay={0.5}
-            >
-              <WebDesign />
-            </BentoCard>
-          </div>
-
-          {/* COLUMN 3: RIGHT (2 Cards) */}
-          <div className="flex flex-col gap-4 h-[880px] md:h-[880px]">
-            {/* Card 6: Visual Effects */}
-            <BentoCard
-              title={vfx.title}
-              description={vfx.description}
-              href={vfx.href}
-              className="flex-1"
-              accentColor={vfx.accentColor}
-              delay={0.6}
-            >
-              <VisualEffects />
-            </BentoCard>
-
-            {/* Card 7: 3D Designing */}
-            <BentoCard
-              title={threeD.title}
-              description={threeD.description}
-              href={threeD.href}
-              className="flex-[1.2]"
-              accentColor={threeD.accentColor}
-              delay={0.7}
-              isLarge
-            >
-              <ThreeDDesigning />
-            </BentoCard>
-          </div>
+          {/* Card 4: 3D & VFX (Wide - col span 2, horizontal) */}
+          <BentoCard
+            title={threeDvfx.title}
+            description={threeDvfx.description}
+            href={threeDvfx.href}
+            accentColor={threeDvfx.accentColor}
+            delay={0.4}
+            mode="horizontal"
+            className="col-span-1 md:col-span-2"
+          >
+            <ThreeDDesigning />
+          </BentoCard>
 
         </div>
       </div>

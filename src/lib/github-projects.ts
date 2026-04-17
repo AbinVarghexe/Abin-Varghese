@@ -1,4 +1,5 @@
 import { posix } from 'path';
+import { supabase } from '@/lib/supabase';
 
 type WorkspaceType = 'coding' | 'designing';
 
@@ -42,6 +43,7 @@ export interface WorkspaceProject {
   updatedAt: string;
   owner: string;
   repo: string;
+  isFromDb?: boolean;
 }
 
 const FALLBACK_GITHUB_SOURCE = 'https://github.com/AbinVarghexe';
@@ -488,9 +490,81 @@ export async function getGithubWorkspaceProjects(): Promise<WorkspaceProject[]> 
   return projects.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
 }
 
+export async function getAllProjects(): Promise<WorkspaceProject[]> {
+  // 1. Fetch from Database using Supabase
+  const { data: dbProjects, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Failed to fetch projects from Supabase:', error);
+    return [];
+  }
+
+  // 2. Map Supabase Projects to WorkspaceProjects
+  const mappedDbProjects: WorkspaceProject[] = (dbProjects || []).map(p => ({
+    id: p.id,
+    slug: p.slug || p.id, // Using slug if available, fallback to ID
+    title: p.title || "Untitled Project",
+    description: p.description || "View project to learn more.",
+    imageUrl: p.media_url || "",
+    githubUrl: p.external_url || "",
+    liveUrl: p.iframe_url || null,
+    tags: p.tags || [],
+    workspace: (p.workspace === 'designing' ? 'designing' : 'coding') as WorkspaceType,
+    stars: 0,
+    updatedAt: p.created_at || new Date().toISOString(),
+    owner: "",
+    repo: "",
+    isFromDb: true
+  } as any));
+
+  // 3. Fetch from GitHub
+  const githubProjects = await getGithubWorkspaceProjects();
+
+  // 4. Merge and Deduplicate
+  // We prioritize DB projects if they share the same GitHub URL
+  const merged = [...mappedDbProjects];
+  const dbRepoUrls = new Set(mappedDbProjects.map(p => p.githubUrl).filter(Boolean));
+
+  for (const ghProject of githubProjects) {
+    if (!dbRepoUrls.has(ghProject.githubUrl)) {
+      merged.push(ghProject);
+    }
+  }
+
+  return merged.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+}
+
 export async function getGithubWorkspaceProjectBySlug(
   slug: string
 ): Promise<WorkspaceProject | null> {
+  // Check Supabase first for the slug or id
+  const { data: dbProject, error } = await supabase
+    .from('projects')
+    .select('*')
+    .or(`id.eq.${slug},slug.eq.${slug}`)
+    .maybeSingle();
+
+  if (dbProject) {
+    return {
+      id: dbProject.id,
+      slug: dbProject.slug || dbProject.id,
+      title: dbProject.title || "Untitled Project",
+      description: dbProject.description || "View project to learn more.",
+      imageUrl: dbProject.media_url || "",
+      githubUrl: dbProject.external_url || "",
+      liveUrl: dbProject.iframe_url || null,
+      tags: dbProject.tags || [],
+      workspace: (dbProject.workspace === 'designing' ? 'designing' : 'coding') as WorkspaceType,
+      stars: 0,
+      updatedAt: dbProject.created_at || new Date().toISOString(),
+      owner: "",
+      repo: "",
+    };
+  }
+
   const parsed = parseSlug(slug);
 
   if (!parsed) {

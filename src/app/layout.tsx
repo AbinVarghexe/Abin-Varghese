@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "@/styles/globals.css";
 import { PersonSchema, WebSiteSchema } from "@/seo/schema";
 import { metadata as seoMetadata, viewport } from "@/seo/metadata";
+import { Toaster } from "sonner";
 import ClientLayoutWrapper from "@/components/common/ClientLayoutWrapper";
 
 const poppins = Poppins({
@@ -45,6 +46,7 @@ export default function RootLayout({
       >
         <WebSiteSchema />
         <PersonSchema />
+        <Toaster position="top-right" richColors closeButton />
         <ClientLayoutWrapper>
           {children}
         </ClientLayoutWrapper>

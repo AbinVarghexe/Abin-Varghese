@@ -3,7 +3,7 @@ import ProjectsPageShell from '@/components/projects/ProjectsPageShell';
 import type { WorkspaceFilter } from '@/components/projects/WorkspaceProjectsSection';
 import {
   getConfiguredGithubSourceUrl,
-  getGithubWorkspaceProjects,
+  getAllProjects,
 } from '@/lib/github-projects';
 import { createPageMetadata } from '@/seo/page-metadata';
 
@@ -23,7 +23,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   const initialWorkspace: WorkspaceFilter =
     workspace === 'designing' ? 'designing' : 'coding';
 
-  const projects = await getGithubWorkspaceProjects();
+  const projects = await getAllProjects();
   const githubSourceUrl = getConfiguredGithubSourceUrl();
 
   return (

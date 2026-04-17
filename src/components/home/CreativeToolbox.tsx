@@ -10,7 +10,7 @@ import {
 } from "framer-motion";
 import Image from "next/image";
 import { splitAccentHeading } from "@/lib/accent-heading";
-import type { SiteCopyContent } from "@/lib/site-copy-content";
+import type { SiteCopyContent } from "@/types/site-copy";
 
 interface Tool {
   id: string;

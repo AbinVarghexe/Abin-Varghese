@@ -53,7 +53,7 @@ The project uses `@/` as an alias for `src/`.
 ```ts
 import Navbar from "@/components/layout/Navbar";
 import { createPageMetadata } from "@/seo/page-metadata";
-import prisma from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 ```
 
 ## Conventions

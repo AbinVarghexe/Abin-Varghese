@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { z } from "zod";
-
-import { authOptions } from "@/lib/auth-options";
+import { requireAdminSession } from "@/lib/admin-auth";
 import {
   getSiteCopyContent,
   normalizeSiteCopyContent,
@@ -105,9 +103,9 @@ const siteCopySchema = z.object({
 });
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireAdminSession();
+  if (response) {
+    return response;
   }
 
   const siteCopy = await getSiteCopyContent();
@@ -115,9 +113,9 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireAdminSession();
+  if (response) {
+    return response;
   }
 
   try {
