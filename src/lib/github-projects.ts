@@ -1,4 +1,5 @@
 import { posix } from 'path';
+import { unstable_cache } from 'next/cache';
 import { supabase } from '@/lib/supabase';
 
 type WorkspaceType = 'coding' | 'designing';
@@ -39,6 +40,10 @@ export interface WorkspaceProject {
   liveUrl: string | null;
   tags: string[];
   workspace: WorkspaceType;
+  category?: string | null;
+  type?: 'CODE' | 'FIGMA' | 'BEHANCE' | 'PINTEREST';
+  mediaType?: 'IMAGE' | 'VIDEO' | 'GIF' | 'MODEL';
+  featured?: boolean;
   stars: number;
   updatedAt: string;
   owner: string;
@@ -465,68 +470,90 @@ export function getConfiguredGithubSourceUrl(): string {
   return process.env.GITHUB_PROJECT_SOURCE_URL?.trim() || FALLBACK_GITHUB_SOURCE;
 }
 
-export async function getGithubWorkspaceProjects(): Promise<WorkspaceProject[]> {
-  const source = getConfiguredGithubSourceUrl();
-  const owner = parseOwnerFromSource(source);
+const getCachedGithubWorkspaceProjects = unstable_cache(
+  async (): Promise<WorkspaceProject[]> => {
+    const source = getConfiguredGithubSourceUrl();
+    const owner = parseOwnerFromSource(source);
 
-  const response = await fetch(
-    `https://api.github.com/users/${owner}/repos?per_page=100&sort=updated&type=owner`,
-    {
-      headers: createGithubHeaders(),
-      next: { revalidate: 3600 },
+    const response = await fetch(
+      `https://api.github.com/users/${owner}/repos?per_page=100&sort=updated&type=owner`,
+      {
+        headers: createGithubHeaders(),
+        next: { revalidate: 3600 },
+      }
+    );
+
+    if (!response.ok) {
+      console.error('GitHub repo fetch failed:', response.status, response.statusText);
+      return [];
     }
-  );
 
-  if (!response.ok) {
-    console.error('GitHub repo fetch failed:', response.status, response.statusText);
-    return [];
+    const repos = (await response.json()) as GitHubRepo[];
+
+    const filteredRepos = repos.filter((repo) => !repo.fork && !repo.archived);
+    const projects = await mapReposToProjects(filteredRepos);
+
+    return projects.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  },
+  ['workspace-projects-github'],
+  {
+    revalidate: 3600,
+    tags: ['workspace-projects-github'],
   }
+);
 
-  const repos = (await response.json()) as GitHubRepo[];
-
-  const filteredRepos = repos.filter((repo) => !repo.fork && !repo.archived);
-  const projects = await mapReposToProjects(filteredRepos);
-
-  return projects.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+export async function getGithubWorkspaceProjects(): Promise<WorkspaceProject[]> {
+  return getCachedGithubWorkspaceProjects();
 }
 
-export async function getAllProjects(): Promise<WorkspaceProject[]> {
-  // 1. Fetch from Database using Supabase
-  const { data: dbProjects, error } = await supabase
-    .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false });
+const getCachedDbWorkspaceProjects = unstable_cache(
+  async (): Promise<WorkspaceProject[]> => {
+    const { data: dbProjects, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Failed to fetch projects from Supabase:', error);
-    return [];
+    if (error) {
+      console.error('Failed to fetch projects from Supabase:', error);
+      return [];
+    }
+
+    return (dbProjects || []).map((p) => ({
+      id: p.id,
+      slug: p.slug || p.id,
+      title: p.title || "Untitled Project",
+      description: p.description || "View project to learn more.",
+      imageUrl: p.media_url || "",
+      githubUrl: p.external_url || "",
+      liveUrl: p.iframe_url || null,
+      tags: p.tags || [],
+      workspace: (p.workspace === 'designing' ? 'designing' : 'coding') as WorkspaceType,
+      category: p.category || null,
+      type: p.type || undefined,
+      mediaType: p.media_type || undefined,
+      featured: Boolean(p.featured),
+      stars: 0,
+      updatedAt: p.created_at || new Date().toISOString(),
+      owner: "",
+      repo: "",
+      isFromDb: true,
+    }));
+  },
+  ['workspace-projects-db'],
+  {
+    revalidate: 60,
+    tags: ['workspace-projects-db'],
   }
+);
 
-  // 2. Map Supabase Projects to WorkspaceProjects
-  const mappedDbProjects: WorkspaceProject[] = (dbProjects || []).map(p => ({
-    id: p.id,
-    slug: p.slug || p.id, // Using slug if available, fallback to ID
-    title: p.title || "Untitled Project",
-    description: p.description || "View project to learn more.",
-    imageUrl: p.media_url || "",
-    githubUrl: p.external_url || "",
-    liveUrl: p.iframe_url || null,
-    tags: p.tags || [],
-    workspace: (p.workspace === 'designing' ? 'designing' : 'coding') as WorkspaceType,
-    stars: 0,
-    updatedAt: p.created_at || new Date().toISOString(),
-    owner: "",
-    repo: "",
-    isFromDb: true
-  } as any));
+export async function getAllProjects(): Promise<WorkspaceProject[]> {
+  const [mappedDbProjects, githubProjects] = await Promise.all([
+    getCachedDbWorkspaceProjects(),
+    getGithubWorkspaceProjects(),
+  ]);
 
-  // 3. Fetch from GitHub
-  const githubProjects = await getGithubWorkspaceProjects();
-
-  // 4. Merge and Deduplicate
-  // We prioritize DB projects if they share the same GitHub URL
   const merged = [...mappedDbProjects];
-  const dbRepoUrls = new Set(mappedDbProjects.map(p => p.githubUrl).filter(Boolean));
+  const dbRepoUrls = new Set(mappedDbProjects.map((p) => p.githubUrl).filter(Boolean));
 
   for (const ghProject of githubProjects) {
     if (!dbRepoUrls.has(ghProject.githubUrl)) {
@@ -541,7 +568,7 @@ export async function getGithubWorkspaceProjectBySlug(
   slug: string
 ): Promise<WorkspaceProject | null> {
   // Check Supabase first for the slug or id
-  const { data: dbProject, error } = await supabase
+  const { data: dbProject } = await supabase
     .from('projects')
     .select('*')
     .or(`id.eq.${slug},slug.eq.${slug}`)
@@ -558,6 +585,10 @@ export async function getGithubWorkspaceProjectBySlug(
       liveUrl: dbProject.iframe_url || null,
       tags: dbProject.tags || [],
       workspace: (dbProject.workspace === 'designing' ? 'designing' : 'coding') as WorkspaceType,
+      category: dbProject.category || null,
+      type: dbProject.type || undefined,
+      mediaType: dbProject.media_type || undefined,
+      featured: Boolean(dbProject.featured),
       stars: 0,
       updatedAt: dbProject.created_at || new Date().toISOString(),
       owner: "",

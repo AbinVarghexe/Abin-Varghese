@@ -1,108 +1,30 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowUpRight,
-  Box,
-  Film,
   Github,
   Globe,
   LayoutGrid,
-  Monitor,
-  Palette,
-  Sparkles,
-  Video,
-  MousePointer2,
 } from 'lucide-react';
 import {
   IconBrandBehance,
   IconBrandDribbble,
   IconBrandPinterest,
-  IconChevronLeft,
-  IconChevronRight,
-  IconX,
-  IconExternalLink,
-  IconArrowRight,
 } from '@tabler/icons-react';
 import type { WorkspaceProject } from '@/lib/github-projects';
 import { homePageDesignSystem } from '@/lib/home-page-design-system';
 import PinCard from '@/components/pinterest/PinCard';
-import { pinterestPins, type PinterestPin } from '@/lib/pinterest-content';
+import type { PinterestPin } from '@/lib/pinterest-content';
 import ProjectPreviewImage from '@/components/projects/ProjectPreviewImage';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProjectGalleryCard from './ProjectGalleryCard';
 import CodingMarqueeShowcase from './CodingMarqueeShowcase';
-import { FigmaInteractiveShowcase } from './FigmaInteractiveShowcase';
 import TechStackMarquee from './TechStackMarquee';
+import { FigmaInteractiveShowcase } from './FigmaInteractiveShowcase';
 
 export type WorkspaceFilter = 'coding' | 'designing';
-
-const BEHANCE_PROJECTS = [
-  {
-    id: "behance-1",
-    url: "https://www.behance.net/embed/project/238218229?ilo0=1",
-    title: "Featured Brand Identity",
-    coverImage: "https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=2071",
-    link: "https://www.behance.net/gallery/238218229/Project-Title"
-  },
-  {
-    id: "behance-2",
-    url: "https://www.behance.net/embed/project/238218229?ilo0=1", 
-    title: "Visual Identity Study",
-    coverImage: "https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?auto=format&fit=crop&q=80&w=2070",
-    link: "#"
-  },
-  {
-    id: "behance-3",
-    url: "https://www.behance.net/embed/project/238218229?ilo0=1", 
-    title: "Kinetic Typography",
-    coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2064",
-    link: "#"
-  },
-  {
-    id: "behance-4",
-    url: "https://www.behance.net/embed/project/238218229?ilo0=1", 
-    title: "UI Design Exploration",
-    coverImage: "https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=2070",
-    link: "#"
-  }
-];
-
-const FIGMA_PROJECTS = [
-  {
-    id: "figma-deal-six",
-    title: "DEALSIX Platform",
-    description: "A comprehensive digital ecosystem for logistics and commerce management. This design system focuses on high-density information architecture and clean user flows.",
-    url: "https://www.figma.com/design/UkvEzHwcZ8SHSIqmsOK1KE/DEALSIX?node-id=11-3075&t=NNUTESDtBLn3Vgun-1",
-    coverImage: "https://images.unsplash.com/photo-1551288049-bbbda5366a71?auto=format&fit=crop&q=80&w=2070",
-    tags: ["UI/UX Evolution", "Design System", "Logistics", "B2B Dashboard"]
-  },
-  {
-    id: "figma-nutriloop",
-    title: "NutriLoop AI Dashboard",
-    description: "A futuristic health-tech platform for tracking nutrition profiles and sustainable food sourcing. Features a signature Spotify-inspired dark aesthetic.",
-    url: "https://www.figma.com/design/UkvEzHwcZ8SHSIqmsOK1KE/DEALSIX?node-id=0-1", // Using existing URL as placeholder or you can put specific ones
-    coverImage: "https://images.unsplash.com/photo-1576091160550-217359f49f4a?auto=format&fit=crop&q=80&w=2070",
-    tags: ["Health Tech", "AI-Powered", "Dark Mode", "Dashboard"]
-  },
-  {
-    id: "figma-aura",
-    title: "Aura Creative Agency",
-    description: "Minimalist landing page for a boutique design agency. Centered around high-end typography and smooth spatial transitions.",
-    url: "https://www.figma.com/design/UkvEzHwcZ8SHSIqmsOK1KE/DEALSIX?node-id=0-2",
-    coverImage: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=2055",
-    tags: ["Portfolio", "Minimalism", "Typography", "Motion Style"]
-  },
-  {
-    id: "figma-vault",
-    title: "Vault Crypto Wallet",
-    description: "Next-gen digital asset management with a focus on security and real-time visualization of blockchain transactions.",
-    url: "https://www.figma.com/design/UkvEzHwcZ8SHSIqmsOK1KE/DEALSIX?node-id=0-3",
-    coverImage: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?auto=format&fit=crop&q=80&w=2070",
-    tags: ["Fintech", "Crypto", "Asset Management", "Security UI"]
-  }
-];
 
 interface WorkspaceProjectsSectionProps {
   projects: WorkspaceProject[];
@@ -111,15 +33,6 @@ interface WorkspaceProjectsSectionProps {
 }
 
 const CARD_RATIO = 'h-full w-full';
-
-const CARD_HEIGHTS = [
-  'h-[220px]',
-  'h-[250px]',
-  'h-[210px]',
-  'h-[280px]',
-  'h-[230px]',
-  'h-[260px]',
-];
 
 const PROJECT_PIN_HEIGHTS = [360, 420, 340, 390, 440, 320];
 const DESIGN_RETURN_QUERY = 'from=projects&workspace=designing';
@@ -139,27 +52,91 @@ const DESIGN_CATEGORIES: DesignCategory[] = [
   'VFX & 3D Animation',
 ];
 
-const DESIGN_CATEGORY_ICONS = {
-  'All': LayoutGrid,
-  'Graphic design': Palette,
-  'Web Design': Monitor,
-  'Motion Graphics': Video,
-  'VFX & 3D Animation': Box,
-} as const;
+function toConcreteDesignCategory(
+  value: string | null | undefined
+): Exclude<DesignCategory, 'All'> | null {
+  if (!value) {
+    return null;
+  }
 
-// Public demo links used when project-specific env URLs are not provided.
-const DEMO_FIGMA_DESIGN_URL =
-  'https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931/Sample-File?type=design&node-id=0-1&mode=design';
-const DEMO_FIGMA_WEBFLOW_URL =
-  'https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931/Sample-File?type=design&node-id=0-1&mode=design';
+  const normalized = value.trim().toLowerCase();
 
-function toEmbedUrl(sourceUrl: string) {
-  return `https://www.figma.com/embed?embed_host=portfolio&url=${encodeURIComponent(sourceUrl)}`;
+  if (normalized === 'graphic design') {
+    return 'Graphic design';
+  }
+
+  if (normalized === 'web design') {
+    return 'Web Design';
+  }
+
+  if (normalized === 'motion graphics') {
+    return 'Motion Graphics';
+  }
+
+  if (normalized === 'vfx & 3d animation') {
+    return 'VFX & 3D Animation';
+  }
+
+  return null;
+}
+
+function isConcreteDesignCategory(value: string | null | undefined): value is Exclude<DesignCategory, 'All'> {
+  return toConcreteDesignCategory(value) !== null;
+}
+
+function normalizeDesignCategory(
+  category: string | null | undefined,
+  type: WorkspaceProject['type'],
+  mediaType: WorkspaceProject['mediaType'],
+  tags: string[] = [],
+  fallbackText = ''
+): DesignCategory {
+  const explicitCategory = toConcreteDesignCategory(category);
+
+  if (explicitCategory) {
+    return explicitCategory;
+  }
+
+  if (type === 'FIGMA') {
+    return 'Web Design';
+  }
+
+  if (type === 'PINTEREST' && mediaType === 'MODEL') {
+    return 'VFX & 3D Animation';
+  }
+
+  if (type === 'PINTEREST' && mediaType === 'VIDEO') {
+    return 'Motion Graphics';
+  }
+
+  const fingerprint = `${category ?? ''} ${tags.join(' ')} ${fallbackText}`.toLowerCase();
+
+  if (/graphic|branding|poster|logo|collage|editorial|print|typography/.test(fingerprint)) {
+    return 'Graphic design';
+  }
+
+  if (/motion|animation|kinetic|after effects|lottie|reel/.test(fingerprint)) {
+    return 'Motion Graphics';
+  }
+
+  if (/3d|vfx|visual effect|render|model|blender|houdini|maya|cinematic/.test(fingerprint)) {
+    return 'VFX & 3D Animation';
+  }
+
+  if (/web design|ui|ux|dashboard|website|landing|interface|design system|prototype|app/.test(fingerprint)) {
+    return 'Web Design';
+  }
+
+  return 'Web Design';
 }
 
 function matchesDesignCategory(pin: PinterestPin, category: DesignCategory) {
   if (category === 'All') {
     return true;
+  }
+
+  if (isConcreteDesignCategory(pin.board)) {
+    return pin.board === category;
   }
 
   const fingerprint = `${pin.title} ${pin.description} ${pin.board} ${pin.tags.join(' ')}`.toLowerCase();
@@ -176,6 +153,35 @@ function matchesDesignCategory(pin: PinterestPin, category: DesignCategory) {
     default:
       return true;
   }
+}
+
+function getInteractiveProjectUrl(project: WorkspaceProject): string | null {
+  const candidate = project.liveUrl?.trim() || project.githubUrl?.trim();
+
+  if (!candidate) {
+    return null;
+  }
+
+  return candidate;
+}
+
+function getDesignPinMediaType(
+  project: WorkspaceProject,
+  normalizedCategory: DesignCategory
+): PinterestPin["mediaType"] {
+  if (normalizedCategory === 'Web Design' || project.type === 'FIGMA') {
+    return 'image';
+  }
+
+  if (project.mediaType === 'VIDEO') {
+    return 'video';
+  }
+
+  if (project.mediaType === 'MODEL') {
+    return 'model';
+  }
+
+  return 'image';
 }
 
 function resolveGithubProfileUrl(sourceUrl: string): string {
@@ -209,10 +215,8 @@ function resolveGithubProfileUrl(sourceUrl: string): string {
 
 function WorkspaceProjectCard({
   project,
-  index,
 }: {
   project: WorkspaceProject;
-  index: number;
 }) {
   const design = homePageDesignSystem;
   const fallbackSrc = `https://opengraph.githubassets.com/portfolio/${project.owner}/${project.repo}`;
@@ -421,23 +425,33 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
   );
 }
 
-export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
+export function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
   const [activeTab, setActiveTab] = useState<DesignCategory>('All');
-  const [loadedBehanceIds, setLoadedBehanceIds] = useState<Set<string>>(new Set());
-  const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
   const design = homePageDesignSystem;
+  const uploadedProjects = useMemo(
+    () => projects.filter((project) => project.isFromDb && Boolean(project.imageUrl)),
+    [projects]
+  );
 
   const feedItems = useMemo(() => {
-    const projectPins = projects.map((project, index) => {
+    return uploadedProjects.map((project, index) => {
+      const normalizedCategory = normalizeDesignCategory(
+        project.category,
+        project.type,
+        project.mediaType,
+        project.tags,
+        `${project.title} ${project.description}`
+      );
+      const normalizedMediaType = getDesignPinMediaType(project, normalizedCategory);
       const pin: PinterestPin = {
         id: `project-${project.id}`,
         title: project.title,
         description: project.description,
-        mediaType: 'image',
+        mediaType: normalizedMediaType,
         mediaPath: project.imageUrl,
-        board: 'Design Repositories',
+        board: normalizedCategory,
         author: project.owner,
-        tags: project.tags.length ? project.tags : ['repository', 'design'],
+        tags: project.tags.length ? [...project.tags, normalizedCategory] : ['repository', 'design', normalizedCategory],
         dominantColor: '#111827',
         previewHeight: PROJECT_PIN_HEIGHTS[index % PROJECT_PIN_HEIGHTS.length],
         likes: Math.max(project.stars * 30, 120),
@@ -449,72 +463,50 @@ export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
         pin,
       };
     });
-
-    const behancePins = BEHANCE_PROJECTS.map((project, index) => ({
-      id: `virtual-behance-${project.id}`,
-      href: project.link,
-      pin: {
-        id: project.id,
-        title: project.title,
-        description: "Featured Case Study",
-        mediaType: 'image' as const,
-        mediaPath: project.coverImage,
-        board: 'Case Studies',
-        author: 'Behance',
-        tags: ['branding', 'case-study'],
-        dominantColor: '#0057ff',
-        previewHeight: PROJECT_PIN_HEIGHTS[(index + 1) % PROJECT_PIN_HEIGHTS.length],
-        likes: 950,
-      }
-    }));
-
-    const figmaPins = FIGMA_PROJECTS.map((project, index) => ({
-      id: `virtual-figma-${project.id}`,
-      href: project.url,
-      pin: {
-        id: project.id,
-        title: project.title,
-        description: project.description,
-        mediaType: 'image' as const,
-        mediaPath: project.coverImage,
-        board: 'Web Design',
-        author: 'Figma',
-        tags: project.tags,
-        dominantColor: '#1f5fff',
-        previewHeight: PROJECT_PIN_HEIGHTS[(index + 2) % PROJECT_PIN_HEIGHTS.length],
-        likes: 1100,
-      }
-    }));
-
-    const visualPins = pinterestPins.map((pin) => ({
-      id: `pin-${pin.id}`,
-      href: `/pinterest/${pin.id}?${DESIGN_RETURN_QUERY}`,
-      pin,
-    }));
-
-    const mixed: Array<{ id: string; href: string; pin: PinterestPin }> = [];
-    const sources = [visualPins, projectPins, figmaPins, behancePins];
-    const maxLen = Math.max(...sources.map(s => s.length));
-
-    for (let i = 0; i < maxLen; i++) {
-      sources.forEach(source => {
-        if (source[i]) mixed.push(source[i]);
-      });
-    }
-
-    return mixed;
-  }, [projects]);
+  }, [uploadedProjects]);
 
   const filteredFeedItems = useMemo(() => {
     if (activeTab === 'All') {
-      return feedItems;
+      return feedItems.filter((item) => item.pin.board !== 'Web Design');
     }
     return feedItems.filter((item) => matchesDesignCategory(item.pin, activeTab));
   }, [feedItems, activeTab]);
 
+  const interactiveWebProjects = useMemo(() => {
+    return uploadedProjects
+      .filter((project) => normalizeDesignCategory(
+        project.category,
+        project.type,
+        project.mediaType,
+        project.tags,
+        `${project.title} ${project.description}`
+      ) === 'Web Design')
+      .sort((a, b) => {
+        const featuredDelta = Number(Boolean(b.featured)) - Number(Boolean(a.featured));
+        if (featuredDelta !== 0) {
+          return featuredDelta;
+        }
 
-  const itemsBeforeBehance = filteredFeedItems.slice(0, 20);
-  const showBehance = activeTab === 'Graphic design' && itemsBeforeBehance.length >= 20;
+        return +new Date(b.updatedAt) - +new Date(a.updatedAt);
+      })
+      .map((project) => {
+        const url = getInteractiveProjectUrl(project);
+
+        if (!url) {
+          return null;
+        }
+
+        return {
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          url,
+          coverImage: project.imageUrl,
+          tags: project.tags.length > 0 ? project.tags : ['Web Design'],
+        };
+      })
+      .filter((project): project is NonNullable<typeof project> => Boolean(project));
+  }, [uploadedProjects]);
   
   const isPinterestLayout = [
     'All',
@@ -522,8 +514,7 @@ export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
     'Motion Graphics', 
     'VFX & 3D Animation'
   ].includes(activeTab);
-
-  const isWebDesignLayout = activeTab === 'Web Design';
+  const showInteractiveWebDesign = activeTab === 'Web Design' && interactiveWebProjects.length > 0;
 
   return (
     <div className="relative">
@@ -605,7 +596,7 @@ export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
             Curated <span className="font-serif italic font-medium text-[#1f5fff]">Designs</span>
           </h2>
           <p className="mx-auto mt-3 max-w-3xl text-base text-zinc-600 md:text-lg">
-            Browse UI/UX, motion, visual effects, video, and 3D references through a curated design feed.
+            Browse only the design projects you have uploaded from the admin panel, grouped by category.
           </p>
         </div>
       </div>
@@ -633,12 +624,21 @@ export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
         <div className="pb-16 text-center">
           {/* Main Feed Container */}
           <div className="mx-auto max-w-7xl">
-            {isWebDesignLayout ? (
-              <FigmaInteractiveShowcase projects={FIGMA_PROJECTS} />
+            {showInteractiveWebDesign ? (
+              <FigmaInteractiveShowcase projects={interactiveWebProjects} />
+            ) : filteredFeedItems.length === 0 ? (
+              <div className="rounded-[28px] border border-dashed border-black/15 bg-white/70 px-6 py-14 text-center shadow-[0_16px_36px_rgba(10,10,10,0.04)]">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  No Uploaded Projects
+                </p>
+                <p className="mx-auto mt-3 max-w-2xl text-sm text-zinc-600 md:text-base">
+                  This design category is empty right now. Upload a project from the admin panel to have it appear here.
+                </p>
+              </div>
             ) : (
               <div className={isPinterestLayout ? "columns-2 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 max-w-[1400px] mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-24 md:gap-y-32"}>
                 <AnimatePresence mode="popLayout">
-                  {itemsBeforeBehance.map((item, index) => (
+                  {filteredFeedItems.map((item, index) => (
                     <motion.div
                       key={item.id}
                       layout
@@ -663,165 +663,6 @@ export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
               </div>
             )}
           </div>
-
-          {/* Horizontal Behance Showcase Section */}
-          <AnimatePresence>
-            {showBehance && (
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden border-y border-black/5 bg-zinc-50/50 py-32"
-                style={{ clipPath: 'inset(0 0 0 0)' }}
-              >
-                <div className="mb-20 text-center">
-                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0057ff]/10 text-[#0057ff] text-[10px] font-bold uppercase tracking-widest border border-blue-100">
-                    <IconBrandBehance size={14} /> Global Portfolio
-                  </span>
-                  <h3 className="mt-4 text-4xl font-bold text-zinc-900">Behance Case Studies</h3>
-                  <div className="mt-2 text-zinc-500">A continuous showcase of high-fidelity project explorations</div>
-                </div>
-
-                <div className="relative w-full overflow-hidden">
-                  <div className="flex w-fit animate-marquee-scroll gap-12 px-12 py-10" style={{ animationDuration: '45s' }}>
-                    {/* First Loop */}
-                    {BEHANCE_PROJECTS.map((project, idx) => (
-                      <div 
-                        key={`${project.id}-loop1`}
-                        className="group flex-shrink-0 w-[680px] overflow-hidden rounded-[32px] border border-black/5 bg-white shadow-2xl transition-all hover:scale-[1.02] hover:shadow-3xl"
-                      >
-                        <div className="flex items-center justify-between border-b border-black/5 bg-zinc-50/50 px-8 py-5">
-                          <div className="truncate text-base font-bold text-zinc-900">{project.title}</div>
-                          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition-colors group-hover:text-blue-600">
-                            {idx === 0 || loadedBehanceIds.has(project.id) ? 'View Project' : 'Explore Case Study'} <IconExternalLink size={16} />
-                          </div>
-                        </div>
-                        <div className="relative aspect-[16/10] w-full bg-zinc-100 overflow-hidden">
-                          <AnimatePresence mode="wait">
-                            {idx === 0 || loadedBehanceIds.has(project.id) ? (
-                              <motion.div
-                                key="iframe"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="absolute inset-0"
-                              >
-                                <iframe 
-                                  src={project.url} 
-                                  className="absolute inset-0 h-full w-full border-0 pointer-events-none"
-                                  loading="lazy"
-                                  onLoad={() => setReadyIds(prev => new Set(prev).add(project.id))}
-                                />
-                                {!readyIds.has(project.id) && (
-                                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-zinc-50/50 backdrop-blur-[2px] animate-pulse">
-                                    <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">Loading...</div>
-                                  </div>
-                                )}
-                                <a 
-                                  href={project.link} 
-                                  target="_blank" 
-                                  className="absolute inset-0 z-10" 
-                                />
-                              </motion.div>
-                            ) : (
-                              <motion.div
-                                key="cover"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 cursor-pointer group/behance-facade"
-                                onClick={() => setLoadedBehanceIds(prev => new Set(prev).add(project.id))}
-                              >
-                                <img 
-                                  src={project.coverImage} 
-                                  className="h-full w-full object-cover transition-transform duration-700 group-hover/behance-facade:scale-105"
-                                  alt={project.title}
-                                />
-                                <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover/behance-facade:opacity-100 transition-opacity duration-300">
-                                  <div className="bg-white/95 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-2 shadow-2xl">
-                                    <Sparkles size={16} className="text-blue-600 animate-pulse" />
-                                    <span className="text-sm font-bold text-zinc-900">Unlock Case Study</span>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </div>
-                    ))}
-                    {/* Second Loop for seamless transition */}
-                    {BEHANCE_PROJECTS.map((project, idx) => (
-                      <div 
-                        key={`${project.id}-loop2`}
-                        className="group flex-shrink-0 w-[680px] overflow-hidden rounded-[32px] border border-black/5 bg-white shadow-2xl transition-all hover:scale-[1.02] hover:shadow-3xl"
-                      >
-                        <div className="flex items-center justify-between border-b border-black/5 bg-zinc-50/50 px-8 py-5">
-                          <div className="truncate text-base font-bold text-zinc-900">{project.title}</div>
-                          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition-colors group-hover:text-blue-600">
-                            {idx === 0 || loadedBehanceIds.has(project.id) ? 'View Project' : 'Explore Case Study'} <IconExternalLink size={16} />
-                          </div>
-                        </div>
-                        <div className="relative aspect-[16/10] w-full bg-zinc-100 overflow-hidden">
-                          <AnimatePresence mode="wait">
-                            {idx === 0 || loadedBehanceIds.has(project.id) ? (
-                              <motion.div
-                                key="iframe"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="absolute inset-0"
-                              >
-                                <iframe 
-                                  src={project.url} 
-                                  className="absolute inset-0 h-full w-full border-0 pointer-events-none"
-                                  loading="lazy"
-                                  onLoad={() => setReadyIds(prev => new Set(prev).add(project.id))}
-                                />
-                                {!readyIds.has(project.id) && (
-                                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-zinc-50/50 backdrop-blur-[2px] animate-pulse">
-                                    <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">Loading...</div>
-                                  </div>
-                                )}
-                                <a 
-                                  href={project.link} 
-                                  target="_blank" 
-                                  className="absolute inset-0 z-10" 
-                                />
-                              </motion.div>
-                            ) : (
-                              <motion.div
-                                key="cover"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute inset-0 cursor-pointer group/behance-facade"
-                                onClick={() => setLoadedBehanceIds(prev => new Set(prev).add(project.id))}
-                              >
-                                <img 
-                                  src={project.coverImage} 
-                                  className="h-full w-full object-cover transition-transform duration-700 group-hover/behance-facade:scale-105"
-                                  alt={project.title}
-                                />
-                                <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-0 group-hover/behance-facade:opacity-100 transition-opacity duration-300">
-                                  <div className="bg-white/95 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-2 shadow-2xl">
-                                    <Sparkles size={16} className="text-blue-600 animate-pulse" />
-                                    <span className="text-sm font-bold text-zinc-900">Unlock Case Study</span>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Button section removed */}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Portfolio version text removed */}
         </div>
       </div>
     </div>

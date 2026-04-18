@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { homePageDesignSystem } from "@/lib/home-page-design-system";
 import { PinterestPin } from "@/lib/pinterest-content";
 
@@ -26,6 +26,7 @@ export default function PinCard({
   const cardRadius = "14px";
 
   const [isLoaded, setIsLoaded] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
   const [measuredMedia, setMeasuredMedia] = useState<{
     path: string;
     ratio: number;
@@ -107,7 +108,7 @@ export default function PinCard({
               />
             )}
 
-            {pin.mediaType === "video" && (
+            {pin.mediaType === "video" && !videoFailed && (
               <video
                 src={pin.mediaPath}
                 autoPlay
@@ -117,6 +118,10 @@ export default function PinCard({
                 preload="metadata"
                 className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                 onLoadedData={() => setIsLoaded(true)}
+                onError={() => {
+                  setVideoFailed(true);
+                  setIsLoaded(true);
+                }}
                 onLoadedMetadata={(event) => {
                   if (!fixedHeight && event.currentTarget.videoWidth && event.currentTarget.videoHeight) {
                     setMeasuredMedia({
@@ -126,6 +131,12 @@ export default function PinCard({
                   }
                 }}
               />
+            )}
+
+            {pin.mediaType === "video" && videoFailed && (
+              <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-center text-xs font-medium text-zinc-500">
+                Preview unavailable
+              </div>
             )}
 
             {pin.mediaType === "model" && (

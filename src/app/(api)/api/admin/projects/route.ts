@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +28,14 @@ const projectSchema = z.object({
   featured: z.boolean().optional().default(false),
   workspace: z.string().default('coding'),
 });
+
+function isMainWebDesignProject(data: {
+  category?: string | null;
+  type?: 'CODE' | 'FIGMA' | 'BEHANCE' | 'PINTEREST';
+  featured?: boolean;
+}) {
+  return Boolean(data.featured) && (data.category === 'Web Design' || data.type === 'FIGMA');
+}
 
 // Helper to generate slug
 const generateSlug = (title: string) => {
@@ -121,8 +129,20 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) throw error;
+
+    if (project && isMainWebDesignProject(data)) {
+      const { error: clearOthersError } = await supabase
+        .from('projects')
+        .update({ featured: false })
+        .eq('workspace', 'designing')
+        .or('category.eq.Web Design,type.eq.FIGMA')
+        .neq('id', project.id);
+
+      if (clearOthersError) throw clearOthersError;
+    }
     
     // Multi-path revalidation to ensure both public and admin views are fresh
+    revalidateTag('workspace-projects-db');
     revalidatePath('/projects');
     revalidatePath('/admin/projects');
     revalidatePath('/', 'layout');

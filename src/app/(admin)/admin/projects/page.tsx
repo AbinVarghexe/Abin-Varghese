@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AdminSectionWorkspace from "@/components/admin/AdminSectionWorkspace";
 import { uploadToStorage } from "@/lib/supabase";
 import { Upload as UploadIcon, X as XIcon, Loader2, Sparkles, Pencil, AlertCircle } from "lucide-react";
@@ -22,6 +22,7 @@ type Project = {
   previewHeight: number | null;
   featured: boolean;
   createdAt: string;
+  workspace?: "coding" | "designing";
 };
 
 type ProjectForm = {
@@ -56,10 +57,20 @@ const defaultForm: ProjectForm = {
   featured: false,
 };
 
+type AdminWorkspace = "coding" | "designing";
+
+function createDefaultForm(workspace: AdminWorkspace): ProjectForm {
+  return {
+    ...defaultForm,
+    type: workspace === "coding" ? "CODE" : "BEHANCE",
+  };
+}
+
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [form, setForm] = useState<ProjectForm>(defaultForm);
+  const [activeWorkspace, setActiveWorkspace] = useState<AdminWorkspace>("coding");
+  const [form, setForm] = useState<ProjectForm>(() => createDefaultForm("coding"));
   const [isUploading, setIsUploading] = useState(false);
   const [isFetchingGithub, setIsFetchingGithub] = useState(false);
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
@@ -100,6 +111,8 @@ export default function AdminProjectsPage() {
   }, []);
 
   function selectProject(project: Project) {
+    const workspace = project.workspace || (project.type === "CODE" ? "coding" : "designing");
+    setActiveWorkspace(workspace);
     setSelectedId(project.id);
     setForm({
       title: project.title,
@@ -120,7 +133,48 @@ export default function AdminProjectsPage() {
 
   function resetForm() {
     setSelectedId(null);
-    setForm(defaultForm);
+    setForm(createDefaultForm(activeWorkspace));
+  }
+
+  function switchWorkspace(workspace: AdminWorkspace) {
+    setActiveWorkspace(workspace);
+    setSelectedId(null);
+    setForm(createDefaultForm(workspace));
+  }
+
+  const sidebarProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const workspace = project.workspace || (project.type === "CODE" ? "coding" : "designing");
+      return workspace === activeWorkspace;
+    });
+  }, [activeWorkspace, projects]);
+
+  async function setMainWebDesignProject(project: Project) {
+    const toastId = toast.loading(`Setting "${project.title}" as the main web design project...`);
+
+    const response = await fetch(`/api/admin/projects/${project.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        featured: true,
+        category: project.category || "Web Design",
+        type: project.type,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      toast.error(errorData.error || "Could not set the main web design project.", { id: toastId });
+      return;
+    }
+
+    await loadProjects();
+
+    if (selectedId === project.id) {
+      setForm((prev) => ({ ...prev, featured: true }));
+    }
+
+    toast.success("Main web design project updated.", { id: toastId });
   }
 
   function parsePayload() {
@@ -328,12 +382,19 @@ export default function AdminProjectsPage() {
       sectionLabel="Project Section"
       sectionTitle="Project CRUD Management"
       sectionDescription="Add new projects, edit existing entries, and control featured work visibility."
-      previewPath="/projects"
+      previewPath={activeWorkspace === "coding" ? "/projects?workspace=coding" : "/projects?workspace=designing"}
     >
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
         <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-5 xl:col-span-4">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-medium text-[#0b0b0c]">Projects</h3>
+            <div>
+              <h3 className="text-lg font-medium text-[#0b0b0c]">
+                {activeWorkspace === "coding" ? "Coding Projects" : "Designing Projects"}
+              </h3>
+              <p className="mt-1 text-xs text-[var(--color-text-body)]">
+                {sidebarProjects.length} item{sidebarProjects.length === 1 ? "" : "s"} in this workspace
+              </p>
+            </div>
             <button
               type="button"
               onClick={resetForm}
@@ -344,8 +405,11 @@ export default function AdminProjectsPage() {
           </div>
 
           <div className="space-y-2">
-            {projects.map((project) => {
+            {sidebarProjects.map((project) => {
               const isEditing = selectedId === project.id;
+              const isWebDesignProject =
+                activeWorkspace === "designing" &&
+                (project.category === "Web Design" || project.type === "FIGMA");
               return (
                 <article
                   key={project.id}
@@ -357,9 +421,19 @@ export default function AdminProjectsPage() {
                 >
                   {/* Project info */}
                   <div className="mb-2">
-                    <p className={`text-sm font-semibold ${isEditing ? "text-blue-800" : "text-[#0b0b0c]"}`}>
-                      {project.title}
-                    </p>
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <p className={`text-sm font-semibold ${isEditing ? "text-blue-800" : "text-[#0b0b0c]"}`}>
+                        {project.title}
+                      </p>
+                      <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
+                        {project.category || (project.type === "CODE" ? "Coding" : "Design")}
+                      </span>
+                      {isWebDesignProject && project.featured ? (
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
+                          Main
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="mt-0.5 line-clamp-2 text-xs text-[var(--color-text-body)]">
                       {project.description}
                     </p>
@@ -367,6 +441,22 @@ export default function AdminProjectsPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 pt-1">
+                    {isWebDesignProject ? (
+                      <button
+                        type="button"
+                        onClick={() => setMainWebDesignProject(project)}
+                        disabled={project.featured}
+                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+                          project.featured
+                            ? "border-blue-200 bg-blue-50 text-blue-500 cursor-default"
+                            : "border-blue-200 bg-white text-blue-700 hover:bg-blue-50 hover:border-blue-300"
+                        }`}
+                      >
+                        <Sparkles size={11} />
+                        {project.featured ? "Main Project" : "Set as Main"}
+                      </button>
+                    ) : null}
+
                     <button
                       type="button"
                       onClick={() => isEditing ? resetForm() : selectProject(project)}
@@ -421,25 +511,25 @@ export default function AdminProjectsPage() {
           <div className="mt-4 flex gap-2">
             <button
               type="button"
-              onClick={() => setForm((prev) => ({ ...prev, type: "CODE" }))}
+              onClick={() => switchWorkspace("coding")}
               className={`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all ${
-                form.type === "CODE"
+                activeWorkspace === "coding"
                   ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
                   : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)] hover:bg-white"
               }`}
+              aria-pressed={activeWorkspace === "coding"}
             >
               💻 Coding Project
             </button>
             <button
               type="button"
-              onClick={() => {
-                if (form.type === "CODE") setForm((prev) => ({ ...prev, type: "BEHANCE" }));
-              }}
+              onClick={() => switchWorkspace("designing")}
               className={`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all ${
-                form.type !== "CODE"
+                activeWorkspace === "designing"
                   ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm"
                   : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)] hover:bg-white"
               }`}
+              aria-pressed={activeWorkspace === "designing"}
             >
               🎨 Designing Project
             </button>
@@ -639,13 +729,13 @@ export default function AdminProjectsPage() {
                   </select>
                 </div>
 
-                {form.type !== "BEHANCE" && (
+                {(form.type === "CODE" || Boolean(form.category)) && (
                   <label className="space-y-2 text-sm md:col-span-2">
                     <span className="text-[var(--color-text-body)] flex items-center justify-between">
                       <span>
                         {form.type === "CODE"
                           ? "Project Thumbnail (Image or GIF)"
-                          : "Media Asset (URL or Upload)"}
+                          : "Cover Image / Media Asset"}
                       </span>
                       {isUploading && <Loader2 size={14} className="animate-spin text-blue-500" />}
                     </span>
@@ -805,7 +895,9 @@ export default function AdminProjectsPage() {
               checked={form.featured}
               onChange={(e) => setForm((prev) => ({ ...prev, featured: e.target.checked }))}
             />
-            Featured project
+            {form.category === "Web Design" || form.type === "FIGMA"
+              ? "Main project in Web Design section"
+              : "Featured project"}
           </label>
 
           <div className="mt-6 flex items-center gap-3">

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +23,14 @@ const projectSchema = z.object({
   featured: z.boolean().optional(),
   workspace: z.string().optional(),
 });
+
+function isMainWebDesignProject(data: {
+  category?: string | null;
+  type?: 'CODE' | 'FIGMA' | 'BEHANCE' | 'PINTEREST';
+  featured?: boolean;
+}) {
+  return Boolean(data.featured) && (data.category === 'Web Design' || data.type === 'FIGMA');
+}
 
 // Get single project
 export async function GET(
@@ -74,7 +82,7 @@ export async function PUT(
 
     const supabase = createAdminClient();
     
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (data.title) updateData.title = data.title;
     if (data.description) updateData.description = data.description;
     if (data.content !== undefined) updateData.content = data.content;
@@ -100,7 +108,23 @@ export async function PUT(
 
     if (error) throw error;
 
+    if (project && isMainWebDesignProject({
+      category: data.category ?? project.category,
+      type: data.type ?? project.type,
+      featured: data.featured ?? project.featured,
+    })) {
+      const { error: clearOthersError } = await supabase
+        .from('projects')
+        .update({ featured: false })
+        .eq('workspace', 'designing')
+        .or('category.eq.Web Design,type.eq.FIGMA')
+        .neq('id', project.id);
+
+      if (clearOthersError) throw clearOthersError;
+    }
+
     // Multi-path revalidation to ensure both public and admin views are fresh
+    revalidateTag('workspace-projects-db');
     revalidatePath('/projects');
     revalidatePath('/admin/projects');
     revalidatePath('/', 'layout');
@@ -143,6 +167,7 @@ export async function DELETE(
     if (error) throw error;
 
     // Multi-path revalidation to ensure both public and admin views are fresh
+    revalidateTag('workspace-projects-db');
     revalidatePath('/projects');
     revalidatePath('/admin/projects');
     revalidatePath('/', 'layout');
