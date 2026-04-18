@@ -32,6 +32,9 @@ import { pinterestPins, type PinterestPin } from '@/lib/pinterest-content';
 import ProjectPreviewImage from '@/components/projects/ProjectPreviewImage';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProjectGalleryCard from './ProjectGalleryCard';
+import CodingMarqueeShowcase from './CodingMarqueeShowcase';
+import { FigmaInteractiveShowcase } from './FigmaInteractiveShowcase';
+import TechStackMarquee from './TechStackMarquee';
 
 export type WorkspaceFilter = 'coding' | 'designing';
 
@@ -74,6 +77,30 @@ const FIGMA_PROJECTS = [
     url: "https://www.figma.com/design/UkvEzHwcZ8SHSIqmsOK1KE/DEALSIX?node-id=11-3075&t=NNUTESDtBLn3Vgun-1",
     coverImage: "https://images.unsplash.com/photo-1551288049-bbbda5366a71?auto=format&fit=crop&q=80&w=2070",
     tags: ["UI/UX Evolution", "Design System", "Logistics", "B2B Dashboard"]
+  },
+  {
+    id: "figma-nutriloop",
+    title: "NutriLoop AI Dashboard",
+    description: "A futuristic health-tech platform for tracking nutrition profiles and sustainable food sourcing. Features a signature Spotify-inspired dark aesthetic.",
+    url: "https://www.figma.com/design/UkvEzHwcZ8SHSIqmsOK1KE/DEALSIX?node-id=0-1", // Using existing URL as placeholder or you can put specific ones
+    coverImage: "https://images.unsplash.com/photo-1576091160550-217359f49f4a?auto=format&fit=crop&q=80&w=2070",
+    tags: ["Health Tech", "AI-Powered", "Dark Mode", "Dashboard"]
+  },
+  {
+    id: "figma-aura",
+    title: "Aura Creative Agency",
+    description: "Minimalist landing page for a boutique design agency. Centered around high-end typography and smooth spatial transitions.",
+    url: "https://www.figma.com/design/UkvEzHwcZ8SHSIqmsOK1KE/DEALSIX?node-id=0-2",
+    coverImage: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=2055",
+    tags: ["Portfolio", "Minimalism", "Typography", "Motion Style"]
+  },
+  {
+    id: "figma-vault",
+    title: "Vault Crypto Wallet",
+    description: "Next-gen digital asset management with a focus on security and real-time visualization of blockchain transactions.",
+    url: "https://www.figma.com/design/UkvEzHwcZ8SHSIqmsOK1KE/DEALSIX?node-id=0-3",
+    coverImage: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?auto=format&fit=crop&q=80&w=2070",
+    tags: ["Fintech", "Crypto", "Asset Management", "Security UI"]
   }
 ];
 
@@ -367,19 +394,35 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
   };
 
   return (
-    <div className="grid grid-cols-12 gap-4 auto-rows-[210px] md:auto-rows-[220px] xl:auto-rows-[240px]">
-      {projects.map((project, index) => (
-        <div key={project.id} className={`${getTileClass(index)} h-full overflow-hidden`}>
-          <WorkspaceProjectCard project={project} index={index} />
+    <div className="flex flex-col gap-12">
+      {/* Bento Grid */}
+      <div className="px-4 md:px-8 mx-auto max-w-7xl w-full">
+        <div className="mb-12 text-center">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 text-zinc-600 text-[10px] font-bold uppercase tracking-widest border border-black/10">
+            <LayoutGrid size={14} /> Full Gallery
+          </span>
+          <h3 className="mt-4 text-3xl md:text-4xl font-bold text-zinc-900">
+            Project Directory
+          </h3>
+          <p className="mt-2 text-zinc-500 max-w-lg mx-auto">
+            A comprehensive library of my development journey, including experiments, 
+            tooling, and production-ready frontend components.
+          </p>
         </div>
-      ))}
+        <div className="grid grid-cols-12 gap-4 auto-rows-[210px] md:auto-rows-[220px] xl:auto-rows-[240px]">
+          {projects.map((project, index) => (
+            <div key={project.id} className={`${getTileClass(index)} h-full overflow-hidden`}>
+              <WorkspaceProjectCard project={project} index={index} />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
 export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
   const [activeTab, setActiveTab] = useState<DesignCategory>('All');
-  const [loadedFigmaIds, setLoadedFigmaIds] = useState<Set<string>>(new Set());
   const [loadedBehanceIds, setLoadedBehanceIds] = useState<Set<string>>(new Set());
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
   const design = homePageDesignSystem;
@@ -489,10 +532,20 @@ export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
+        @keyframes marquee-reverse {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
         .animate-marquee-scroll {
           animation: marquee 40s linear infinite;
         }
         .animate-marquee-scroll:hover {
+          animation-play-state: paused;
+        }
+        .animate-marquee-scroll-reverse {
+          animation: marquee-reverse 40s linear infinite;
+        }
+        .animate-marquee-scroll-reverse:hover {
           animation-play-state: paused;
         }
       `}} />
@@ -559,14 +612,14 @@ export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
 
       {/* Filter Tabs */}
       <div className="mt-12 mb-16 flex justify-center">
-        <div className="flex flex-wrap items-center justify-center gap-1.5 bg-zinc-100/80 p-1.5 rounded-lg border border-black/[0.03]">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 bg-zinc-100/80 p-1.5 rounded-full border border-zinc-200">
           {DESIGN_CATEGORIES.map((category) => (
             <button
               key={category}
               onClick={() => setActiveTab(category)}
-              className={`px-5 py-2 text-[14px] font-medium rounded-md transition-all duration-300 ease-out ${
+              className={`px-7 py-2.5 text-[15px] font-medium rounded-full transition-all duration-300 ease-out ${
                 activeTab === category 
-                  ? "bg-white text-[#1f5fff] shadow-[0_2px_10px_rgba(0,0,0,0.06)]" 
+                  ? "bg-gradient-to-br from-zinc-900 to-zinc-600 text-white shadow-lg" 
                   : "text-zinc-500 hover:text-zinc-900"
               }`}
             >
@@ -581,96 +634,7 @@ export function DesigningWorkspaceLayout({ projects }: { projects: any[] }) {
           {/* Main Feed Container */}
           <div className="mx-auto max-w-7xl">
             {isWebDesignLayout ? (
-              <div className="flex flex-col gap-24">
-                {FIGMA_PROJECTS.map((project, idx) => (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8, delay: idx * 0.2 }}
-                    className="group relative overflow-hidden rounded-[40px] border border-black/10 bg-white p-4 shadow-3xl transition-all hover:bg-zinc-50/50"
-                  >
-                    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[32px] border border-black/5 bg-zinc-100 shadow-inner">
-                      <AnimatePresence mode="wait">
-                        {!loadedFigmaIds.has(project.id) ? (
-                          <motion.div
-                            key="cover"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 cursor-pointer group/facade"
-                            onClick={() => setLoadedFigmaIds(prev => new Set(prev).add(project.id))}
-                          >
-                            <img 
-                              src={project.coverImage} 
-                              className="h-full w-full object-cover transition-transform duration-700 group-hover/facade:scale-105"
-                              alt={project.title}
-                            />
-                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover/facade:opacity-100 transition-opacity duration-300">
-                              <div className="bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl scale-95 group-hover/facade:scale-100 transition-transform">
-                                <MousePointer2 size={20} className="text-blue-600" />
-                                <span className="text-sm font-bold text-zinc-900">Click to Explore Prototype</span>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="iframe"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="absolute inset-0 bg-zinc-50"
-                          >
-                            <iframe 
-                              src={toEmbedUrl(project.url)} 
-                              className="absolute inset-0 h-full w-full border-0" 
-                              allowFullScreen 
-                              loading="lazy"
-                              onLoad={() => setReadyIds(prev => new Set(prev).add(project.id))}
-                            />
-                            {/* Loading State Facade */}
-                            {!readyIds.has(project.id) && (
-                              <div className="absolute inset-0 pointer-events-none flex items-center justify-center bg-zinc-50/50 backdrop-blur-[2px] animate-pulse">
-                                <div className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">Loading Figma...</div>
-                              </div>
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    
-                    <div className="mt-10 px-6 pb-8 text-left">
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {project.tags.map(tag => (
-                          <span key={tag} className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 rounded-md border border-blue-100">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <h3 className="text-3xl font-bold text-zinc-900 group-hover:text-[#1f5fff] transition-colors">
-                        {project.title}
-                      </h3>
-                      <p className="mt-3 text-lg text-zinc-500 max-w-2xl leading-relaxed">
-                        {project.description}
-                      </p>
-                      
-                      <div className="mt-8 flex items-center gap-4">
-                        <a 
-                          href={project.url}
-                          target="_blank"
-                          className="inline-flex items-center gap-2 rounded-full bg-[#1f5fff] px-8 py-3.5 text-sm font-bold text-white shadow-xl transition-all hover:-translate-y-1 hover:bg-[#164ecc] hover:shadow-2xl active:scale-95"
-                        >
-                          View Full Design <IconArrowRight size={18} />
-                        </a>
-                        <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400">
-                          <MousePointer2 size={14} className="animate-bounce" />
-                          Interactive Prototype
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              <FigmaInteractiveShowcase projects={FIGMA_PROJECTS} />
             ) : (
               <div className={isPinterestLayout ? "columns-2 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 max-w-[1400px] mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-24 md:gap-y-32"}>
                 <AnimatePresence mode="popLayout">
@@ -878,8 +842,13 @@ export default function WorkspaceProjectsSection({
 
   const sectionClass =
     workspace === 'coding'
-      ? 'mx-auto w-full max-w-[1480px] px-3 py-14 md:px-5 md:py-20'
-      : 'mx-auto w-full max-w-[1620px] px-2 py-8 sm:px-4 md:px-6 md:py-12';
+      ? 'w-full py-14 md:py-20'
+      : 'w-full py-8 sm:py-12 md:py-16';
+
+  const contentContainerClass =
+    workspace === 'coding'
+      ? 'mx-auto w-full max-w-[1480px] px-3 md:px-5'
+      : 'mx-auto w-full max-w-[1620px] px-2 sm:px-4 md:px-6';
 
   const filteredProjects = useMemo(
     () => projects.filter((project) => project.workspace === workspace),
@@ -907,7 +876,7 @@ export default function WorkspaceProjectsSection({
         />
       </div>
 
-      <div className="relative z-10">
+      <div className={`relative z-10 ${contentContainerClass}`}>
         {workspace === 'coding' ? (
           <div className="mb-7 flex flex-col items-center gap-5 text-center">
             <div className="space-y-2">
@@ -924,72 +893,86 @@ export default function WorkspaceProjectsSection({
           </div>
         ) : null}
 
-        {workspace === 'coding' ? (
-          <div className="mb-4 flex justify-end md:mb-5">
-            <a
-              href={githubProfileUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center no-underline"
-              style={{
-                gap: '10px',
-                background: 'var(--gradient-gray)',
-                border: '1.5px solid var(--color-border-light)',
-                borderRadius: 'var(--radius-full)',
-                padding: '12px 20px',
-                fontFamily: 'var(--font-sans)',
-                fontWeight: 500,
-                fontSize: '14px',
-                color: '#fff',
-                textDecoration: 'none',
-                transition: 'box-shadow 300ms ease, transform 200ms ease',
-              }}
-              onMouseEnter={(event) => {
-                const element = event.currentTarget as HTMLElement;
-                element.style.boxShadow = '0 14px 36px rgba(0,0,0,0.22)';
-                element.style.transform = 'scale(1.02)';
-              }}
-              onMouseLeave={(event) => {
-                const element = event.currentTarget as HTMLElement;
-                element.style.boxShadow = 'none';
-                element.style.transform = 'scale(1)';
-              }}
-            >
-              <Github className="h-5 w-5" />
-              <span>View Github</span>
-            </a>
-          </div>
-        ) : null}
 
-        <div className={containerClass}>
-          {workspace === 'coding' ? (
-            filteredProjects.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-black/20 bg-zinc-50 px-6 py-10 text-center">
-                <p className="text-sm text-zinc-600 md:text-base">
-                  No projects found in this workspace from your GitHub source.
-                </p>
+
+        <div className="flex flex-col gap-8 md:gap-14">
+          {workspace === 'coding' && (
+            <div className="flex flex-col gap-6 md:gap-10">
+              <CodingMarqueeShowcase projects={filteredProjects} />
+              
+              <div className="flex flex-col gap-4 md:gap-6">
+                <TechStackMarquee />
+                
+                {/* GitHub CTA Button - Right Aligned */}
+                <div className="flex justify-end px-4 md:px-8">
+                  <a
+                    href={githubProfileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center no-underline"
+                    style={{
+                      gap: '10px',
+                      background: 'var(--gradient-gray)',
+                      border: '1.5px solid var(--color-border-light)',
+                      borderRadius: 'var(--radius-full)',
+                      padding: '10px 20px',
+                      fontFamily: 'var(--font-sans)',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      color: '#fff',
+                      textDecoration: 'none',
+                      transition: 'all 300ms ease',
+                    }}
+                    onMouseEnter={(event) => {
+                      const element = event.currentTarget as HTMLElement;
+                      element.style.boxShadow = '0 12px 32px rgba(0,0,0,0.22)';
+                      element.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(event) => {
+                      const element = event.currentTarget as HTMLElement;
+                      element.style.boxShadow = 'none';
+                      element.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <Github className="h-4 w-4" />
+                    <span>View GitHub Profile</span>
+                  </a>
+                </div>
               </div>
-            ) : (
-              <CodingWorkspaceLayout projects={filteredProjects} />
-            )
-          ) : (
-            <DesigningWorkspaceLayout projects={filteredProjects} />
+            </div>
           )}
 
-          {workspace === 'coding' ? (
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-black/10 pt-6 text-xs text-zinc-500 md:text-sm">
-              <span>Data source: {sourceUrl}</span>
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-xl border border-black/20 px-3 py-1.5 font-medium text-zinc-700 transition hover:bg-zinc-100"
-              >
-                Open GitHub source
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          ) : null}
+          <div className={containerClass}>
+            {workspace === 'coding' ? (
+              filteredProjects.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-black/20 bg-zinc-50 px-6 py-10 text-center">
+                  <p className="text-sm text-zinc-600 md:text-base">
+                    No projects found in this workspace from your GitHub source.
+                  </p>
+                </div>
+              ) : (
+                <CodingWorkspaceLayout projects={filteredProjects} />
+              )
+            ) : (
+              <DesigningWorkspaceLayout projects={filteredProjects} />
+            )}
+
+            {workspace === 'coding' ? (
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-black/10 pt-6 text-xs text-zinc-500 md:text-sm">
+                <span>Data source: {sourceUrl}</span>
+                <a
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-xl border border-black/20 px-3 py-1.5 font-medium text-zinc-700 transition hover:bg-zinc-100"
+                >
+                  Open GitHub source
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            ) : null}
+          </div>
+
         </div>
       </div>
     </section>

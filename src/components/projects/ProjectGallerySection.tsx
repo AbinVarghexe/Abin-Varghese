@@ -92,16 +92,15 @@ export default function ProjectGallerySection() {
           </p>
         </div>
 
-        {/* Filter Tabs */}
         <div className="flex justify-center mb-14">
-          <div className="inline-flex items-center gap-1 bg-zinc-100/80 p-1.5 rounded-lg border border-black/[0.03]">
+          <div className="inline-flex items-center gap-1 bg-zinc-100/80 p-1.5 rounded-full border border-zinc-200">
             {TABS.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2 text-[14px] font-medium rounded-md transition-all duration-300 ease-out ${
+                className={`px-7 py-2.5 text-[15px] font-medium rounded-full transition-all duration-300 ease-out ${
                   activeTab === tab 
-                    ? "bg-white text-zinc-900 shadow-[0_2px_10px_rgba(0,0,0,0.06)]" 
+                    ? "bg-gradient-to-br from-zinc-900 to-zinc-600 text-white shadow-lg" 
                     : "text-zinc-500 hover:text-zinc-900"
                 }`}
               >

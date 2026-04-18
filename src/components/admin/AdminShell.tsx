@@ -55,11 +55,10 @@ export default function AdminShell({
       setIsLoggingOut(true);
       const supabase = createClient();
       await supabase.auth.signOut();
-      router.refresh();
-      router.push("/admin/login");
+      window.location.href = "/admin/login";
     } catch (error) {
       console.error("Sign out error:", error);
-      setIsLoggingOut(false);
+      window.location.href = "/admin/login";
     }
   };
 
@@ -176,10 +175,11 @@ export default function AdminShell({
             type="button"
             onClick={handleSignOut}
             disabled={isLoggingOut}
-            className="p-2 hover:bg-[#f3f4f6] rounded-lg transition-colors text-[var(--color-text-body)] hover:text-[#0b0b0c] shrink-0 disabled:opacity-50"
+            className={`flex items-center gap-3 p-2 hover:bg-[#fff1f1] rounded-lg transition-colors text-[var(--color-text-body)] hover:text-red-600 shrink-0 disabled:opacity-50 group border border-transparent hover:border-red-100 ${!isSidebarExpanded ? "justify-center" : ""}`}
             title="Log Out"
           >
-            <LogOut className={`w-4 h-4 ${isLoggingOut ? "animate-pulse" : ""}`} />
+            <LogOut className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${isLoggingOut ? "animate-pulse" : ""}`} />
+            {isSidebarExpanded && <span className="text-sm font-medium">Logout</span>}
           </button>
         </div>
       </aside>
