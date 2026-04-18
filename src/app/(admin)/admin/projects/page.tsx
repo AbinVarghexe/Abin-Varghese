@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import AdminSectionWorkspace from "@/components/admin/AdminSectionWorkspace";
 import { uploadToStorage } from "@/lib/supabase";
-import { Image as ImageIcon, Link as LinkIcon, Upload as UploadIcon, X as XIcon, Loader2, Sparkles } from "lucide-react";
+import { Upload as UploadIcon, X as XIcon, Loader2, Sparkles, Pencil, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 type Project = {
@@ -75,7 +75,7 @@ export default function AdminProjectsPage() {
       const { url, error } = await uploadToStorage(file);
       if (error) throw error;
       if (url) {
-        setForm({ ...form, mediaUrl: url });
+        setForm((prev) => ({ ...prev, mediaUrl: url }));
         toast.success("Upload successful.", { id: toastId });
       }
     } catch (err) {
@@ -88,10 +88,7 @@ export default function AdminProjectsPage() {
 
   async function loadProjects() {
     const response = await fetch("/api/admin/projects", { cache: "no-store" });
-    if (!response.ok) {
-      return;
-    }
-
+    if (!response.ok) return;
     const data = await response.json();
     setProjects(data.projects || []);
   }
@@ -128,12 +125,13 @@ export default function AdminProjectsPage() {
 
   function parsePayload() {
     return {
-      title: form.title.trim() || null,
-      description: form.description.trim() || null,
+      // Required fields — send as strings so Zod min(1) can validate properly
+      title: form.title.trim(),
+      description: form.description.trim(),
+      mediaUrl: form.mediaUrl.trim(),
       content: form.content.trim() || null,
       type: form.type,
       mediaType: form.mediaType,
-      mediaUrl: form.mediaUrl.trim() || null,
       externalUrl: form.externalUrl.trim() || null,
       iframeUrl: form.iframeUrl.trim() || null,
       category: form.category.trim() || null,
@@ -144,6 +142,7 @@ export default function AdminProjectsPage() {
       dominantColor: form.dominantColor.trim() || null,
       previewHeight: form.previewHeight ? parseInt(form.previewHeight) : null,
       featured: form.featured,
+      workspace: form.type === "CODE" ? "coding" : "designing",
     };
   }
 
@@ -157,31 +156,27 @@ export default function AdminProjectsPage() {
 
     const [, owner, repo] = match;
     const cleanRepo = repo.replace(/\.git$/, "");
-    
+
     setIsFetchingGithub(true);
     const toastId = toast.loading(`Fetching data for ${owner}/${cleanRepo}...`);
 
     try {
-      // Fetch main repo info
       const repoRes = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}`);
       if (!repoRes.ok) throw new Error("Repo not found");
       const repoData = await repoRes.json();
 
-      // Fetch topics (tags)
       const topicsRes = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}/topics`, {
-        headers: { Accept: "application/vnd.github.mercy-preview+json" }
+        headers: { Accept: "application/vnd.github.mercy-preview+json" },
       });
       const topicsData = await topicsRes.json();
-      
+
       const languagesRes = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}/languages`);
       const languagesData = await languagesRes.json();
       const languages = Object.keys(languagesData);
 
-      const combinedTags = Array.from(new Set([
-        ...languages,
-        ...(topicsData.names || []),
-        repoData.language
-      ])).filter(Boolean);
+      const combinedTags = Array.from(
+        new Set([...languages, ...(topicsData.names || []), repoData.language])
+      ).filter(Boolean);
 
       setForm((prev) => ({
         ...prev,
@@ -192,8 +187,8 @@ export default function AdminProjectsPage() {
       }));
 
       toast.success("GitHub data fetched successfully!", { id: toastId });
-    } catch (err) {
-      toast.error("Failed to fetch GitHub data. check repo visibility.", { id: toastId });
+    } catch {
+      toast.error("Failed to fetch GitHub data. Check repo visibility.", { id: toastId });
     } finally {
       setIsFetchingGithub(false);
     }
@@ -218,7 +213,6 @@ export default function AdminProjectsPage() {
     const toastId = toast.loading("Step 1/2: ✨ Scraping project metadata...");
 
     try {
-      // Step 1: Fetch Metadata
       const metaRes = await fetch("/api/admin/projects/fetch-metadata", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -228,7 +222,7 @@ export default function AdminProjectsPage() {
       if (!metaRes.ok) throw new Error("Scraping failed");
       const metaData = await metaRes.json();
 
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
         title: metaData.title || prev.title,
         mediaUrl: metaData.image || prev.mediaUrl,
@@ -236,7 +230,6 @@ export default function AdminProjectsPage() {
 
       toast.loading("Step 2/2: 🪄 AI generating content...", { id: toastId });
 
-      // Step 2: Generate Content with Gemini
       const genRes = await fetch("/api/admin/projects/generate-ai-content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -254,7 +247,7 @@ export default function AdminProjectsPage() {
 
       const aiData = await genRes.json();
 
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
         description: aiData.description,
         content: aiData.content,
@@ -262,9 +255,12 @@ export default function AdminProjectsPage() {
       }));
 
       toast.success("✨ Project drafted successfully!", { id: toastId });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
       console.error(error);
-      toast.error(`Automation failed: ${error.message}. You may need to fill fields manually.`, { id: toastId });
+      toast.error(`Automation failed: ${message}. You may need to fill fields manually.`, {
+        id: toastId,
+      });
     } finally {
       setIsGeneratingContent(false);
     }
@@ -292,12 +288,19 @@ export default function AdminProjectsPage() {
     });
 
     if (!response.ok) {
-      toast.error("Project save failed.", { id: toastId });
+      const errorData = await response.json().catch(() => ({}));
+      // Show the first Zod validation error if present, otherwise fallback
+      const details = errorData.details?.[0]?.message || errorData.error || "Unknown error";
+      toast.error(`Save failed: ${details}`, { id: toastId });
+      console.error("Save error details:", errorData);
       return;
     }
 
     await loadProjects();
-    toast.success(selectedId ? "Project updated successfully!" : "Project created successfully!", { id: toastId });
+    toast.success(
+      selectedId ? "Project updated successfully!" : "Project created successfully!",
+      { id: toastId }
+    );
 
     if (!selectedId) {
       resetForm();
@@ -341,46 +344,86 @@ export default function AdminProjectsPage() {
           </div>
 
           <div className="space-y-2">
-            {projects.map((project) => (
-              <article
-                key={project.id}
-                className={`rounded-lg border p-3 ${
-                  selectedId === project.id
-                    ? "border-[var(--color-border-medium)] bg-[#eef2ff]"
-                    : "border-[var(--color-border-light)] bg-[#f8f5f2]"
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => selectProject(project)}
-                  className="w-full text-left"
+            {projects.map((project) => {
+              const isEditing = selectedId === project.id;
+              return (
+                <article
+                  key={project.id}
+                  className={`rounded-xl border p-3 transition-all ${
+                    isEditing
+                      ? "border-blue-400 bg-blue-50 ring-2 ring-blue-200 shadow-sm"
+                      : "border-[var(--color-border-light)] bg-[#f8f5f2] hover:border-[var(--color-border-medium)] hover:bg-white"
+                  }`}
                 >
-                  <p className="text-sm font-medium text-[#0b0b0c]">{project.title}</p>
-                  <p className="mt-1 line-clamp-2 text-xs text-[var(--color-text-body)]">{project.description}</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => deleteProject(project.id)}
-                  className="mt-3 rounded border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-700"
-                >
-                  Delete
-                </button>
-              </article>
-            ))}
+                  {/* Project info */}
+                  <div className="mb-2">
+                    <p className={`text-sm font-semibold ${isEditing ? "text-blue-800" : "text-[#0b0b0c]"}`}>
+                      {project.title}
+                    </p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-[var(--color-text-body)]">
+                      {project.description}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => isEditing ? resetForm() : selectProject(project)}
+                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+                        isEditing
+                          ? "border-blue-400 bg-blue-100 text-blue-700 hover:bg-blue-200"
+                          : "border-[var(--color-border-light)] bg-white text-[#0b0b0c] hover:bg-[#eef2ff] hover:border-blue-300 hover:text-blue-700"
+                      }`}
+                    >
+                      <Pencil size={11} />
+                      {isEditing ? "Cancel Edit" : "Edit"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteProject(project.id)}
+                      className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition-all hover:bg-red-100 hover:border-red-300"
+                    >
+                      <XIcon size={11} />
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
 
         <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-6 xl:col-span-8">
-          <h3 className="text-lg font-medium text-[#0b0b0c]">
-            {selectedId ? "Edit Project" : "Create Project"}
-          </h3>
+          {/* Edit-mode banner */}
+          {selectedId ? (
+            <div className="mb-5 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+              <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-blue-800">Editing project</p>
+                <p className="truncate text-xs text-blue-600 mt-0.5">
+                  {projects.find((p) => p.id === selectedId)?.title ?? ""}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="ml-auto flex-shrink-0 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+              >
+                Discard
+              </button>
+            </div>
+          ) : (
+            <h3 className="mb-5 text-lg font-medium text-[#0b0b0c]">Create New Project</h3>
+          )}
 
           <div className="mt-4 flex gap-2">
             <button
               type="button"
-              onClick={() => setForm({ ...form, type: 'CODE' })}
+              onClick={() => setForm((prev) => ({ ...prev, type: "CODE" }))}
               className={`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all ${
-                form.type === 'CODE'
+                form.type === "CODE"
                   ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
                   : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)] hover:bg-white"
               }`}
@@ -390,10 +433,10 @@ export default function AdminProjectsPage() {
             <button
               type="button"
               onClick={() => {
-                if (form.type === 'CODE') setForm({ ...form, type: 'BEHANCE' });
+                if (form.type === "CODE") setForm((prev) => ({ ...prev, type: "BEHANCE" }));
               }}
               className={`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all ${
-                form.type !== 'CODE'
+                form.type !== "CODE"
                   ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm"
                   : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)] hover:bg-white"
               }`}
@@ -404,18 +447,17 @@ export default function AdminProjectsPage() {
 
           <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Dynamic Designing Mode Flow */}
-            {form.type !== 'CODE' && (
+            {form.type !== "CODE" && (
               <div className="md:col-span-2 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl bg-zinc-50 border border-zinc-200 p-4">
                   <div className="space-y-2 text-sm">
                     <span className="font-semibold text-zinc-900">1. Select Design Category</span>
                     <select
                       value={form.category}
-                      onChange={(event) => {
-                        const cat = event.target.value;
+                      onChange={(e) => {
+                        const cat = e.target.value;
                         let newType = form.type;
                         let newMediaType = form.mediaType;
-
                         if (cat === "Web Design") {
                           newType = "FIGMA";
                         } else if (cat === "Motion Graphics" || cat === "VFX & 3D Animation") {
@@ -424,8 +466,12 @@ export default function AdminProjectsPage() {
                         } else if (cat === "Graphic design") {
                           newType = "BEHANCE";
                         }
-
-                        setForm({ ...form, category: cat, type: newType, mediaType: newMediaType as any });
+                        setForm((prev) => ({
+                          ...prev,
+                          category: cat,
+                          type: newType,
+                          mediaType: newMediaType as ProjectForm["mediaType"],
+                        }));
                       }}
                       className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
                     >
@@ -433,14 +479,16 @@ export default function AdminProjectsPage() {
                       <option value="Graphic design">Graphic design</option>
                       <option value="Web Design">Web Design</option>
                       <option value="Motion Graphics">Motion Graphics</option>
-                      <option value="VFX & 3D Animation">VFX & 3D Animation</option>
+                      <option value="VFX & 3D Animation">VFX &amp; 3D Animation</option>
                     </select>
                   </div>
                   <div className="space-y-2 text-sm">
                     <span className="font-semibold text-zinc-900">2. Platform</span>
                     <select
                       value={form.type}
-                      onChange={(event) => setForm({ ...form, type: event.target.value as any })}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, type: e.target.value as ProjectForm["type"] }))
+                      }
                       className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
                     >
                       {form.category === "Graphic design" ? (
@@ -453,7 +501,8 @@ export default function AdminProjectsPage() {
                           <option value="FIGMA">Figma Prototype</option>
                           <option value="BEHANCE">Behance Case Study</option>
                         </>
-                      ) : form.category === "Motion Graphics" || form.category === "VFX & 3D Animation" ? (
+                      ) : form.category === "Motion Graphics" ||
+                        form.category === "VFX & 3D Animation" ? (
                         <option value="PINTEREST">Pinterest Pin</option>
                       ) : (
                         <>
@@ -471,8 +520,12 @@ export default function AdminProjectsPage() {
                       <div className="flex gap-2">
                         <input
                           value={form.externalUrl}
-                          onChange={(event) => setForm({ ...form, externalUrl: event.target.value })}
-                          placeholder={form.type === 'BEHANCE' ? "https://behance.net/..." : "https://..."}
+                          onChange={(e) =>
+                            setForm((prev) => ({ ...prev, externalUrl: e.target.value }))
+                          }
+                          placeholder={
+                            form.type === "BEHANCE" ? "https://behance.net/..." : "https://..."
+                          }
                           className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
                         />
                         <button
@@ -494,17 +547,22 @@ export default function AdminProjectsPage() {
                 </div>
               </div>
             )}
-            {form.type === 'CODE' && (
+
+            {form.type === "CODE" && (
               <div className="md:col-span-2 space-y-6">
                 <div className="rounded-2xl bg-blue-50/50 border border-blue-100 p-4">
                   <div className="space-y-2 text-sm">
-                    <span className="font-semibold text-blue-900">1. Paste GitHub Repository URL</span>
+                    <span className="font-semibold text-blue-900">
+                      1. Paste GitHub Repository URL
+                    </span>
                     <div className="flex gap-2">
                       <input
                         value={form.externalUrl}
-                        onChange={(event) => setForm({ ...form, externalUrl: event.target.value })}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, externalUrl: e.target.value }))
+                        }
                         onBlur={() => {
-                          if (form.externalUrl.includes('github.com')) {
+                          if (form.externalUrl.includes("github.com")) {
                             handleGithubFetch();
                           }
                         }}
@@ -532,14 +590,15 @@ export default function AdminProjectsPage() {
                 </div>
               </div>
             )}
+
             {/* Sub-fields shown after category/fetch or for CODE mode */}
-            {(form.type === 'CODE' || form.category) && (
+            {(form.type === "CODE" || form.category) && (
               <>
                 <label className="space-y-2 text-sm md:col-span-2">
                   <span className="text-[var(--color-text-body)]">Project Title</span>
                   <input
                     value={form.title}
-                    onChange={(event) => setForm({ ...form, title: event.target.value })}
+                    onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="My Awesome Project"
                     className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
                   />
@@ -549,15 +608,21 @@ export default function AdminProjectsPage() {
                   <span className="text-[var(--color-text-body)]">Media Type</span>
                   <select
                     value={form.mediaType}
-                    onChange={(event) => setForm({ ...form, mediaType: event.target.value as any })}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        mediaType: e.target.value as ProjectForm["mediaType"],
+                      }))
+                    }
                     className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
                   >
-                    {form.type === 'CODE' ? (
+                    {form.type === "CODE" ? (
                       <>
                         <option value="IMAGE">Static Image</option>
                         <option value="GIF">Animated GIF</option>
                       </>
-                    ) : form.category === "VFX & 3D Animation" || form.category === "Motion Graphics" ? (
+                    ) : form.category === "VFX & 3D Animation" ||
+                      form.category === "Motion Graphics" ? (
                       <>
                         <option value="VIDEO">Video</option>
                         <option value="MODEL">3D Model (GLB/GLTF)</option>
@@ -574,23 +639,29 @@ export default function AdminProjectsPage() {
                   </select>
                 </div>
 
-                {form.type !== 'BEHANCE' && (
+                {form.type !== "BEHANCE" && (
                   <label className="space-y-2 text-sm md:col-span-2">
                     <span className="text-[var(--color-text-body)] flex items-center justify-between">
-                      <span>{form.type === 'CODE' ? 'Project Thumbnail (Image or GIF)' : 'Media Asset (URL or Upload)'}</span>
+                      <span>
+                        {form.type === "CODE"
+                          ? "Project Thumbnail (Image or GIF)"
+                          : "Media Asset (URL or Upload)"}
+                      </span>
                       {isUploading && <Loader2 size={14} className="animate-spin text-blue-500" />}
                     </span>
                     <div className="flex gap-2">
                       <input
                         value={form.mediaUrl}
-                        onChange={(event) => setForm({ ...form, mediaUrl: event.target.value })}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, mediaUrl: e.target.value }))
+                        }
                         placeholder="https://..."
                         className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
                       />
                       <div className="relative">
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/*,video/*"
                           onChange={handleUpload}
                           className="absolute inset-0 opacity-0 cursor-pointer"
                           disabled={isUploading}
@@ -603,12 +674,31 @@ export default function AdminProjectsPage() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Media Preview — handles IMAGE, GIF, and VIDEO */}
                     {form.mediaUrl && (
-                      <div className="relative mt-2 aspect-video w-full max-w-[200px] overflow-hidden rounded-lg border">
-                        <img src={form.mediaUrl} alt="Preview" className="h-full w-full object-cover" />
+                      <div className="relative mt-2 aspect-video w-full max-w-[220px] overflow-hidden rounded-lg border bg-black/5">
+                        {form.mediaType === "VIDEO" ? (
+                          <video
+                            src={form.mediaUrl}
+                            className="h-full w-full object-cover"
+                            controls
+                          />
+                        ) : (
+                          <img
+                            src={form.mediaUrl}
+                            alt="Preview"
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "https://placehold.co/600x400?text=Preview+Unavailable";
+                            }}
+                          />
+                        )}
                         <button
-                          onClick={() => setForm({ ...form, mediaUrl: "" })}
-                          className="absolute top-1 right-1 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, mediaUrl: "" }))}
+                          className="absolute top-1 right-1 z-10 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
                         >
                           <XIcon size={12} />
                         </button>
@@ -617,83 +707,90 @@ export default function AdminProjectsPage() {
                   </label>
                 )}
 
-
-                {form.type !== 'PINTEREST' && (
+                {form.type !== "PINTEREST" && (
                   <label className="space-y-2 text-sm">
                     <span className="text-[var(--color-text-body)]">
-                      {form.type === 'BEHANCE' 
-                        ? 'Behance Embed Code/URL' 
-                        : form.type === 'FIGMA' 
-                          ? 'Figma Prototype URL' 
-                          : form.type === 'CODE'
-                            ? 'Live Demo / Website URL'
-                            : 'Embed URL (Iframe)'}
+                      {form.type === "BEHANCE"
+                        ? "Behance Embed Code/URL"
+                        : form.type === "FIGMA"
+                        ? "Figma Prototype URL"
+                        : form.type === "CODE"
+                        ? "Live Demo / Website URL"
+                        : "Embed URL (Iframe)"}
                     </span>
                     <input
                       value={form.iframeUrl}
-                      onChange={(event) => setForm({ ...form, iframeUrl: event.target.value })}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, iframeUrl: e.target.value }))
+                      }
                       placeholder="https://..."
                       className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
                     />
                   </label>
                 )}
 
-                {form.type === 'CODE' && (
+                {form.type === "CODE" && (
                   <label className="space-y-2 text-sm">
                     <span className="text-[var(--color-text-body)]">Technologies / Tags</span>
                     <input
                       value={form.tags}
-                      onChange={(event) => setForm({ ...form, tags: event.target.value })}
+                      onChange={(e) => setForm((prev) => ({ ...prev, tags: e.target.value }))}
                       placeholder="React, Next.js, etc."
                       className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
                     />
                   </label>
                 )}
 
-                {form.type !== 'CODE' && (
+                {form.type !== "CODE" && (
                   <label className="space-y-2 text-sm">
                     <span className="text-[var(--color-text-body)]">Dominant Color (Hex)</span>
                     <input
                       value={form.dominantColor}
-                      onChange={(event) => setForm({ ...form, dominantColor: event.target.value })}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, dominantColor: e.target.value }))
+                      }
                       placeholder="#1a1a1a"
                       className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
                     />
                   </label>
                 )}
 
-                {/* Description - Hidden for Behance (as it uses embed title), but shown for Coding/Others */}
-                {form.type !== 'BEHANCE' && (
+                {form.type !== "BEHANCE" && (
                   <label className="space-y-2 text-sm md:col-span-2">
                     <span className="text-[var(--color-text-body)]">Short Description</span>
                     <textarea
                       rows={3}
                       value={form.description}
-                      onChange={(event) => setForm({ ...form, description: event.target.value })}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, description: e.target.value }))
+                      }
                       className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
                     />
                   </label>
                 )}
 
-                {/* Case Study - Hide for Coding and Behance */}
-                {form.type !== 'CODE' && form.type !== 'BEHANCE' && (
+                {form.type !== "CODE" && form.type !== "BEHANCE" && (
                   <label className="space-y-2 text-sm md:col-span-2">
-                    <span className="text-[var(--color-text-body)]">Detailed Case Study (Markdown)</span>
+                    <span className="text-[var(--color-text-body)]">
+                      Detailed Case Study (Markdown)
+                    </span>
                     <textarea
                       rows={10}
                       value={form.content}
-                      onChange={(event) => setForm({ ...form, content: event.target.value })}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, content: e.target.value }))
+                      }
                       className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
                     />
                   </label>
                 )}
 
-                {form.type !== 'CODE' && (
+                {form.type !== "CODE" && (
                   <label className="space-y-2 text-sm md:col-span-2">
                     <span className="text-[var(--color-text-body)]">Tags (comma separated)</span>
                     <input
                       value={form.tags}
-                      onChange={(event) => setForm({ ...form, tags: event.target.value })}
+                      onChange={(e) => setForm((prev) => ({ ...prev, tags: e.target.value }))}
                       className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
                     />
                   </label>
@@ -706,7 +803,7 @@ export default function AdminProjectsPage() {
             <input
               type="checkbox"
               checked={form.featured}
-              onChange={(event) => setForm({ ...form, featured: event.target.checked })}
+              onChange={(e) => setForm((prev) => ({ ...prev, featured: e.target.checked }))}
             />
             Featured project
           </label>

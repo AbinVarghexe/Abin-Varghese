@@ -3,24 +3,29 @@ import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { requireAdminSession } from '@/lib/admin-auth';
 import { z } from 'zod';
 
 const projectSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().min(1),
+  title: z.string().default(''),
+  description: z.string().default(''),
   content: z.string().optional().nullable(),
   type: z.enum(['CODE', 'FIGMA', 'BEHANCE', 'PINTEREST']),
   mediaType: z.enum(['IMAGE', 'VIDEO', 'GIF', 'MODEL']),
-  mediaUrl: z.string().min(1),
-  externalUrl: z.string().url().optional().nullable(),
+  mediaUrl: z.string().default(''),
+  // Accept valid URL, empty string, or null
+  externalUrl: z.union([
+    z.string().url(),
+    z.literal(''),
+    z.null(),
+  ]).optional().default(null),
   iframeUrl: z.string().optional().nullable(),
-  category: z.string().optional(),
+  category: z.string().optional().nullable(),
   tags: z.array(z.string()).default([]),
   dominantColor: z.string().optional().nullable(),
   previewHeight: z.number().optional().nullable(),
-  featured: z.boolean().optional(),
+  featured: z.boolean().optional().default(false),
   workspace: z.string().default('coding'),
 });
 
@@ -40,7 +45,7 @@ export async function GET() {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data: projects, error } = await supabase
       .from('projects')
       .select('*')
@@ -90,7 +95,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = projectSchema.parse(body);
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const slug = generateSlug(data.title);
 
     const { data: project, error } = await supabase

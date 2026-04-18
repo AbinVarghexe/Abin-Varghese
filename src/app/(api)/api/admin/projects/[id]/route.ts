@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
 
-import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import { requireAdminSession } from '@/lib/admin-auth';
 import { z } from 'zod';
 
@@ -36,7 +36,7 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data: project, error } = await supabase
       .from('projects')
       .select('*')
@@ -72,7 +72,7 @@ export async function PUT(
     const body = await request.json();
     const data = projectSchema.parse(body);
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     
     const updateData: any = {};
     if (data.title) updateData.title = data.title;
@@ -134,7 +134,7 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { error } = await supabase
       .from('projects')
       .delete()
