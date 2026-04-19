@@ -215,8 +215,10 @@ function resolveGithubProfileUrl(sourceUrl: string): string {
 
 function WorkspaceProjectCard({
   project,
+  index,
 }: {
   project: WorkspaceProject;
+  index?: number;
 }) {
   const design = homePageDesignSystem;
   const fallbackSrc = `https://opengraph.githubassets.com/portfolio/${project.owner}/${project.repo}`;

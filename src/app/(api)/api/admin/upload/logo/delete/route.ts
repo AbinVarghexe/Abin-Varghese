@@ -1,16 +1,12 @@
 import { unlink } from "node:fs/promises";
 import path from "node:path";
 
-import { getServerSession } from "next-auth";
+import { requireAdminSession } from "@/lib/admin-auth";
 import { NextResponse } from "next/server";
 
-import { authOptions } from "@/lib/auth-options";
-
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const { session, response } = await requireAdminSession();
+  if (response) return response;
 
   try {
     const { url } = await request.json();

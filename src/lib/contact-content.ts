@@ -1,8 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
-import { 
-  type ContactSectionSettings, 
-  contactSectionDefaults 
-} from "@/types/contact";
+import { contactSectionDefaults, type ContactSectionSettings } from "@/types/contact";
+export { contactSectionDefaults };
+export type { ContactSectionSettings };
 
 const CONTACT_SETTINGS_KEY = "contact_section_settings";
 
@@ -51,5 +50,3 @@ export async function upsertContactSectionSettings(settings: ContactSectionSetti
 
   if (error) throw error;
 }
-
-export { contactSectionDefaults };

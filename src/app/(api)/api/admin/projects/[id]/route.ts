@@ -124,7 +124,7 @@ export async function PUT(
     }
 
     // Multi-path revalidation to ensure both public and admin views are fresh
-    revalidateTag('workspace-projects-db');
+    revalidateTag('workspace-projects-db', 'default');
     revalidatePath('/projects');
     revalidatePath('/admin/projects');
     revalidatePath('/', 'layout');
@@ -167,7 +167,7 @@ export async function DELETE(
     if (error) throw error;
 
     // Multi-path revalidation to ensure both public and admin views are fresh
-    revalidateTag('workspace-projects-db');
+    revalidateTag('workspace-projects-db', 'default');
     revalidatePath('/projects');
     revalidatePath('/admin/projects');
     revalidatePath('/', 'layout');
