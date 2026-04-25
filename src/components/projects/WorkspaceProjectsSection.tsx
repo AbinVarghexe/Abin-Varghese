@@ -794,13 +794,13 @@ export default function WorkspaceProjectsSection({
                   </p>
                 </div>
               ) : (
-                <CodingWorkspaceLayout projects={filteredProjects} />
+                <CodingWorkspaceLayout projects={filteredProjects.filter((p) => !p.isFromDb)} />
               )
             ) : (
               <DesigningWorkspaceLayout projects={filteredProjects} />
             )}
 
-            {workspace === 'coding' ? (
+            {workspace === 'coding' && false ? (
               <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-black/10 pt-6 text-xs text-zinc-500 md:text-sm">
                 <span>Data source: {sourceUrl}</span>
                 <a

@@ -41,6 +41,21 @@ type ProjectForm = {
   featured: boolean;
 };
 
+type GithubRepoAdminItem = {
+  full_name: string;
+  name: string;
+  description: string | null;
+  html_url: string;
+  stars: number;
+  language: string | null;
+  updated_at: string;
+  enabled: boolean;
+  image_url: string | null;
+  is_manual: boolean;
+  draftImageUrl: string;
+  isSaving?: boolean;
+};
+
 const defaultForm: ProjectForm = {
   title: "",
   description: "",
@@ -68,12 +83,15 @@ function createDefaultForm(workspace: AdminWorkspace): ProjectForm {
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [githubRepos, setGithubRepos] = useState<GithubRepoAdminItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeWorkspace, setActiveWorkspace] = useState<AdminWorkspace>("coding");
   const [form, setForm] = useState<ProjectForm>(() => createDefaultForm("coding"));
   const [isUploading, setIsUploading] = useState(false);
   const [isFetchingGithub, setIsFetchingGithub] = useState(false);
   const [isGeneratingContent, setIsGeneratingContent] = useState(false);
+  const [isLoadingGithubRepos, setIsLoadingGithubRepos] = useState(true);
+  const [uploadingRepoBanner, setUploadingRepoBanner] = useState<string | null>(null);
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -104,11 +122,162 @@ export default function AdminProjectsPage() {
     setProjects(data.projects || []);
   }
 
+  async function loadGithubRepos() {
+    setIsLoadingGithubRepos(true);
+
+    try {
+      const response = await fetch("/api/admin/github-repos", { cache: "no-store" });
+
+      if (!response.ok) {
+        let errMsg = "Failed to load GitHub repositories.";
+        try {
+          const errData = await response.json();
+          errMsg = errData.error || errMsg;
+        } catch(e) {
+          errMsg = await response.text();
+        }
+        throw new Error(`Failed to load GitHub repositories: ${errMsg}`);
+      }
+
+      const data = await response.json();
+      const repos = Array.isArray(data.repos) ? data.repos : [];
+
+      setGithubRepos(
+        repos.map((repo: any) => ({
+          ...repo,
+          draftImageUrl: repo.image_url || "",
+          isSaving: false,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("Could not load GitHub repository settings.");
+    } finally {
+      setIsLoadingGithubRepos(false);
+    }
+  }
+
   useEffect(() => {
     queueMicrotask(() => {
-      void loadProjects();
+      void Promise.all([loadProjects(), loadGithubRepos()]);
     });
   }, []);
+
+  function updateGithubRepoState(fullName: string, updater: (repo: GithubRepoAdminItem) => GithubRepoAdminItem) {
+    setGithubRepos((prev) =>
+      prev.map((repo) => (repo.full_name === fullName ? updater(repo) : repo))
+    );
+  }
+
+  async function saveGithubRepoSettings(repo: GithubRepoAdminItem, overrides?: Partial<GithubRepoAdminItem>) {
+    const nextEnabled = overrides?.enabled ?? repo.enabled;
+    const nextImageUrl =
+      overrides?.draftImageUrl !== undefined
+        ? overrides.draftImageUrl
+        : repo.draftImageUrl;
+
+    updateGithubRepoState(repo.full_name, (current) => ({
+      ...current,
+      ...overrides,
+      enabled: nextEnabled,
+      draftImageUrl: nextImageUrl,
+      isSaving: true,
+    }));
+
+    try {
+      const response = await fetch("/api/admin/github-repos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          updates: [
+            {
+              full_name: repo.full_name,
+              enabled: nextEnabled,
+              image_url: nextImageUrl.trim() || null,
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Could not save repository settings.");
+      }
+
+      updateGithubRepoState(repo.full_name, (current) => ({
+        ...current,
+        enabled: nextEnabled,
+        image_url: nextImageUrl.trim() || null,
+        draftImageUrl: nextImageUrl,
+        isSaving: false,
+      }));
+    } catch (error) {
+      console.error(error);
+      updateGithubRepoState(repo.full_name, (current) => ({
+        ...current,
+        isSaving: false,
+      }));
+      throw error;
+    }
+  }
+
+  async function handleGithubRepoEnabledToggle(repo: GithubRepoAdminItem) {
+    const nextEnabled = !repo.enabled;
+
+    try {
+      await saveGithubRepoSettings(repo, { enabled: nextEnabled });
+      toast.success(
+        nextEnabled
+          ? `${repo.name} is now visible on the website.`
+          : `${repo.name} has been hidden from the website.`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not update repository visibility.";
+      toast.error(message);
+      await loadGithubRepos();
+    }
+  }
+
+  async function handleRepoBannerUpload(
+    repo: GithubRepoAdminItem,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingRepoBanner(repo.full_name);
+    const toastId = toast.loading(`Uploading banner for ${repo.name}...`);
+
+    try {
+      const { url, error } = await uploadToStorage(file);
+      if (error || !url) {
+        throw error || new Error("Upload failed.");
+      }
+
+      updateGithubRepoState(repo.full_name, (current) => ({
+        ...current,
+        draftImageUrl: url,
+      }));
+      toast.success("Banner uploaded. Save to publish it.", { id: toastId });
+    } catch (error) {
+      console.error(error);
+      toast.error("Banner upload failed.", { id: toastId });
+    } finally {
+      setUploadingRepoBanner(null);
+      event.target.value = "";
+    }
+  }
+
+  async function handleSaveRepoBanner(repo: GithubRepoAdminItem) {
+    try {
+      await saveGithubRepoSettings(repo);
+      toast.success(`Banner settings saved for ${repo.name}.`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not save the banner.";
+      toast.error(message);
+      await loadGithubRepos();
+    }
+  }
 
   function selectProject(project: Project) {
     const workspace = project.workspace || (project.type === "CODE" ? "coding" : "designing");
@@ -483,6 +652,137 @@ export default function AdminProjectsPage() {
               );
             })}
           </div>
+
+          {activeWorkspace === "coding" ? (
+            <div className="mt-6 border-t border-[var(--color-border-light)] pt-5">
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-[#0b0b0c]">Repository Visibility</h4>
+                <p className="mt-1 text-xs text-[var(--color-text-body)]">
+                  Turn repositories on or off for the public coding section and set a custom banner for each one.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {isLoadingGithubRepos ? (
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] p-3"
+                    >
+                      <div className="h-4 w-2/3 animate-pulse rounded bg-zinc-200" />
+                      <div className="mt-2 h-3 w-full animate-pulse rounded bg-zinc-200" />
+                      <div className="mt-3 h-9 w-full animate-pulse rounded-xl bg-zinc-200" />
+                    </div>
+                  ))
+                ) : githubRepos.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-[var(--color-border-light)] bg-[#f8f5f2] px-4 py-6 text-center text-xs text-[var(--color-text-body)]">
+                    No GitHub repositories were found for the coding section.
+                  </div>
+                ) : (
+                  githubRepos.map((repo) => {
+                    const isUploadingBanner = uploadingRepoBanner === repo.full_name;
+
+                    return (
+                      <article
+                        key={repo.full_name}
+                        className="rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] p-3"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-[#0b0b0c]">
+                              {repo.name}
+                            </p>
+                            <p className="mt-1 text-[11px] text-[var(--color-text-body)]">
+                              {repo.full_name}
+                            </p>
+                            {repo.description ? (
+                              <p className="mt-2 line-clamp-2 text-xs text-[var(--color-text-body)]">
+                                {repo.description}
+                              </p>
+                            ) : null}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleGithubRepoEnabledToggle(repo)}
+                            disabled={repo.isSaving}
+                            className={`relative inline-flex h-7 w-12 flex-shrink-0 items-center rounded-full transition ${
+                              repo.enabled ? "bg-blue-600" : "bg-zinc-300"
+                            } ${repo.isSaving ? "opacity-60" : ""}`}
+                            aria-pressed={repo.enabled}
+                            aria-label={`Toggle ${repo.name} visibility`}
+                          >
+                            <span
+                              className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                                repo.enabled ? "translate-x-6" : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="mt-3">
+                          <label className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-[var(--color-text-body)]">
+                            Custom banner
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              value={repo.draftImageUrl}
+                              onChange={(e) =>
+                                updateGithubRepoState(repo.full_name, (current) => ({
+                                  ...current,
+                                  draftImageUrl: e.target.value,
+                                }))
+                              }
+                              placeholder="https://... or upload an image"
+                              className="w-full rounded-xl border border-[var(--color-border-light)] bg-white px-3 py-2 text-xs text-[#0b0b0c]"
+                            />
+                            <div className="relative">
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => void handleRepoBannerUpload(repo, e)}
+                                className="absolute inset-0 cursor-pointer opacity-0"
+                                disabled={isUploadingBanner}
+                              />
+                              <button
+                                type="button"
+                                className="flex h-full items-center rounded-xl border border-[var(--color-border-light)] bg-white px-3 hover:bg-[#f8f5f2]"
+                              >
+                                {isUploadingBanner ? (
+                                  <Loader2 size={14} className="animate-spin text-blue-500" />
+                                ) : (
+                                  <UploadIcon size={14} className="text-gray-500" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          <a
+                            href={repo.html_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px] font-medium text-blue-700 underline-offset-4 hover:underline"
+                          >
+                            Open repository
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => void handleSaveRepoBanner(repo)}
+                            disabled={repo.isSaving}
+                            className="rounded-lg border border-[var(--color-border-light)] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#0b0b0c] hover:bg-[#eef2ff] disabled:opacity-60"
+                          >
+                            {repo.isSaving ? "Saving..." : "Save Banner"}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-6 xl:col-span-8">

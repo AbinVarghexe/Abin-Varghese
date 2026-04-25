@@ -30,6 +30,12 @@ interface GitHubReadmeResponse {
   path?: string;
 }
 
+interface GithubRepoSetting {
+  full_name: string;
+  enabled: boolean | null;
+  image_url: string | null;
+}
+
 export interface WorkspaceProject {
   id: string;
   slug: string;
@@ -475,13 +481,20 @@ const getCachedGithubWorkspaceProjects = unstable_cache(
     const source = getConfiguredGithubSourceUrl();
     const owner = parseOwnerFromSource(source);
 
-    const response = await fetch(
-      `https://api.github.com/users/${owner}/repos?per_page=100&sort=updated&type=owner`,
-      {
-        headers: createGithubHeaders(),
-        next: { revalidate: 3600 },
-      }
-    );
+    const [{ data: repoSettings, error: repoSettingsError }, response] = await Promise.all([
+      supabase.from('github_repo_settings').select('full_name, enabled, image_url'),
+      fetch(
+        `https://api.github.com/users/${owner}/repos?per_page=100&sort=updated&type=owner`,
+        {
+          headers: createGithubHeaders(),
+          next: { revalidate: 3600 },
+        }
+      ),
+    ]);
+
+    if (repoSettingsError) {
+      console.error('Failed to fetch GitHub repo settings:', repoSettingsError);
+    }
 
     if (!response.ok) {
       console.error('GitHub repo fetch failed:', response.status, response.statusText);
@@ -489,11 +502,32 @@ const getCachedGithubWorkspaceProjects = unstable_cache(
     }
 
     const repos = (await response.json()) as GitHubRepo[];
+    const settingsMap = new Map<string, GithubRepoSetting>();
 
-    const filteredRepos = repos.filter((repo) => !repo.fork && !repo.archived);
+    for (const setting of (repoSettings ?? []) as GithubRepoSetting[]) {
+      settingsMap.set(setting.full_name, setting);
+    }
+
+    const filteredRepos = repos.filter((repo) => {
+      if (repo.fork || repo.archived) {
+        return false;
+      }
+
+      const setting = settingsMap.get(repo.full_name);
+      return setting?.enabled ?? true;
+    });
     const projects = await mapReposToProjects(filteredRepos);
 
-    return projects.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+    const mergedProjects = projects.map((project) => {
+      const setting = settingsMap.get(`${project.owner}/${project.repo}`);
+
+      return {
+        ...project,
+        imageUrl: setting?.image_url?.trim() ? setting.image_url : project.imageUrl,
+      };
+    });
+
+    return mergedProjects.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
   },
   ['workspace-projects-github'],
   {

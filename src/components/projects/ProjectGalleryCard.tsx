@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import ProjectPreviewImage from "@/components/projects/ProjectPreviewImage";
 
 interface ProjectGalleryCardProps {
   title: string;
@@ -18,14 +18,17 @@ export default function ProjectGalleryCard({
   link,
   className = "",
 }: ProjectGalleryCardProps) {
+  const fallbackImage =
+    "https://placehold.co/1200x1200/f4f4f5/71717a?text=Project+Preview";
+
   return (
     <div className={`relative flex flex-col items-center w-full group ${className}`}>
       {/* Main Image Container */}
       <div className="w-full aspect-square rounded-xl overflow-hidden relative bg-zinc-100">
-        <Image
+        <ProjectPreviewImage
           src={image}
+          fallbackSrc={fallbackImage}
           alt={title}
-          fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />

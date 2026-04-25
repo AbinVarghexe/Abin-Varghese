@@ -8,7 +8,7 @@ interface CodingMarqueeShowcaseProps {
 }
 
 export default function CodingMarqueeShowcase({ projects }: CodingMarqueeShowcaseProps) {
-  const liveProjects = projects.filter(p => !!p.liveUrl);
+  const liveProjects = projects.filter(p => !!p.liveUrl && p.isFromDb);
 
   if (!liveProjects || liveProjects.length === 0) {
     return null;

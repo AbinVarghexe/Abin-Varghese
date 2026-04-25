@@ -3,6 +3,7 @@
 // PATCH /api/admin/github-repos → bulk-update enabled flags
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { requireAdminSession } from '@/lib/admin-auth';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { z } from 'zod';
@@ -153,6 +154,7 @@ export async function POST(request: NextRequest) {
       );
 
     if (error) throw error;
+    revalidateTag('workspace-projects-github', 'max');
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -197,6 +199,7 @@ export async function PATCH(request: NextRequest) {
       if (error) throw error;
     }
 
+    revalidateTag('workspace-projects-github', 'max');
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof z.ZodError) {
