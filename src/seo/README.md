@@ -1,35 +1,48 @@
-# SEO Configuration - Abin Varghese Portfolio
+# SEO & Performance
 
-This folder contains the central SEO setup for https://abinvarghese.me.
+This directory contains all SEO configuration for the Abin Varghese portfolio site.
 
-## Files
+## File Overview
 
-- **config.ts**: Canonical site configuration and absolute URL helpers
-- **metadata.ts**: Global App Router metadata shared by the full site
-- **page-metadata.ts**: Reusable helper for route-level metadata
-- **schema.tsx**: JSON-LD helpers for person, website, breadcrumb, service, and project schema
+| File | Purpose |
+|------|---------|
+| `config.ts` | Site-wide constants — URL, name, social profiles |
+| `metadata.ts` | Root `<head>` metadata exported to `app/layout.tsx` |
+| `page-metadata.ts` | Per-page metadata factory (`createPageMetadata`) |
+| `schema.tsx` | JSON-LD structured data components |
 
-## Setup
+## JSON-LD Schemas in use
 
-1. Global metadata is exported from `src/seo/metadata.ts` and mounted in `src/app/layout.tsx`
-2. Route-level metadata uses `createPageMetadata()` from `src/seo/page-metadata.ts`
-3. Structured data is rendered through helpers in `src/seo/schema.tsx`
-4. `src/app/robots.ts` and `src/app/sitemap.ts` are the authoritative crawler endpoints
+- **Person** — identity, social sameAs links, skills, address
+- **WebSite** — site-level with `SearchAction` for potential Google sitelinks search
+- **BreadcrumbList** — on project detail & service detail pages
+- **Service** — on each `/services/[slug]` page
+- **SoftwareSourceCode** — on each `/projects/[projectSlug]` page
 
-## Page-Level SEO
+## Key SEO Features
 
-Each page can export its own metadata:
+- ✅ Per-page `<title>` via `template: "%s | Abin Varghese"`
+- ✅ Open Graph images with correct `1200×630` dimensions
+- ✅ Twitter Card `summary_large_image` on all pages
+- ✅ Canonical URLs on every page
+- ✅ `hreflang="en-IN"` and `x-default` alternate links
+- ✅ Google Search Console verification via `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`
+- ✅ Dynamic sitemap with ISR (revalidates every 24 h)
+- ✅ robots.ts blocks AI training scrapers (GPTBot, CCBot, Claude-Web)
+- ✅ `generateStaticParams` on service detail pages for static generation
 
-```tsx
-export const metadata: Metadata = createPageMetadata({
-  title: "Page Title | Abin Varghese",
-  description: "Page description",
-  path: "/page-path",
-});
+## Environment Variables
+
+```env
+NEXT_PUBLIC_SITE_URL=https://abinvarghese.me
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=<your-token>
+NEXT_PUBLIC_CONTACT_EMAIL=toabinvarghese@gmail.com
 ```
 
-## Verification
+## Checklist before deploy
 
-- Set `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` to enable Google Search Console verification
-- Set `NEXT_PUBLIC_SITE_URL` when the canonical production domain changes
-- Keep the default social image configured in `src/seo/config.ts` available in `public/`
+- [ ] Verify `NEXT_PUBLIC_SITE_URL` matches production domain exactly
+- [ ] Submit `https://abinvarghese.me/sitemap.xml` in Google Search Console
+- [ ] Add `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` from Google Search Console
+- [ ] Upload an `og-image.jpg` (1200×630 px) to `/public/og-image.jpg`
+- [ ] Test structured data at https://search.google.com/test/rich-results

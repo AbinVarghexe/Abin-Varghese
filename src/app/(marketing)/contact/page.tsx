@@ -10,8 +10,15 @@ import { createPageMetadata } from '@/seo/page-metadata';
 export const metadata: Metadata = createPageMetadata({
   title: "Contact | Abin Varghese",
   description:
-    "Get in touch with Abin Varghese for freelance work, collaborations, or internship opportunities. Front-end developer and UI/UX designer available for projects.",
+    "Get in touch with Abin Varghese for freelance web development, UI/UX design collaborations, or internship opportunities. Based in Kerala, India — available worldwide.",
   path: "/contact",
+  keywords: [
+    "Contact Abin Varghese",
+    "Hire freelance developer India",
+    "Hire UI designer Kerala",
+    "Freelance Next.js developer contact",
+    "Web developer for hire India",
+  ],
 });
 
 export default async function ContactPage() {
@@ -43,10 +50,23 @@ export default async function ContactPage() {
         {/* Left Column */}
         <div className="flex flex-col gap-14 lg:w-[420px] pt-4">
           <div className="flex flex-col gap-4 relative group cursor-default">
-            <h1 className="text-5xl md:text-[64px] font-semibold flex flex-wrap items-center gap-3 text-black tracking-tight leading-[0.95]">
-              <span>{siteCopy.contactHeading}</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <svg 
+                viewBox="0 0 400 80" 
+                className="w-auto h-12 md:h-16 overflow-visible"
+                preserveAspectRatio="xMinYMid meet"
+              >
+                <text 
+                  x="0" 
+                  y="60" 
+                  className="text-5xl md:text-[64px] font-semibold font-['Poppins'] tracking-tight"
+                  fill="black"
+                >
+                  {siteCopy.contactHeading}
+                </text>
+              </svg>
               <ArrowUpRight className="w-12 h-12 md:w-16 md:h-16 text-black stroke-[2px] transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
-            </h1>
+            </div>
             <p className="text-black/70 font-medium leading-[1.6] text-base md:text-lg max-w-[380px] transition-colors duration-300 group-hover:text-black/90">
               {formSettings.introText}
             </p>
@@ -90,19 +110,41 @@ export default async function ContactPage() {
         </div>
       </div>
 
-      {/* Giant Background Text */}
+      {/* Giant Background Text - SVG Version for Figma Export */}
       <div className="absolute bottom-[-10%] w-[110vw] pointer-events-none select-none z-[5] overflow-hidden flex justify-center mix-blend-multiply opacity-[0.15]">
-        <h2 
-          className="contact-giant-text text-[120px] sm:text-[180px] md:text-[330px] lg:text-[390px] font-semibold leading-[0.8] tracking-[-11.85px] text-transparent bg-clip-text whitespace-nowrap drop-shadow-xl"
+        {/* 
+          To edit the vector curves:
+          1. Inspect this element in the browser and copy the <svg> tag.
+          2. Paste it directly into Figma.
+          3. Right-click the text in Figma and select "Outline stroke" or press Ctrl/Cmd+Shift+O to convert to paths.
+          4. Adjust your vector curves.
+          5. Export as SVG from Figma and replace this <svg> block with your new paths!
+        */}
+        <svg 
+          viewBox="0 0 1600 500" 
+          className="w-full h-auto drop-shadow-xl"
+          preserveAspectRatio="xMidYMid meet"
         >
-          {siteCopy.contactGiantText}
-        </h2>
-        <style dangerouslySetInnerHTML={{__html: `
-          .contact-giant-text {
-            background-image: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 35%, transparent 100%);
-            -webkit-text-stroke: 4px rgba(0, 0, 0, 0.05);
-          }
-        `}} />
+          <defs>
+            <linearGradient id="giantTextGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgba(0,0,0,0.8)" />
+              <stop offset="35%" stopColor="rgba(0,0,0,0.2)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+            </linearGradient>
+          </defs>
+          <text 
+            x="50%" 
+            y="50%" 
+            dominantBaseline="middle" 
+            textAnchor="middle" 
+            fill="url(#giantTextGradient)" 
+            stroke="rgba(0, 0, 0, 0.05)"
+            strokeWidth="4"
+            className="font-semibold text-[390px] tracking-[-11.85px] font-['Poppins']"
+          >
+            {siteCopy.contactGiantText}
+          </text>
+        </svg>
       </div>
     </div>
   );

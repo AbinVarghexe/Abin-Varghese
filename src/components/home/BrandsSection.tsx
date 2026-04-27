@@ -16,7 +16,9 @@ interface BrandsSectionProps {
 }
 
 const BrandsSection = ({ logos }: BrandsSectionProps) => {
-  const displayLogos = logos && logos.length > 0 ? logos : partnerLogos;
+  // Filter out any default placeholder company-x.png images
+  const validLogos = logos?.filter(logo => !logo.includes('company-'));
+  const displayLogos = validLogos && validLogos.length > 0 ? validLogos : partnerLogos;
 
   return (
     <section className="relative z-20 w-full px-4 md:px-8 lg:px-16 py-8">

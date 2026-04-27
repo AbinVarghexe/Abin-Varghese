@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import {
   ArrowRight,
+  Brain,
   Database,
   Eye,
   EyeOff,
@@ -18,6 +19,14 @@ import {
 } from "lucide-react";
 
 const sections = [
+  {
+    title: "Jarvis Knowledge Base",
+    description:
+      "Feed your Digital Clone. Sync GitHub repos, upload LinkedIn data, and add manual knowledge entries to power the RAG-based AI chatbot.",
+    href: "/admin/jarvis",
+    icon: Brain,
+    tone: "from-[#0020d7]/20 via-blue-600/10 to-transparent border-[#0020d7]/40",
+  },
   {
     title: "Home Section",
     description:

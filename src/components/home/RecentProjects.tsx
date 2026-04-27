@@ -11,37 +11,44 @@ const CREATIVE_CATEGORIES = [
   {
     title: "Motion Graphics",
     description: "Bringing static designs to life with fluid animations and cinematic storytelling that captivates audiences.",
-    image: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=600"
+    image: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=600",
+    lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/5f/13/31/5f1331c04272eb0210b7f42997bc4c5f_720w.mp4"
   },
   {
     title: "UI/UX Design",
     description: "Crafting intuitive, user-centered interfaces that blend aesthetic beauty with seamless functional experiences.",
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600"
+    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600",
+    lottieUrl: "https://i.pinimg.com/originals/9d/1f/1f/9d1f1fb1b6004da53df6ae2aa320aeea.gif"
   },
   {
     title: "Video Production",
     description: "High-quality video editing and direction, focusing on rhythm, color grading, and impactful visual narratives.",
-    image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=600"
+    image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=600",
+    lottieUrl: "https://i.pinimg.com/originals/05/a9/ca/05a9ca456daeb936b7715aaa52477cb2.gif"
   },
   {
     title: "VFX Animation",
     description: "Creating mind-bending visual effects and high-fidelity animations for a truly immersive digital experience.",
-    image: "https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=600"
+    image: "https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=600",
+    lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/48/e7/83/48e783773884e91eb65eb4a8bfbeee2c_720w.mp4"
   },
   {
     title: "3D Modeling",
     description: "Developing detailed 3D assets and environments with realistic textures, lighting, and spatial depth.",
-    image: "https://images.unsplash.com/photo-1616423640778-28d1b53229bd?q=80&w=600"
+    image: "https://images.unsplash.com/photo-1616423640778-28d1b53229bd?q=80&w=600",
+    lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/99/25/c4/9925c401f8eaa36ac99d6472df701a84_720w.mp4"
   },
   {
     title: "Visual Branding",
     description: "Designing cohesive brand identities that tell a unique story through color, typography, and iconography.",
-    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=600"
+    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=600",
+    lottieUrl: "https://i.pinimg.com/originals/bf/1c/a1/bf1ca126169bd06a802f17b1c218416d.gif"
   },
   {
     title: "Character Design",
     description: "Giving personality to digital entities through expressive character concepts and detailed illustrations.",
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600"
+    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600",
+    lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/68/3f/7b/683f7bd1a42b8ac5dd38110fe29ac0e9_720w.mp4"
   }
 ];
 
@@ -54,8 +61,17 @@ export default function RecentProjects({
   creativeTitle,
   creativeCopy,
   creativeCtaLabel,
-  creativeCategories
+  creativeCategories,
+  projects = []
 }: any) {
+  const getHostname = (url: string) => {
+    if (!url) return "Visit Site";
+    try {
+      return new URL(url).hostname.replace(/^www\./, '');
+    } catch {
+      return "Visit Site";
+    }
+  };
   const [isHoveringCard, setIsHoveringCard] = useState(false);
   const [hoveredUrl, setHoveredUrl] = useState("Visit Site");
   const [activeCreativeIndex, setActiveCreativeIndex] = useState(3);
@@ -182,75 +198,35 @@ export default function RecentProjects({
                }}
              >
                <CardSwap pauseOnHover={false}>
-                 <Card className="overflow-hidden shadow-lg w-[260px] h-[190px] md:w-[320px] md:h-[240px] lg:w-[360px] lg:h-[260px]">
-                   <a 
-                     href="https://awwwards.com" target="_blank" rel="noopener noreferrer" 
-                     className="flex flex-col w-full h-full cursor-none pointer-events-auto"
-                     onMouseEnter={() => setHoveredUrl("awwwards.com")}
-                     onMouseLeave={() => setHoveredUrl("Visit Site")}
-                   >
-                     <div className="w-full h-[36px] md:h-[40px] flex items-center px-4 bg-zinc-100/80 backdrop-blur-sm border-b border-zinc-200 shrink-0">
-                         <div className="flex gap-1.5 shrink-0">
-                             <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-                             <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-                             <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                 {projects.slice(0, 3).map((project: any, index: number) => {
+                   const siteHostname = project.liveUrl ? getHostname(project.liveUrl) : (project.githubUrl ? getHostname(project.githubUrl) : "Visit Site");
+                   
+                   return (
+                     <Card key={project.id || index} className="overflow-hidden shadow-lg w-[260px] h-[190px] md:w-[320px] md:h-[240px] lg:w-[360px] lg:h-[260px]">
+                       <a 
+                         href={project.liveUrl || project.githubUrl || "#"} target="_blank" rel="noopener noreferrer" 
+                         className="flex flex-col w-full h-full cursor-none pointer-events-auto"
+                         onMouseEnter={() => setHoveredUrl(siteHostname)}
+                         onMouseLeave={() => setHoveredUrl("Visit Site")}
+                       >
+                         <div className="w-full h-[36px] md:h-[40px] flex items-center px-4 bg-zinc-100/80 backdrop-blur-sm border-b border-zinc-200 shrink-0">
+                             <div className="flex gap-1.5 shrink-0">
+                                 <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                                 <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                                 <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                             </div>
+                             <div className="mx-auto bg-white px-4 py-1 text-[10px] md:text-xs rounded-md text-zinc-500 border border-zinc-200 shadow-sm flex items-center gap-1 font-mono tracking-tighter truncate max-w-[150px]">
+                                 {siteHostname}
+                             </div>
+                             <div className="w-7 shrink-0"></div>
                          </div>
-                         <div className="mx-auto bg-white px-4 py-1 text-[10px] md:text-xs rounded-md text-zinc-500 border border-zinc-200 shadow-sm flex items-center gap-1 font-mono tracking-tighter truncate max-w-[150px]">
-                             awwwards.com
+                         <div className="flex-1 w-full relative bg-zinc-200">
+                             <img src={project.imageUrl || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=600&auto=format&fit=crop"} alt={project.title || "Web Project"} className="absolute inset-0 w-full h-full object-cover object-top" />
                          </div>
-                         <div className="w-7 shrink-0"></div>
-                     </div>
-                     <div className="flex-1 w-full relative bg-zinc-200">
-                         <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=600&auto=format&fit=crop" alt="Web Dev 1" className="absolute inset-0 w-full h-full object-cover object-top" />
-                     </div>
-                   </a>
-                 </Card>
-                 <Card className="overflow-hidden shadow-lg w-[260px] h-[190px] md:w-[320px] md:h-[240px] lg:w-[360px] lg:h-[260px]">
-                   <a 
-                     href="https://dribbble.com" target="_blank" rel="noopener noreferrer" 
-                     className="flex flex-col w-full h-full cursor-none pointer-events-auto"
-                     onMouseEnter={() => setHoveredUrl("dribbble.com")}
-                     onMouseLeave={() => setHoveredUrl("Visit Site")}
-                   >
-                     <div className="w-full h-[36px] md:h-[40px] flex items-center px-4 bg-zinc-100/80 backdrop-blur-sm border-b border-zinc-200 shrink-0">
-                         <div className="flex gap-1.5 shrink-0">
-                             <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-                             <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-                             <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-                         </div>
-                         <div className="mx-auto bg-white px-4 py-1 text-[10px] md:text-xs rounded-md text-zinc-500 border border-zinc-200 shadow-sm flex items-center gap-1 font-mono tracking-tighter truncate max-w-[150px]">
-                             dribbble.com
-                         </div>
-                         <div className="w-7 shrink-0"></div>
-                     </div>
-                     <div className="flex-1 w-full relative bg-zinc-200">
-                         <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=600&auto=format&fit=crop" alt="Web Dev 2" className="absolute inset-0 w-full h-full object-cover object-top" />
-                     </div>
-                   </a>
-                 </Card>
-                 <Card className="overflow-hidden shadow-lg w-[260px] h-[190px] md:w-[320px] md:h-[240px] lg:w-[360px] lg:h-[260px]">
-                   <a 
-                     href="https://behance.net" target="_blank" rel="noopener noreferrer" 
-                     className="flex flex-col w-full h-full cursor-none pointer-events-auto"
-                     onMouseEnter={() => setHoveredUrl("behance.net")}
-                     onMouseLeave={() => setHoveredUrl("Visit Site")}
-                   >
-                     <div className="w-full h-[36px] md:h-[40px] flex items-center px-4 bg-zinc-100/80 backdrop-blur-sm border-b border-zinc-200 shrink-0">
-                         <div className="flex gap-1.5 shrink-0">
-                             <div className="w-2.5 h-2.5 rounded-full bg-red-400"></div>
-                             <div className="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-                             <div className="w-2.5 h-2.5 rounded-full bg-green-400"></div>
-                         </div>
-                         <div className="mx-auto bg-white px-4 py-1 text-[10px] md:text-xs rounded-md text-zinc-500 border border-zinc-200 shadow-sm flex items-center gap-1 font-mono tracking-tighter truncate max-w-[150px]">
-                             behance.net
-                         </div>
-                         <div className="w-7 shrink-0"></div>
-                     </div>
-                     <div className="flex-1 w-full relative bg-zinc-200">
-                         <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?q=80&w=600&auto=format&fit=crop" alt="Web Dev 3" className="absolute inset-0 w-full h-full object-cover object-top" />
-                     </div>
-                   </a>
-                 </Card>
+                       </a>
+                     </Card>
+                   );
+                 })}
                </CardSwap>
              </div>
           </div>

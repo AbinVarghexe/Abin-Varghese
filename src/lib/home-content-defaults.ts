@@ -18,9 +18,10 @@ export type HomeContent = {
 export const homeContentDefaults: HomeContent = {
   scrollingBannerItems: "Web Developer,Graphic Designer,Video Editor,VFX Artist",
   scrollingLogos: [
-    "/uploads/logos/company-1.png",
-    "/uploads/logos/company-2.png",
-    "/uploads/logos/company-3.png",
+    "/uploads/logos/1775313043262-incial.png",
+    "/uploads/logos/1775314295868-voltant.png",
+    "/uploads/logos/1775314641812-blaupunkt.png",
+    "/uploads/logos/1775314941462-manna.png",
   ],
   socialLinks: {
     github: "https://github.com/AbinVarghexe",

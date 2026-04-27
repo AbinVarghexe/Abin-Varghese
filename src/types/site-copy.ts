@@ -293,7 +293,7 @@ export const siteCopyDefaults: SiteCopyContent = {
   servicesFaqCtaText: "Could not find the answer you were looking for?",
   servicesFaqCtaLabel: "Contact Me",
   contactEyebrow: "Let's Connect",
-  contactHeading: "Let's talk about what you're building.",
+  contactHeading: "Let's talk.",
   contactSupportLine:
     "The easiest way to start is with a simple message about what you are working on and where you need help.",
   contactGiantText: "Contact Me",

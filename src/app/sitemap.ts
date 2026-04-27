@@ -4,6 +4,9 @@ import { pinterestPins } from "@/lib/pinterest-content";
 import { getServicesContent } from "@/lib/services-content";
 import { getAbsoluteUrl } from "@/seo/config";
 
+// Regenerate every 24 hours — keeps project list fresh without hammering GitHub API
+export const revalidate = 86400;
+
 function now() {
   return new Date();
 }
@@ -44,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: getAbsoluteUrl("/pinterest"),
       lastModified: now(),
       changeFrequency: "monthly",
-      priority: 0.6,
+      priority: 0.5,
     },
   ];
 
@@ -69,6 +72,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push(
       ...projects.map((project) => ({
         url: getAbsoluteUrl(`/projects/${encodeURIComponent(project.slug)}`),
+        // Use actual commit timestamp so Google knows what changed
         lastModified: new Date(project.updatedAt),
         changeFrequency: "weekly" as const,
         priority: 0.8,
@@ -83,7 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: getAbsoluteUrl(`/pinterest/${pin.id}`),
       lastModified: now(),
       changeFrequency: "monthly" as const,
-      priority: 0.5,
+      priority: 0.45,
     }))
   );
 

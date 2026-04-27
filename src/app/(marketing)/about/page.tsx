@@ -7,10 +7,20 @@ import { getSiteCopyContent } from "@/lib/site-copy-content";
 import { createPageMetadata } from "@/seo/page-metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "About Me | Abin Varghese",
+  title: "About Abin Varghese | Front-End Developer & UI/UX Designer",
   description:
-    "Learn about Abin Varghese's journey, education, and experience as a front-end developer and UI/UX designer. Discover skills, achievements, and background.",
+    "Discover the story of Abin Varghese — a self-driven front-end developer and UI/UX designer from Kerala, India, studying at Amal Jyothi College of Engineering. Expert in React, Next.js, Figma, and Tailwind CSS.",
   path: "/about",
+  keywords: [
+    "Abin Varghese about",
+    "Front-End Developer Kerala",
+    "Amal Jyothi College of Engineering",
+    "UI/UX Designer India",
+    "React developer background",
+    "Figma designer portfolio",
+    "Next.js developer Kerala",
+    "Smart India Hackathon winner",
+  ],
 });
 
 export default async function AboutPage() {

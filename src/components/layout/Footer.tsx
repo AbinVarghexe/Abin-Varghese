@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight, Instagram, Linkedin, Mail } from 'lucide-react';
 import { homeContentDefaults } from '@/lib/home-content-defaults';
 import { 
@@ -9,6 +10,7 @@ import {
   type PublicSiteShellContent 
 } from '@/types/site-copy';
 import { contactSectionDefaults } from '@/types/contact';
+import { InteractiveDotPattern } from '@/components/ui/InteractiveDotPattern';
 
 
 export default function Footer() {
@@ -52,10 +54,10 @@ export default function Footer() {
 
   const navLinks = [
     { name: 'HOME', href: '/' },
+    { name: 'ABOUT', href: '/about' },
     { name: 'PROJECTS', href: '/projects' },
     { name: 'SERVICES', href: '/services' },
-    { name: 'ABOUT ME', href: '/about' },
-    { name: 'GET IN TOUCH', href: '/contact' },
+    { name: 'CONTACT', href: '/contact' },
   ];
 
   const socialLinks = [
@@ -75,9 +77,15 @@ export default function Footer() {
           {/* Left Section */}
           <div className="lg:col-span-4 flex flex-col space-y-8 lg:pr-12">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-full border-2 border-black flex items-center justify-center font-bold text-2xl">
-                A
-              </div>
+              <Link href="/" aria-label="Abin Varghese Home" className="transition-opacity hover:opacity-80">
+                <Image
+                  src="/Logo.svg"
+                  alt="Abin Varghese logo"
+                  width={46}
+                  height={40}
+                  className="h-12 w-auto"
+                />
+              </Link>
               <div>
                 <p className="font-bold text-sm tracking-widest uppercase">{shellContent.siteCopy.footerBrandEyebrow}</p>
                 <p className="font-bold text-sm tracking-widest uppercase text-black/50">{"// ABIN VARGHESE"}</p>
@@ -133,7 +141,7 @@ export default function Footer() {
               </p>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between items-end mt-20 text-xs tracking-widest text-black/40 uppercase">
+            <div className="flex flex-col md:flex-row justify-between items-end mt-12 text-xs tracking-widest text-black/40 uppercase">
               <p>{shellContent.siteCopy.footerCopyright}</p>
               {shellContent.siteCopy.footerCredit ? (
                 <p className="mt-4 md:mt-0">{shellContent.siteCopy.footerCredit}</p>
@@ -143,8 +151,26 @@ export default function Footer() {
         </div>
 
         {/* Bottom Large Text */}
-        <div className="mt-20 -mb-4 md:-mb-8 lg:-mb-12">
-          <h1 className="text-[12vw] font-bold tracking-tighter leading-none whitespace-nowrap overflow-hidden select-none font-vina uppercase text-black transition-colors duration-300">
+        <div className="relative mt-6 -mb-4 md:-mb-8 lg:-mb-12 overflow-hidden flex items-center justify-center">
+          <div 
+            className="absolute inset-0 z-0" 
+            style={{ 
+              maskImage: "linear-gradient(to bottom, transparent, black 15%)", 
+              WebkitMaskImage: "linear-gradient(to bottom, transparent, black 15%)" 
+            }}
+          >
+            <InteractiveDotPattern 
+              cx={2} 
+              cy={2} 
+              cr={1.5} 
+              width={20} 
+              height={20} 
+              dotColor="rgba(0, 0, 0, 0.08)" 
+              activeDotColor="rgba(0, 0, 0, 0.4)" 
+              hoverRadius={120} 
+            />
+          </div>
+          <h1 className="relative z-10 text-[12vw] font-bold tracking-tighter leading-none whitespace-nowrap select-none font-vina uppercase text-black transition-colors duration-300 pointer-events-none">
             Abin Varghese
           </h1>
         </div>

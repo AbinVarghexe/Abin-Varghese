@@ -1,16 +1,23 @@
 {
   "name": "Abin Varghese Portfolio",
   "short_name": "Abin",
-  "description": "Portfolio of Abin Varghese, Front-End Developer & UI/UX Designer",
+  "description": "Portfolio of Abin Varghese, Front-End Developer & UI/UX Designer from Kerala, India.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "background_color": "#f8f5f2",
   "theme_color": "#0020d7",
+  "lang": "en-IN",
+  "categories": ["portfolio", "productivity", "design"],
+  "screenshots": [],
   "icons": [
     {
       "src": "/Logo.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }

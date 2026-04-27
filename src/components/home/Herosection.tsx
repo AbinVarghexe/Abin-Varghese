@@ -422,7 +422,7 @@ const Herosection = ({
           {/* sub-copy */}
           <motion.p
             variants={fadeUp}
-            className="pointer-events-auto mt-4 md:mt-8 max-w-[340px] md:max-w-4xl text-[16px] md:text-xl lg:text-2xl text-center leading-snug tracking-tight text-slate-600 sm:text-justify lg:text-center [text-align-last:center] lg:[text-align-last:auto]"
+            className="pointer-events-auto mt-4 md:mt-8 max-w-[340px] md:max-w-4xl text-[14px] md:text-lg lg:text-xl text-center leading-snug tracking-tight text-slate-600 sm:text-justify lg:text-center [text-align-last:center] lg:[text-align-last:auto]"
           >
             {data.heroSubcopy}
           </motion.p>

@@ -69,6 +69,16 @@ export default function ProjectsHeroBanner({
 
   return (
     <section className="relative isolate border-y border-black/10 bg-[#f8f5f2]">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes blue-echo {
+          0% { box-shadow: 0 4px 12px rgba(0,0,0,0.05), 0 0 0 0 rgba(31, 95, 255, 0.85); }
+          70% { box-shadow: 0 4px 12px rgba(0,0,0,0.05), 0 0 0 12px rgba(31, 95, 255, 0); }
+          100% { box-shadow: 0 4px 12px rgba(0,0,0,0.05), 0 0 0 0 rgba(31, 95, 255, 0); }
+        }
+        .blue-echo-active {
+          animation: blue-echo 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+      `}} />
       <div className="mx-auto w-full max-w-[1540px] px-3 py-4 md:px-5 md:py-6">
         <div
           role="presentation"
@@ -239,7 +249,7 @@ export default function ProjectsHeroBanner({
                 <button
                   type="button"
                   onClick={() => onWorkspaceChange('designing')}
-                  className="group inline-flex items-center no-underline transition-all duration-300 cursor-pointer"
+                  className={`group inline-flex items-center no-underline transition-all duration-300 cursor-pointer ${workspace === 'coding' ? 'blue-echo-active' : ''}`}
                   style={
                     workspace === 'designing'
                       ? {
@@ -279,7 +289,7 @@ export default function ProjectsHeroBanner({
                 >
                   <span className="min-w-[64px] text-center">Designing</span>
                   <span
-                    className="flex items-center justify-center rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
+                    className="relative flex items-center justify-center rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
                     style={{ 
                       width: '32px', 
                       height: '32px',
@@ -291,6 +301,12 @@ export default function ProjectsHeroBanner({
                       strokeWidth={2.2} 
                       style={{ color: workspace === 'designing' ? '#111' : '#1e293b' }} 
                     />
+                    {workspace === 'coding' && (
+                      <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#1f5fff] opacity-80"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#1f5fff]"></span>
+                      </span>
+                    )}
                   </span>
                 </button>
               </div>

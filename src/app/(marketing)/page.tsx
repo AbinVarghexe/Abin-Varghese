@@ -12,19 +12,26 @@ import SlidingRoleBanner from "@/components/ui/SlidingRoleBanner";
 import { getHeroContent, getHomeContent } from "@/lib/site-content";
 import { getSiteCopyContent } from "@/lib/site-copy-content";
 import { getServicesContent } from "@/lib/services-content";
+import { getAllProjects } from "@/lib/github-projects";
 import { homePageContentClass, homePageShellClass } from "@/lib/home-page-design-system";
 import { createPageMetadata } from "@/seo/page-metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Abin Varghese",
+  title: "Abin Varghese | Front-End Developer & UI/UX Designer",
   description:
-    "Explore the work of Abin Varghese, a front-end developer specializing in React, Next.js, and modern UI/UX design. View projects, skills, and achievements.",
+    "Abin Varghese is a front-end developer and UI/UX designer from Kerala, India, building high-performance Next.js apps, modern interfaces, and digital products. Available for freelance.",
   path: "/",
   keywords: [
+    "Abin Varghese",
     "Abin Varghese portfolio",
     "Next.js developer portfolio",
     "React front-end developer",
     "UI UX designer portfolio",
+    "Front-End Developer Kerala",
+    "Hire React developer India",
+    "Freelance Next.js developer",
+    "Web developer Kottayam",
+    "UI designer portfolio India",
   ],
 });
 
@@ -33,6 +40,8 @@ export default async function Home() {
   const homeData = await getHomeContent();
   const siteCopy = await getSiteCopyContent();
   const services = await getServicesContent();
+  const allProjects = await getAllProjects();
+  const webProjects = allProjects.filter((p) => p.workspace === "coding").slice(0, 3);
 
   const scrollingItems = homeData.scrollingBannerItems
     .split(',')
@@ -101,6 +110,7 @@ export default async function Home() {
             creativeCopy={siteCopy.homeCreativeCopy}
             creativeCtaLabel={siteCopy.homeCreativeCtaLabel}
             creativeCategories={siteCopy.homeCreativeCategories}
+            projects={webProjects}
           />
           <ServicesSection
             heading={siteCopy.homeServicesHeading}
