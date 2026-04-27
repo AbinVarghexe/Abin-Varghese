@@ -190,7 +190,7 @@ export default function ClientLayoutWrapper({
           {/* Layer 2: 3D Interaction Layer (z-10) */}
           <div className="fixed inset-0 z-10 pointer-events-none overflow-hidden h-screen w-screen">
             <JarvisAssistant />
-            <div className="hidden lg:block h-full w-full">
+            <div className="hidden md:block h-full w-full">
               <Hero3DLayer />
             </div>
           </div>

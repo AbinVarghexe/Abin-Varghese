@@ -179,7 +179,7 @@ export default function AdminOverviewPage() {
               <div className="h-3 w-3 rounded-full border border-green-400/50 bg-green-300/50" />
             </div>
             <div className="rounded-md border border-[var(--color-border-light)] bg-white px-4 py-1 text-[10px] font-mono text-[var(--color-text-body)]">
-              localhost:3000/
+              {typeof window !== "undefined" ? window.location.host : "localhost:3000"}
             </div>
             <span className="h-3.5 w-3.5" />
           </div>

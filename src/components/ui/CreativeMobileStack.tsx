@@ -7,6 +7,7 @@ interface CreativeItem {
   title: string;
   description: string;
   image: string;
+  lottieUrl?: string;
 }
 
 interface CreativeMobileStackProps {
@@ -119,12 +120,23 @@ function SwipeCard({ item, index, total, onSwipe }: {
       }}
       className="absolute inset-0 rounded-[12px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.3)] bg-white cursor-grab active:cursor-grabbing touch-none border-2 border-white"
     >
-      <div className="w-full h-full relative">
-        <img 
-          src={item.image} 
-          alt={item.title} 
-          className="w-full h-full object-cover pointer-events-none" 
-        />
+      <div className="w-full h-full relative bg-zinc-900">
+        {item.lottieUrl?.endsWith('.mp4') ? (
+          <video 
+            src={item.lottieUrl} 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="w-full h-full object-cover pointer-events-none"
+          />
+        ) : (
+          <img 
+            src={item.lottieUrl || item.image} 
+            alt={item.title} 
+            className="w-full h-full object-cover pointer-events-none" 
+          />
+        )}
         {/* Gradients and Overlays to match About Me style */}
         {index > 0 && <div className="absolute inset-0 bg-black/10" />}
         <div className="absolute inset-0 bg-linear-to-b from-black/0 to-black/20" />

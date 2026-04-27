@@ -162,11 +162,15 @@ function Model() {
 
   const [scrollY, setScrollY] = useState(0);
   const [totalHeight, setTotalHeight] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Sync scroll and calculate total page height
+  // Sync scroll, calculate total page height and detect mobile
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
-    const handleResize = () => setTotalHeight(document.documentElement.scrollHeight - window.innerHeight);
+    const handleResize = () => {
+      setTotalHeight(document.documentElement.scrollHeight - window.innerHeight);
+      setIsMobile(window.innerWidth < 768);
+    };
     
     // Initialize
     handleResize();
@@ -185,8 +189,44 @@ function Model() {
     if (groupRef.current) {
       const time = state.clock.getElapsedTime();
 
-      // **Buttery-Smooth Scroll Synchronization**
-      const vh = window.innerHeight;
+      // **Neural Side-Swapping AI Logic (Desktop Only)**
+      const pCam = camera as THREE.PerspectiveCamera;
+      const vfov = (pCam.fov * Math.PI) / 180;
+      const visibleHeight = 2 * Math.tan(vfov / 2) * 24;
+      const visibleWidth = visibleHeight * (state.size.width / state.size.height);
+
+      if (isMobile) {
+        // **Simplified Mobile Experience**
+        // Position: Centered and fixed above the hero text
+        const targetX = 0;
+        const targetY = -1.2; // Adjusted for 17.5 scale to prevent clipping
+        
+        // Gentle Sine-Wave random motion (Hover)
+        const waveY = Math.sin(time * 0.8) * 0.45;
+        const waveX = Math.cos(time * 0.5) * 0.2;
+        const mobileTarget = new THREE.Vector3(targetX + waveX, targetY + waveY, 5); // Slightly closer (Z=5)
+
+        groupRef.current.position.lerp(mobileTarget, 0.05);
+
+        // Aero-Dynamic Stability: Face forward + subtle mouse tracking
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.PI + (mouse.x * 0.3), 0.1);
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -mouse.y * 0.15, 0.1);
+        groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, Math.sin(time * 0.5) * 0.05, 0.1);
+        
+        // Handle dragging on mobile too
+        if (isDragging) {
+          const vector = new THREE.Vector3(mouse.x, mouse.y, 0.5);
+          vector.unproject(camera);
+          const dir = vector.sub(camera.position).normalize();
+          const distance = -camera.position.z / dir.z;
+          const pos = camera.position.clone().add(dir.multiplyScalar(distance));
+          groupRef.current.position.lerp(pos, 0.2);
+        }
+
+        return; // Bypass desktop journey physics
+      }
+
+      // **Buttery-Smooth Scroll Synchronization (Desktop)**
       smoothedScroll.current = THREE.MathUtils.lerp(smoothedScroll.current, scrollY, 0.05);
       const s = smoothedScroll.current;
 
@@ -197,10 +237,6 @@ function Model() {
         0.012 // **Slow, elegant gliding speed**
       );
 
-      const pCam = camera as THREE.PerspectiveCamera;
-      const vfov = (pCam.fov * Math.PI) / 180;
-      const visibleHeight = 2 * Math.tan(vfov / 2) * 24;
-      const visibleWidth = visibleHeight * (state.size.width / state.size.height);
       const margin = 3.5; 
       
       const minX = -visibleWidth / 2 + margin;
@@ -371,7 +407,7 @@ function Model() {
         {/* ── Jarvis Speech Bubble ────────────────────────────────── */}
         <Html position={[0, 4, 0]} center distanceFactor={15}>
           <AnimatePresence mode="wait">
-            {showBubble && (
+            {!isMobile && showBubble && (
               <motion.div
                 key="jarvis-bubble"
                 initial={{ opacity: 0, scale: 0.5 }}
@@ -405,7 +441,7 @@ function Model() {
 
         <primitive 
           object={scene} 
-          scale={12.5} 
+          scale={isMobile ? 17.5 : 12.5} 
           position={[0, -1.5, 0]}
           rotation={[0, 0, 0]} // Stabilized to Neutral Front View
         />

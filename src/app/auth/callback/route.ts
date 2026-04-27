@@ -11,20 +11,26 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
+    
     if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host') // mirror sstable
+      const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
+      
+      // Prioritize environment variable for base URL if set
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || origin
+
       if (isLocalEnv) {
-        // we can safely use the origin
         return NextResponse.redirect(`${origin}${next}`)
       } else if (forwardedHost) {
         return NextResponse.redirect(`https://${forwardedHost}${next}`)
       } else {
-        return NextResponse.redirect(`${origin}${next}`)
+        return NextResponse.redirect(`${baseUrl}${next}`)
       }
     }
   }
 
   // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  const fallbackOrigin = process.env.NEXT_PUBLIC_BASE_URL || origin
+  return NextResponse.redirect(`${fallbackOrigin}/auth/auth-code-error`)
 }
+

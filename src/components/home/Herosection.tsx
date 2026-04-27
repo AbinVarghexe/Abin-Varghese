@@ -2,12 +2,17 @@
 
 import { memo, useRef, type ComponentType, useState, useEffect } from 'react';
 import { ArrowUpRight, Calendar, Github, Instagram, Linkedin, ChevronDown } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import {
   motion,
   useMotionValue,
   useSpring,
   useInView,
 } from 'framer-motion';
+
+const Hero3DLayer = dynamic(() => import('@/components/ui/Hero3DLayer'), {
+  ssr: false,
+});
 import { HeroContent } from '@/lib/hero-content-defaults';
 import { usePreview } from '@/lib/contexts/PreviewContext';
 import type { HomeContent } from '@/lib/home-content-defaults';
@@ -346,6 +351,11 @@ const Herosection = ({
             animate={inView ? 'show' : 'hidden'}
             className="flex max-w-4xl flex-col items-center text-center"
           >
+            {/* Mobile-only 3D Robot Container */}
+            <div className="md:hidden w-full h-[360px] -mt-20 mb-0 pointer-events-auto">
+              <Hero3DLayer />
+            </div>
+
             {/* headline */}
             <motion.h1
               variants={fadeUp}

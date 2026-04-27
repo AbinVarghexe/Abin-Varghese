@@ -10,10 +10,12 @@ import { motion } from "framer-motion";
  */
 export default function JarvisWaveform({ 
   isThinking, 
-  volume = 0 
+  volume = 0,
+  className = "h-40"
 }: { 
   isThinking: boolean;
   volume?: number;
+  className?: string;
 }) {
   // Balanced palette using official Blue (#0020d7) and Indigo
   const waves = [
@@ -28,7 +30,7 @@ export default function JarvisWaveform({
   const amp = 1 + volume * 5; // Scale up to 6x normal height suring speech
 
   return (
-    <div className="relative w-full h-40 flex items-center justify-center overflow-hidden pointer-events-none">
+    <div className={`relative w-full flex items-center justify-center overflow-hidden pointer-events-none ${className}`}>
       {/* Background Glow */}
       <div className="absolute inset-0 bg-radial-gradient(circle, rgba(0,32,215,0.08) 0%, transparent 70%)" />
       

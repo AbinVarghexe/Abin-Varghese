@@ -6,6 +6,8 @@ import { ArrowUpRight } from "lucide-react";
 import { motion, useSpring } from "framer-motion";
 import CardSwap, { Card } from "@/components/effects/CardSwap";
 import { ArchGallery } from "@/components/ui/ArchGallery";
+import { MobileProjectStack } from "@/components/ui/MobileProjectStack";
+import { CreativeMobileStack } from "@/components/ui/CreativeMobileStack";
 
 const CREATIVE_CATEGORIES = [
   {
@@ -134,9 +136,43 @@ export default function RecentProjects({
             </p>
           </div>
 
-          {/* Large Image Placeholder */}
+          {/* Mobile View: Website Cards */}
+          <div className="md:hidden w-full flex flex-col gap-10 mt-2 mb-12">
+            <MobileProjectStack 
+              projects={projects.slice(0, 4).map((p: any) => ({
+                id: p.id,
+                url: getHostname(p.liveUrl || p.githubUrl),
+                image: p.imageUrl || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=600&auto=format&fit=crop"
+              }))} 
+            />
+            <div className="flex justify-center -mt-6">
+              <Link
+                href="/projects"
+                className="group inline-flex items-center no-underline shadow-lg shadow-blue-500/20"
+                style={{
+                  gap: '12px',
+                  background: 'linear-gradient(208.44deg, #5b74ff 5%, #001bb0 84%)',
+                  border: '1.5px solid rgba(255,255,255,0.1)',
+                  borderRadius: 'var(--radius-full)',
+                  padding: '8px 8px 8px 24px',
+                  fontFamily: 'var(--font-sans)', fontWeight: 500,
+                  fontSize: '14px', color: '#fff', textDecoration: 'none',
+                }}
+              >
+                <span style={{ minWidth: '80px', textAlign: 'center' }}>View Projects</span>
+                <span
+                  className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
+                  style={{ width: '38px', height: '38px' }}
+                >
+                  <ArrowUpRight className="text-[#0b0b0c]" style={{ width: '18px', height: '18px' }} strokeWidth={2.2} />
+                </span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Desktop View: Interactive UI Block */}
           <div 
-            className="w-full aspect-video md:aspect-21/9 bg-white rounded-[24px] overflow-hidden flex items-center justify-center relative shadow-sm hover:shadow-md transition-shadow z-10 border-[5px] border-zinc-200"
+            className="hidden md:flex w-full aspect-video md:aspect-21/9 bg-white rounded-[24px] overflow-hidden items-center justify-center relative shadow-sm hover:shadow-md transition-shadow z-10 border-[5px] border-zinc-200"
             style={{
               backgroundImage: `
                 linear-gradient(to right, rgba(0,0,0,0.08) 1.5px, transparent 1.5px),
@@ -250,7 +286,50 @@ export default function RecentProjects({
             </p>
           </div>
 
-          <div className="w-full relative overflow-visible flex flex-col items-center justify-end pb-12 md:pb-24 pt-[350px] md:pt-[450px] min-h-[550px] md:min-h-[650px]">
+          {/* Mobile View: Creative Stack */}
+          <div className="md:hidden w-full flex flex-col gap-12 mt-4 mb-8">
+            <div className="flex flex-col items-center">
+              <CreativeMobileStack 
+                items={CREATIVE_CATEGORIES}
+                currentIndex={activeCreativeIndex}
+                onIndexChange={setActiveCreativeIndex}
+              />
+            </div>
+            
+            <div className="text-center flex flex-col items-center px-4 -mt-4">
+                <h3 className="text-3xl font-bold text-zinc-900 mb-4 leading-tight">
+                  {activeCategory.title}
+                </h3>
+                <p className="text-zinc-600 text-sm mb-10 max-w-sm mx-auto leading-relaxed">
+                  {activeCategory.description}
+                </p>
+                
+                <Link
+                  href="/contact"
+                  className="group inline-flex items-center justify-center no-underline shadow-xl"
+                  style={{
+                    gap: '12px',
+                    background: 'linear-gradient(208.44deg, #5b74ff 5%, #001bb0 84%)', 
+                    border: '1.5px solid rgba(255,255,255,0.1)',
+                    borderRadius: 'var(--radius-full)',
+                    padding: '8px 8px 8px 24px',
+                    fontFamily: 'var(--font-sans)', fontWeight: 500,
+                    fontSize: '14px', color: '#fff', textDecoration: 'none',
+                  }}
+                >
+                  <span style={{ minWidth: '80px', textAlign: 'center' }}>Contact me</span>
+                  <span
+                    className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
+                    style={{ width: '38px', height: '38px' }}
+                  >
+                    <ArrowUpRight className="text-[#0b0b0c]" style={{ width: '18px', height: '18px' }} strokeWidth={2.2} />
+                  </span>
+                </Link>
+            </div>
+          </div>
+
+          {/* Desktop View: Arched Gallery */}
+          <div className="hidden md:flex w-full relative overflow-visible flex-col items-center justify-end pb-12 md:pb-24 pt-[350px] md:pt-[450px] min-h-[550px] md:min-h-[650px]">
              
              {/* Arched Gallery Background */}
              <ArchGallery 
@@ -261,6 +340,7 @@ export default function RecentProjects({
 
              {/* Center Call to Action Text with Navigation */}
              <div className="z-20 text-center flex flex-col items-center max-w-2xl px-6 relative pointer-events-auto">
+====
                  {/* Navigation Buttons above the heading */}
                  <div className="flex items-center gap-4 mb-6">
                     <motion.button
