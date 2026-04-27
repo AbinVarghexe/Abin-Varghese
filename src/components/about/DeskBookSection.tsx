@@ -84,7 +84,7 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
 
         while (remaining.length > 0) {
             const limit = getCapacity(list.length);
-            let currentList: SiteCopyTimelineEntry[] = [];
+            const currentList: SiteCopyTimelineEntry[] = [];
             let currentChars = 0;
             let consumed = 0;
 
@@ -122,7 +122,7 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
 
         while (remaining.length > 0) {
             const limit = getCapacity(list.length);
-            let currentList: any[] = [];
+            const currentList: any[] = [];
             let currentWeight = 0;
             let consumed = 0;
 

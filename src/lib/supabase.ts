@@ -16,7 +16,7 @@ export async function uploadToStorage(
   file: File | Blob,
   bucket: string = "projects",
   path?: string
-): Promise<{ url: string | null; error: any }> {
+): Promise<{ url: string | null; error: Error | null }> {
   try {
     // Extract real extension if it's a File object, otherwise fallback to generic
     let fileExt = "png";
@@ -50,7 +50,8 @@ export async function uploadToStorage(
     const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
 
     return { url: data.publicUrl, error: null };
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as Error;
     console.error("Storage upload error details:", {
       message: error?.message || "Unknown error",
       error: error,
