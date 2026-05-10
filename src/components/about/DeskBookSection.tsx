@@ -580,7 +580,7 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[#0b0b0c]/80 backdrop-blur-xl transition-opacity z-[999999]" 
+              className="fixed inset-0 bg-[#0b0b0c]/80 backdrop-blur-xl transition-opacity pointer-events-none z-[999999]" 
               aria-hidden="true" 
             />
             <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 md:p-8 z-[999999]">
@@ -630,14 +630,18 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
                 </div>
                 
                 {/* PDF Viewer Area */}
-                <div className="flex-1 w-full bg-[#f4e8d1]/30 relative z-10 overflow-hidden">
+                <div className="flex-1 w-full bg-[#f4e8d1]/30 relative overflow-hidden">
                   {/* Fallback pattern behind PDF */}
                   <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(135deg, #8b5a2b 0px, #8b5a2b 1px, transparent 1px, transparent 15px)" }}></div>
                   
-                  <embed 
-                    src={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume/Abin_Varghese_Resume.pdf"} 
-                    type="application/pdf" 
-                    className="w-full h-full relative z-20" 
+                  {/* Using iframe instead of embed — embed creates a native OS-level plugin window
+                      that sits above ALL HTML elements including the custom cursor div.
+                      iframe is a standard HTML element that respects CSS stacking context. */}
+                  <iframe 
+                    src={`${activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume/Abin_Varghese_Resume.pdf"}#toolbar=1&navpanes=0`}
+                    title={activePdfModal === "resume" ? "Resume Preview" : "Design Resume Preview"}
+                    className="w-full h-full relative border-0" 
+                    style={{ colorScheme: "light" }}
                   />
                   
                   {/* Mobile download fallback inside viewer area (if PDF fails or on small screens) */}

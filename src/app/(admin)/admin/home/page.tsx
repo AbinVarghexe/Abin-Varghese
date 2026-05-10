@@ -58,6 +58,7 @@ type ProjectOption = {
   category?: string;
   imageUrl?: string;
   workspace?: string;
+  liveUrl?: string | null;
 };
 
 type DraftAchievement = Achievement & { localId: string; persisted: boolean };
@@ -437,23 +438,51 @@ export default function AdminHomePage() {
                     <h4 className="text-[15px] font-extrabold text-[#0b0b0c] mb-8 flex items-center gap-3">
                       <ShieldCheck size={20} className="text-[#0020d7]" /> Selection Interface
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {projects.map((p) => {
-                        const active = selectedProjects.includes(p.id);
-                        return (
-                          <button 
-                            key={p.id} 
-                            onClick={() => toggleProject(p.id)}
-                            className={`p-5 rounded-[24px] border-2 text-left transition-all active:scale-[0.97] ${
-                              active ? "bg-white border-[#0020d7] shadow-2xl shadow-black/10 ring-4 ring-[#0020d7]/5" : "bg-white/50 border-[#e4e4e7] opacity-60 hover:opacity-100 hover:border-[#0020d7]/20"
-                            }`}
-                          >
-                            <p className="text-[14px] font-extrabold truncate tracking-tight">{p.title}</p>
-                            <p className="text-[11px] text-[#4a4a68] mt-2 uppercase font-extrabold tracking-widest">{p.category || "General"}</p>
-                          </button>
-                        );
-                      })}
-                    </div>
+                                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {(() => {
+                          const liveProjects = projects.filter(p => p.liveUrl);
+                          if (liveProjects.length === 0) {
+                            return <p className="col-span-full text-center text-[#4a4a68]">No live projects available.</p>;
+                          }
+                          return liveProjects.map(p => {
+                            const active = selectedProjects.includes(p.id);
+                            return (
+                              <button 
+                                key={p.id} 
+                                onClick={() => toggleProject(p.id)}
+                                className={`group/card rounded-[24px] border-2 text-left transition-all active:scale-[0.97] overflow-hidden ${
+                                  active ? "bg-white border-[#0020d7] shadow-2xl shadow-black/10 ring-4 ring-[#0020d7]/5" : "bg-white/50 border-[#e4e4e7] opacity-60 hover:opacity-100 hover:border-[#0020d7]/20"
+                                }`}
+                              >
+                                {p.imageUrl ? (
+                                  <div className="aspect-video w-full bg-[#f7f4ef] overflow-hidden relative">
+                                    <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105" />
+                                    {active && (
+                                      <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-[#0020d7] flex items-center justify-center shadow-lg">
+                                        <ShieldCheck size={12} className="text-white" />
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="aspect-video w-full bg-[#f7f4ef] flex items-center justify-center">
+                                    <ImageIcon size={28} className="text-[#4a4a68] opacity-20" />
+                                  </div>
+                                )}
+                                <div className="p-4 space-y-2">
+                                  <p className="text-[14px] font-extrabold truncate tracking-tight">{p.title}</p>
+                                  <p className="text-[11px] text-[#4a4a68] uppercase font-extrabold tracking-widest">{p.category || "General"}</p>
+                                  {p.liveUrl && (
+                                    <p className="text-[10px] text-[#0020d7] truncate flex items-center gap-1 font-semibold opacity-70">
+                                      <Globe size={10} strokeWidth={2.5} />
+                                      {p.liveUrl.replace(/^https?:\/\//, "")}
+                                    </p>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
                   </div>
 
                   <div className="space-y-4">
