@@ -5,6 +5,7 @@ import {
   getConfiguredGithubSourceUrl,
   getAllProjects,
 } from '@/lib/github-projects';
+import { getBehanceShowcaseEmbeds } from '@/lib/site-content';
 import { createPageMetadata } from '@/seo/page-metadata';
 
 interface ProjectsPageProps {
@@ -33,14 +34,18 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   const initialWorkspace: WorkspaceFilter =
     workspace === 'designing' ? 'designing' : 'coding';
 
-  const projects = await getAllProjects();
-  const githubSourceUrl = getConfiguredGithubSourceUrl();
+  const [projects, githubSourceUrl, behanceShowcaseEmbeds] = await Promise.all([
+    getAllProjects(),
+    Promise.resolve(getConfiguredGithubSourceUrl()),
+    getBehanceShowcaseEmbeds(),
+  ]);
 
   return (
     <ProjectsPageShell
       projects={projects}
       sourceUrl={githubSourceUrl}
       initialWorkspace={initialWorkspace}
+      behanceShowcaseEmbeds={behanceShowcaseEmbeds}
     />
   );
 }

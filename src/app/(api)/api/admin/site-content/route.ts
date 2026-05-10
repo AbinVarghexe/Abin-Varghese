@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { getInstagramMediaUrl, isInstagramUrl, resolveInstagramPreview } from "@/lib/instagram";
-import { getAboutContent, upsertAboutContent, getHeroContent, upsertHeroContent, getHomeContent, upsertHomeContent } from "@/lib/site-content";
+import { getAboutContent, upsertAboutContent, getHeroContent, upsertHeroContent, getHomeContent, upsertHomeContent, getBehanceShowcaseEmbeds, upsertBehanceShowcaseEmbeds } from "@/lib/site-content";
+import type { BehanceShowcaseEmbed } from "@/lib/site-content";
 
 const aboutContentSchema = z.object({
   aboutImage: z.string(),
@@ -66,7 +67,8 @@ export async function GET() {
   const about = await getAboutContent();
   const hero = await getHeroContent();
   const home = await getHomeContent();
-  return NextResponse.json({ about, hero, home });
+  const behanceShowcase = await getBehanceShowcaseEmbeds();
+  return NextResponse.json({ about, hero, home, behanceShowcase });
 }
 
 export async function PUT(request: NextRequest) {
@@ -127,6 +129,17 @@ export async function PUT(request: NextRequest) {
       const home = homeContentSchema.parse(data);
       await upsertHomeContent(home);
       return NextResponse.json({ home });
+    }
+
+    if (type === 'behanceShowcase') {
+      const parsed = z.array(z.object({
+        id: z.string(),
+        src: z.string(),
+        title: z.string(),
+      })).parse(data);
+      const embeds = parsed.filter((e) => e.src.trim().length > 0);
+      await upsertBehanceShowcaseEmbeds(embeds as BehanceShowcaseEmbed[]);
+      return NextResponse.json({ behanceShowcase: embeds });
     }
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });

@@ -80,6 +80,31 @@ const homeAdminTabs: Array<{
   { id: "achievements", label: "Milestones", description: "Verified success cards", icon: Trophy },
 ];
 
+const DESIGN_TOOL_DOMAINS = [
+  "figma.com",
+  "behance.net",
+  "dribbble.com",
+  "pinterest.com",
+  "pinterest.co",
+  "canva.com",
+  "sketch.com",
+  "invisionapp.com",
+  "adobe.com",
+  "framer.com",
+  "zeplin.io",
+  "miro.com",
+];
+
+function isLiveWebsiteUrl(url?: string | null): boolean {
+  if (!url) return false;
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return !DESIGN_TOOL_DOMAINS.some(d => hostname === d || hostname.endsWith(`.${d}`));
+  } catch {
+    return false;
+  }
+}
+
 function uid(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
@@ -440,7 +465,7 @@ export default function AdminHomePage() {
                     </h4>
                                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {(() => {
-                          const liveProjects = projects.filter(p => p.liveUrl);
+                          const liveProjects = projects.filter(p => isLiveWebsiteUrl(p.liveUrl) && p.workspace !== "designing");
                           if (liveProjects.length === 0) {
                             return <p className="col-span-full text-center text-[#4a4a68]">No live projects available.</p>;
                           }

@@ -14,6 +14,7 @@ import {
   IconBrandPinterest,
 } from '@tabler/icons-react';
 import type { WorkspaceProject } from '@/lib/github-projects';
+import type { BehanceShowcaseEmbed } from '@/lib/site-content';
 import { homePageDesignSystem } from '@/lib/home-page-design-system';
 import PinCard from '@/components/pinterest/PinCard';
 import type { PinterestPin } from '@/lib/pinterest-content';
@@ -30,12 +31,21 @@ interface WorkspaceProjectsSectionProps {
   projects: WorkspaceProject[];
   sourceUrl: string;
   workspace: WorkspaceFilter;
+  behanceShowcaseEmbeds?: BehanceShowcaseEmbed[];
 }
 
 const CARD_RATIO = 'h-full w-full';
 
 const PROJECT_PIN_HEIGHTS = [360, 420, 340, 390, 440, 320];
 const DESIGN_RETURN_QUERY = 'from=projects&workspace=designing';
+
+/** Extracts the src URL if a full `<iframe>` tag was stored instead of a bare URL. */
+function sanitizeBehanceSrc(src: string): string {
+  const trimmed = src.trim();
+  if (!trimmed.startsWith('<')) return trimmed;
+  const match = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+  return match ? match[1] : trimmed;
+}
 
 type DesignCategory =
   | 'All'
@@ -427,7 +437,7 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
   );
 }
 
-export function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
+export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] }: { projects: WorkspaceProject[]; behanceShowcaseEmbeds?: BehanceShowcaseEmbed[] }) {
   const [activeTab, setActiveTab] = useState<DesignCategory>('All');
   const design = homePageDesignSystem;
   const uploadedProjects = useMemo(
@@ -665,6 +675,121 @@ export function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProj
               </div>
             )}
           </div>
+
+          {/* ── Behance Showcase — only under Graphic Design ── */}
+          {activeTab === 'Graphic design' && behanceShowcaseEmbeds.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.15 }}
+              className="mt-20"
+            >
+              {/* Section Header */}
+              <div className="mx-auto max-w-5xl text-center mb-10">
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.18em] border"
+                  style={{
+                    background: 'linear-gradient(135deg, #1769ff12 0%, #0057ff08 100%)',
+                    borderColor: 'rgba(23,105,255,0.18)',
+                    color: '#1769ff',
+                  }}
+                >
+                  <IconBrandBehance size={15} stroke={1.8} />
+                  Behance Showcase
+                </span>
+                <h3 className="mt-4 text-2xl md:text-3xl font-bold tracking-tight text-zinc-900">
+                  Featured Case Studies
+                </h3>
+                <p className="mx-auto mt-2 max-w-xl text-sm text-zinc-500 md:text-base">
+                  Explore detailed graphic design case studies and projects on Behance.
+                </p>
+              </div>
+
+              {/* Behance Embeds Container */}
+              {behanceShowcaseEmbeds.length > 2 ? (
+                <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden py-10">
+                   <div className="flex w-fit animate-marquee-scroll gap-6 px-6">
+                    {/* First set of projects */}
+                    {behanceShowcaseEmbeds.map((item) => (
+                      <div
+                        key={item.id}
+                        className="group relative w-[320px] md:w-[480px] shrink-0 overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl"
+                        style={{
+                          background: '#ffffff',
+                          border: '1.5px solid rgba(0,0,0,0.08)',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                        }}
+                      >
+                        <div className="relative w-full" style={{ paddingBottom: '78.2%' }}>
+                          <iframe
+                            src={sanitizeBehanceSrc(item.src)}
+                            className="absolute inset-0 w-full h-full rounded-lg"
+                            allowFullScreen
+                            loading="lazy"
+                            style={{ border: 'none' }}
+                            allow="clipboard-write"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            title={item.title}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    {/* Duplicate set for seamless loop */}
+                    {behanceShowcaseEmbeds.map((item) => (
+                      <div
+                        key={`${item.id}-loop`}
+                        className="group relative w-[320px] md:w-[480px] shrink-0 overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl"
+                        style={{
+                          background: '#ffffff',
+                          border: '1.5px solid rgba(0,0,0,0.08)',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                        }}
+                      >
+                        <div className="relative w-full" style={{ paddingBottom: '78.2%' }}>
+                          <iframe
+                            src={sanitizeBehanceSrc(item.src)}
+                            className="absolute inset-0 w-full h-full rounded-lg"
+                            allowFullScreen
+                            loading="lazy"
+                            style={{ border: 'none' }}
+                            allow="clipboard-write"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            title={item.title}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 px-4">
+                  {behanceShowcaseEmbeds.map((item) => (
+                    <div
+                      key={item.id}
+                      className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl"
+                      style={{
+                        background: '#ffffff',
+                        border: '1.5px solid rgba(0,0,0,0.08)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                      }}
+                    >
+                      <div className="relative w-full" style={{ paddingBottom: '78.2%' }}>
+                        <iframe
+                          src={sanitizeBehanceSrc(item.src)}
+                          className="absolute inset-0 w-full h-full rounded-lg"
+                          allowFullScreen
+                          loading="lazy"
+                          style={{ border: 'none' }}
+                          allow="clipboard-write"
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          title={item.title}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
@@ -675,6 +800,7 @@ export default function WorkspaceProjectsSection({
   projects,
   sourceUrl,
   workspace,
+  behanceShowcaseEmbeds = [],
 }: WorkspaceProjectsSectionProps) {
   const githubProfileUrl = useMemo(() => resolveGithubProfileUrl(sourceUrl), [sourceUrl]);
 
@@ -797,7 +923,7 @@ export default function WorkspaceProjectsSection({
                 <CodingWorkspaceLayout projects={filteredProjects.filter((p) => !p.isFromDb)} />
               )
             ) : (
-              <DesigningWorkspaceLayout projects={filteredProjects} />
+              <DesigningWorkspaceLayout projects={filteredProjects} behanceShowcaseEmbeds={behanceShowcaseEmbeds} />
             )}
 
             {workspace === 'coding' && false ? (

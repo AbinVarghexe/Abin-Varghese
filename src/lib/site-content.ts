@@ -5,6 +5,14 @@ import { aboutContentDefaults, type AboutContent } from "@/lib/about-content-def
 import { heroContentDefaults, type HeroContent } from "@/lib/hero-content-defaults";
 import { homeContentDefaults, type HomeContent } from "@/lib/home-content-defaults";
 
+export type BehanceShowcaseEmbed = {
+  id: string;
+  src: string;
+  title: string;
+};
+
+const BEHANCE_SHOWCASE_KEY = "behance_showcase_embeds";
+
 export const siteContentDefaults = {
   ...aboutContentDefaults,
   ...heroContentDefaults,
@@ -226,6 +234,55 @@ export async function upsertHomeContent(content: HomeContent) {
   const { error } = await supabase
     .from("site_content")
     .upsert(entries, { onConflict: "key" });
+
+  if (error) throw error;
+}
+
+export async function getBehanceShowcaseEmbeds(): Promise<BehanceShowcaseEmbed[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("site_content")
+    .select("value")
+    .eq("key", BEHANCE_SHOWCASE_KEY)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching Behance showcase embeds:", error);
+    return [];
+  }
+
+  if (!data?.value) return [];
+
+  try {
+    const parsed = JSON.parse(data.value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (item: any) =>
+          typeof item?.id === "string" &&
+          typeof item?.src === "string" &&
+          typeof item?.title === "string"
+      )
+      .map((item: any) => ({
+        id: item.id,
+        src: item.src,
+        title: item.title,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export async function upsertBehanceShowcaseEmbeds(embeds: BehanceShowcaseEmbed[]) {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(
+      { key: BEHANCE_SHOWCASE_KEY, value: JSON.stringify(embeds) },
+      { onConflict: "key" }
+    );
 
   if (error) throw error;
 }

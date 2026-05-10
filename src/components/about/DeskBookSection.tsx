@@ -609,16 +609,16 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <a 
                       href={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume/Abin_Varghese_Resume.pdf"} 
                       download 
-                      className="hidden sm:flex group items-center justify-center gap-2 px-5 py-2 bg-[#8b5a2b] border border-[#8b5a2b] text-[#fdfaf5] font-serif text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#5a3b1c] hover:shadow-lg hover:shadow-[#8b5a2b]/20 rounded-full"
+                      className="group flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:h-auto sm:px-5 sm:py-2 bg-[#8b5a2b] border border-[#8b5a2b] text-[#fdfaf5] font-serif text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#5a3b1c] hover:shadow-lg hover:shadow-[#8b5a2b]/20 rounded-full"
                     >
-                      Download
-                      <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                      <span className="hidden sm:inline">Download</span>
+                      <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5 transition-transform group-hover:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     </a>
-                    <div className="w-px h-6 bg-[#d4bc96]/50 mx-1 hidden sm:block"></div>
+                    <div className="w-px h-6 bg-[#d4bc96]/50 mx-0.5 sm:mx-1"></div>
                     <button 
                       onClick={() => setActivePdfModal(null)} 
                       className="group w-10 h-10 flex items-center justify-center rounded-full bg-white border border-[#d4bc96]/50 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] transition-all hover:shadow-md hover:scale-105"

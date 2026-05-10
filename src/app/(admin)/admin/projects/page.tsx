@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import AdminSectionWorkspace, { SectionPanel, SectionTitle, Field, TextareaField, SelectField, ActionButton, TinyButton, StatusBadge } from "@/components/admin/AdminSectionWorkspace";
 import { uploadToStorage } from "@/lib/supabase";
 import { Upload as UploadIcon, X as XIcon, Loader2, Sparkles, Pencil, AlertCircle, FolderKanban, Code, Palette, Github, Link2, ExternalLink, Trash2, Eye, EyeOff, Save, RefreshCw, Plus, FileText } from "lucide-react";
+import { IconBrandBehance } from "@tabler/icons-react";
 import { toast } from "sonner";
 
 type Project = {
@@ -93,6 +94,12 @@ export default function AdminProjectsPage() {
   const [isLoadingGithubRepos, setIsLoadingGithubRepos] = useState(true);
   const [uploadingRepoBanner, setUploadingRepoBanner] = useState<string | null>(null);
 
+  // Behance Showcase Embeds state
+  type BehanceEmbed = { id: string; src: string; title: string };
+  const [behanceEmbeds, setBehanceEmbeds] = useState<BehanceEmbed[]>([]);
+  const [isSavingBehance, setIsSavingBehance] = useState(false);
+  const [isLoadingBehance, setIsLoadingBehance] = useState(true);
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -157,9 +164,73 @@ export default function AdminProjectsPage() {
     }
   }
 
+  async function loadBehanceShowcase() {
+    setIsLoadingBehance(true);
+    try {
+      const response = await fetch("/api/admin/site-content", { cache: "no-store" });
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data.behanceShowcase)) {
+          setBehanceEmbeds(data.behanceShowcase);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load Behance showcase:", error);
+    } finally {
+      setIsLoadingBehance(false);
+    }
+  }
+
+  async function saveBehanceShowcase() {
+    setIsSavingBehance(true);
+    const toastId = toast.loading("Saving Behance showcase...");
+    try {
+      const response = await fetch("/api/admin/site-content", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "behanceShowcase", data: behanceEmbeds }),
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Save failed");
+      }
+      toast.success("Behance showcase saved!", { id: toastId });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Save failed: ${message}`, { id: toastId });
+    } finally {
+      setIsSavingBehance(false);
+    }
+  }
+
+  function addBehanceEmbed() {
+    setBehanceEmbeds((prev) => [
+      ...prev,
+      { id: `behance-${Date.now()}`, src: "", title: "" },
+    ]);
+  }
+
+  function removeBehanceEmbed(id: string) {
+    setBehanceEmbeds((prev) => prev.filter((e) => e.id !== id));
+  }
+
+  function extractSrcFromIframe(input: string): string {
+    const trimmed = input.trim();
+    if (!trimmed.startsWith("<")) return trimmed;
+    const match = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+    return match ? match[1] : trimmed;
+  }
+
+  function updateBehanceEmbed(id: string, field: "src" | "title", value: string) {
+    const resolved = field === "src" ? extractSrcFromIframe(value) : value;
+    setBehanceEmbeds((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, [field]: resolved } : e))
+    );
+  }
+
   useEffect(() => {
     queueMicrotask(() => {
-      void Promise.all([loadProjects(), loadGithubRepos()]);
+      void Promise.all([loadProjects(), loadGithubRepos(), loadBehanceShowcase()]);
     });
   }, []);
 
@@ -732,6 +803,96 @@ export default function AdminProjectsPage() {
                       </article>
                     );
                   })
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {activeWorkspace === "designing" ? (
+            <div className="mt-10 border-t-2 border-[#f7f4ef] pt-10">
+              <SectionTitle
+                title="Behance Showcase"
+                copy="Manage Behance embed iframes displayed under the Graphic Design section."
+                icon={Palette}
+              />
+
+              <div className="space-y-4">
+                {isLoadingBehance ? (
+                  Array.from({ length: 2 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="rounded-[32px] border-2 border-[#e4e4e7] bg-[#f7f4ef]/30 p-6 animate-pulse"
+                    >
+                      <div className="h-4 w-2/3 rounded bg-[#e4e4e7]" />
+                      <div className="mt-4 h-12 w-full rounded-[18px] bg-[#e4e4e7]" />
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    {behanceEmbeds.map((embed, idx) => (
+                      <article
+                        key={embed.id}
+                        className="group rounded-[32px] border-2 border-[#e4e4e7] bg-[#f7f4ef]/30 p-6 transition-all hover:bg-white hover:shadow-xl"
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-[#1769ff]/10 flex items-center justify-center">
+                              <IconBrandBehance size={18} stroke={1.8} className="text-[#1769ff]" />
+                            </div>
+                            <div>
+                              <span className="text-[11px] font-extrabold text-[#0020d7] uppercase tracking-widest">
+                                Embed #{idx + 1}
+                              </span>
+                              <p className="text-[13px] text-[#4a4a68] font-medium truncate max-w-[200px]">
+                                {embed.title || "Untitled"}
+                              </p>
+                            </div>
+                          </div>
+                          <TinyButton
+                            variant="danger"
+                            onClick={() => removeBehanceEmbed(embed.id)}
+                          >
+                            <Trash2 size={12} strokeWidth={2.5} />
+                          </TinyButton>
+                        </div>
+
+                        <div className="space-y-4">
+                          <Field
+                            label="Embed Title"
+                            value={embed.title}
+                            onChange={(val) => updateBehanceEmbed(embed.id, "title", val)}
+                            placeholder="Behance Project — My Design"
+                            icon={FileText}
+                          />
+                          <Field
+                            label="Behance Embed URL"
+                            value={embed.src}
+                            onChange={(val) => updateBehanceEmbed(embed.id, "src", val)}
+                            placeholder="https://www.behance.net/embed/project/..."
+                            icon={Link2}
+                          />
+                        </div>
+                      </article>
+                    ))}
+
+                    <div className="flex items-center gap-4 pt-4">
+                      <ActionButton variant="secondary" onClick={addBehanceEmbed}>
+                        <Plus className="inline size-5" strokeWidth={2.5} />
+                        <span className="ml-2">Add Embed</span>
+                      </ActionButton>
+                      <ActionButton
+                        onClick={saveBehanceShowcase}
+                        disabled={isSavingBehance}
+                      >
+                        {isSavingBehance ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Save size={16} strokeWidth={2.5} />
+                        )}
+                        <span className="ml-2">{isSavingBehance ? "Saving..." : "Save Showcase"}</span>
+                      </ActionButton>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
