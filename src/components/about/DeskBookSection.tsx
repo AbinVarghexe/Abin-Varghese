@@ -27,8 +27,8 @@ type PageContent = {
 
 export default function DeskBookSection({ copy }: DeskBookSectionProps) {
   const [spread, setSpread] = useState(0);
-// State for resume modal
-const [isResumeOpen, setIsResumeOpen] = useState(false);
+// State for resume/portfolio modals
+const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>(null);
   const [keyboardEngaged, setKeyboardEngaged] = useState(false);
   const keyboardRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -563,21 +563,18 @@ const [isResumeOpen, setIsResumeOpen] = useState(false);
           
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-6 md:mt-12 w-full">
-            <button onClick={() => setIsResumeOpen(true)} className="group flex items-center justify-center gap-2 px-8 py-3 bg-[#fdfaf5]/80 border border-[#8b5a2b]/40 text-[#8b5a2b] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] transition-all hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] shadow-sm hover:shadow-md cursor-pointer rounded-full w-full max-w-[280px] md:w-auto md:min-w-[200px]">
-              View Resume
+            <button onClick={() => setActivePdfModal("resume")} className="group flex items-center justify-center gap-2 px-8 py-3 bg-[#fdfaf5]/80 border border-[#8b5a2b]/40 text-[#8b5a2b] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] transition-all hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] shadow-sm hover:shadow-md cursor-pointer rounded-full w-full max-w-[280px] md:w-auto md:min-w-[200px]">
+              Resume
             </button>
-            <Link href="/portfolio/design" className="group flex items-center justify-center gap-2 px-8 py-3 bg-[#fdfaf5]/80 border border-[#8b5a2b]/40 text-[#8b5a2b] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] transition-all hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] shadow-sm hover:shadow-md cursor-pointer rounded-full w-full max-w-[280px] md:w-auto md:min-w-[200px]">
-              Design Portfolio
-            </Link>
-            <Link href="/portfolio" className="group flex items-center justify-center gap-2 px-8 py-3 bg-[#fdfaf5]/80 border border-[#8b5a2b]/40 text-[#8b5a2b] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] transition-all hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] shadow-sm hover:shadow-md cursor-pointer rounded-full w-full max-w-[280px] md:w-auto md:min-w-[200px]">
-              Normal Portfolio
-            </Link>
+            <button onClick={() => setActivePdfModal("design")} className="group flex items-center justify-center gap-2 px-8 py-3 bg-[#fdfaf5]/80 border border-[#8b5a2b]/40 text-[#8b5a2b] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] transition-all hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] shadow-sm hover:shadow-md cursor-pointer rounded-full w-full max-w-[280px] md:w-auto md:min-w-[200px]">
+              Design Resume
+            </button>
           </div>
       </div>
 
-      {/* Resume Modal */}
-      {isResumeOpen && (
-        <Dialog open={isResumeOpen} onClose={() => setIsResumeOpen(false)} className="relative z-[100]">
+      {/* Resume/Portfolio Modal */}
+      {activePdfModal !== null && (
+        <Dialog open={activePdfModal !== null} onClose={() => setActivePdfModal(null)} className="relative z-[100]">
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" aria-hidden="true" />
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <Dialog.Panel className="w-full max-w-4xl h-[85vh] bg-[#fdfaf5] border-2 border-[#8b5a2b]/20 shadow-2xl overflow-hidden flex flex-col relative" style={{ borderRadius: '4px' }}>
@@ -586,9 +583,9 @@ const [isResumeOpen, setIsResumeOpen] = useState(false);
               
               <div className="flex justify-between items-center p-4 md:p-6 border-b border-[#d4bc96]/50 bg-[#f4e8d1] relative z-10">
                 <Dialog.Title className="text-lg md:text-xl font-serif font-bold text-[#4a331e] uppercase tracking-widest">
-                  Resume Archive
+                  {activePdfModal === "resume" ? "Resume Archive" : "Design Resume Archive"}
                 </Dialog.Title>
-                <button onClick={() => setIsResumeOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full border border-[#8b5a2b]/30 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-[#fdfaf5] transition-all">
+                <button onClick={() => setActivePdfModal(null)} className="w-8 h-8 flex items-center justify-center rounded-full border border-[#8b5a2b]/30 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-[#fdfaf5] transition-all">
                   <span className="sr-only">Close</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -597,20 +594,20 @@ const [isResumeOpen, setIsResumeOpen] = useState(false);
               <div className="flex-1 overflow-auto bg-[#fffcf5] relative z-10 p-2 md:p-6">
                 <div className="w-full h-full border border-[#d4bc96]/50 bg-white shadow-inner flex flex-col items-center justify-center">
                     {/* Placeholder for actual PDF embed */}
-                    <embed src="/resume.pdf" type="application/pdf" className="w-full h-full" />
+                    <embed src={activePdfModal === "resume" ? "/resume.pdf" : "/design-resume.pdf"} type="application/pdf" className="w-full h-full" />
                     {/* Fallback if PDF doesn't load/isn't found */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-10">
                         <div className="text-center">
                             <svg className="w-16 h-16 text-[#d4bc96] mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            <p className="font-serif text-[#8b5a2b] italic">Resume document placeholder</p>
-                            <p className="text-xs font-mono mt-2 text-[#8b5a2b]/50 uppercase">/public/resume.pdf</p>
+                            <p className="font-serif text-[#8b5a2b] italic">{activePdfModal === "resume" ? "Resume document placeholder" : "Design Resume placeholder"}</p>
+                            <p className="text-xs font-mono mt-2 text-[#8b5a2b]/50 uppercase">{activePdfModal === "resume" ? "/public/resume.pdf" : "/public/design-resume.pdf"}</p>
                         </div>
                     </div>
                 </div>
               </div>
               
               <div className="flex justify-end p-4 md:p-6 border-t border-[#d4bc96]/50 bg-[#f4e8d1] relative z-10">
-                <a href="/resume.pdf" download className="group flex items-center justify-center gap-2 px-6 py-2.5 bg-[#8b5a2b] border border-[#8b5a2b] text-[#fdfaf5] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#5a3b1c] shadow-sm cursor-pointer rounded-full">
+                <a href={activePdfModal === "resume" ? "/resume.pdf" : "/design-resume.pdf"} download className="group flex items-center justify-center gap-2 px-6 py-2.5 bg-[#8b5a2b] border border-[#8b5a2b] text-[#fdfaf5] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#5a3b1c] shadow-sm cursor-pointer rounded-full">
                   Download PDF
                   <svg className="w-4 h-4 transition-transform group-hover:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 </a>
