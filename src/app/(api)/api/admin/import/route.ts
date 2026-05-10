@@ -21,6 +21,7 @@ import { createClient } from "@/utils/supabase/server";
 import type { AboutContent } from "@/lib/about-content-defaults";
 import type { HeroContent } from "@/lib/hero-content-defaults";
 import type { HomeContent } from "@/lib/home-content-defaults";
+import { homeContentDefaults } from "@/lib/home-content-defaults";
 import type { Service } from "@/constants/services";
 
 const projectSchema = z.object({
@@ -89,6 +90,19 @@ function parseHomePayload(input: Record<string, unknown>): HomeContent {
       linkedin: String(socialRaw.linkedin || ""),
       instagram: String(socialRaw.instagram || ""),
     },
+    otherSocialLinks: Array.isArray(input.otherSocialLinks)
+      ? input.otherSocialLinks
+          .map((item) => {
+            if (typeof item !== "object" || item === null) return null;
+            const record = item as Record<string, unknown>;
+            return {
+              id: String(record.id || ""),
+              label: String(record.label || ""),
+              url: String(record.url || ""),
+            };
+          })
+          .filter((item): item is HomeContent["otherSocialLinks"][number] => Boolean(item && item.id && item.label))
+      : homeContentDefaults.otherSocialLinks,
     pageLinks: {
       about: String(pageRaw.about || ""),
       projects: String(pageRaw.projects || ""),
@@ -101,6 +115,9 @@ function parseHomePayload(input: Record<string, unknown>): HomeContent {
 function parseAboutPayload(input: Record<string, unknown>): AboutContent {
   return {
     aboutImage: String(input.aboutImage || ""),
+    homeAboutImage1: String(input.homeAboutImage1 || input.aboutImage || ""),
+    homeAboutImage2: String(input.homeAboutImage2 || input.aboutInstagramImage2 || ""),
+    homeAboutImage3: String(input.homeAboutImage3 || input.aboutInstagramImage3 || ""),
     aboutInstagramImage1: String(input.aboutInstagramImage1 || ""),
     aboutInstagramImage2: String(input.aboutInstagramImage2 || ""),
     aboutInstagramImage3: String(input.aboutInstagramImage3 || ""),
@@ -140,6 +157,7 @@ function parseServicesPayload(input: Array<Record<string, unknown>>): Service[] 
       : [],
     projectsUrl: typeof service.projectsUrl === "string" ? service.projectsUrl : undefined,
     projectsLabel: typeof service.projectsLabel === "string" ? service.projectsLabel : undefined,
+    iconUrl: typeof service.iconUrl === "string" ? service.iconUrl : undefined,
   }));
 }
 

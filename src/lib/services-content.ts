@@ -1,4 +1,5 @@
 import { createStaticClient } from "@/utils/supabase/static";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { services as servicesDefaults, type Service } from "@/constants/services";
 
 const SERVICES_CONTENT_KEY = "services_section_content_v1";
@@ -38,6 +39,7 @@ function normalizeService(raw: unknown, fallback: Service): Service {
         : fallback.providedServices,
     projectsUrl: typeof raw.projectsUrl === "string" ? raw.projectsUrl : fallback.projectsUrl,
     projectsLabel: typeof raw.projectsLabel === "string" ? raw.projectsLabel : fallback.projectsLabel,
+    iconUrl: typeof raw.iconUrl === "string" ? raw.iconUrl : fallback.iconUrl,
     contents: Array.isArray(raw.contents) ? (raw.contents as Service["contents"]) : fallback.contents,
   };
 }
@@ -88,7 +90,7 @@ export async function getServicesContent(): Promise<Service[]> {
 }
 
 export async function upsertServicesContent(services: Service[]) {
-  const supabase = createStaticClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from("site_content")
     .upsert(

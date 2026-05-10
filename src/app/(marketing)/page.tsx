@@ -2,17 +2,20 @@
 import type { Metadata } from "next";
 import Herosection from "@/components/home/Herosection";
 import ScrollingBanner from "@/components/ui/ScrollingBanner";
-import CreativeToolbox from "@/components/home/CreativeToolbox";
-import BrandsSection from "@/components/home/BrandsSection";
-import AboutSection from "@/components/home/AboutSection";
-import RecentProjects from "@/components/home/RecentProjects";
-import ServicesSection from "@/components/services/ServicesSection";
-import ReviewsSection from "@/components/home/ReviewsSection";
-import SlidingRoleBanner from "@/components/ui/SlidingRoleBanner";
-import { getHeroContent, getHomeContent } from "@/lib/site-content";
+import dynamic from "next/dynamic";
+
+const CreativeToolbox = dynamic(() => import("@/components/home/CreativeToolbox"));
+const BrandsSection = dynamic(() => import("@/components/home/BrandsSection"));
+const AboutSection = dynamic(() => import("@/components/home/AboutSection"));
+const RecentProjects = dynamic(() => import("@/components/home/RecentProjects"));
+const ServicesSection = dynamic(() => import("@/components/services/ServicesSection"));
+const ReviewsSection = dynamic(() => import("@/components/home/ReviewsSection"));
+const SlidingRoleBanner = dynamic(() => import("@/components/ui/SlidingRoleBanner"));
+import { getAboutContent, getHeroContent, getHomeContent } from "@/lib/site-content";
 import { getSiteCopyContent } from "@/lib/site-copy-content";
 import { getServicesContent } from "@/lib/services-content";
 import { getAllProjects } from "@/lib/github-projects";
+import { getAchievements } from "@/lib/achievements";
 import { homePageContentClass, homePageShellClass } from "@/lib/home-page-design-system";
 import { createPageMetadata } from "@/seo/page-metadata";
 
@@ -38,12 +41,48 @@ export const metadata: Metadata = createPageMetadata({
 export default async function Home() {
   const heroData = await getHeroContent();
   const homeData = await getHomeContent();
+  const aboutData = await getAboutContent();
   const siteCopy = await getSiteCopyContent();
   const services = await getServicesContent();
   const allProjects = await getAllProjects();
-  const webProjects = allProjects.filter((p) => p.workspace === "coding").slice(0, 3);
+  
+  // Use selected projects if configured, otherwise fallback to latest 3 coding projects
+  let webProjects;
+  if (siteCopy.homeRecentWebProjectIds && siteCopy.homeRecentWebProjectIds.length > 0) {
+    const idSet = new Set(siteCopy.homeRecentWebProjectIds);
+    webProjects = allProjects.filter((p) => idSet.has(p.id));
+    // Optional: preserve the order of selection
+    webProjects.sort((a, b) => 
+      siteCopy.homeRecentWebProjectIds.indexOf(a.id) - siteCopy.homeRecentWebProjectIds.indexOf(b.id)
+    );
+  } else {
+    webProjects = allProjects.filter((p) => p.workspace === "coding").slice(0, 3);
+  }
+  
+  const dbAchievements = await getAchievements();
+  let mappedAchievements = dbAchievements.map((a, index) => ({
+    id: a.id || `achievement-${index + 1}`,
+    name: a.title,
+    content: a.description,
+    designation: a.category,
+    rating: a.featured ? 5 : 0,
+  }));
+
+  // Fallback to default demo content if no achievements are in the database
+  if (mappedAchievements.length === 0 && siteCopy.homeReviewsItems) {
+    mappedAchievements = siteCopy.homeReviewsItems.map((item) => ({
+      ...item,
+      designation: item.designation || "",
+      rating: item.rating || 5 // Ensure stars show up for demo content
+    }));
+  }
 
   const scrollingItems = homeData.scrollingBannerItems
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const slidingRoles = siteCopy.homeSlidingRoles
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
@@ -54,6 +93,7 @@ export default async function Home() {
         data={heroData}
         homeLinks={{
           socialLinks: homeData.socialLinks,
+          otherSocialLinks: homeData.otherSocialLinks,
           pageLinks: homeData.pageLinks,
         }}
         statusLine={siteCopy.heroStatusLine}
@@ -84,21 +124,28 @@ export default async function Home() {
             heading={siteCopy.homeToolboxHeading}
             intro={siteCopy.homeToolboxIntro}
             categories={siteCopy.homeToolCategories}
+            tools={siteCopy.homeTools}
           />
           <BrandsSection logos={homeData.scrollingLogos} />
 
           {/* Sliding role banner — section separator between Brands and About Me */}
-          <SlidingRoleBanner direction="left" rotation={5.52} className="mt-16" />
+          <SlidingRoleBanner roles={slidingRoles} direction="left" rotation={5.52} className="mt-16" />
 
           {/* About Me Section */}
           <AboutSection
             heading={siteCopy.homeAboutHeading}
             body={siteCopy.homeAboutBody}
             ctaLabel={siteCopy.homeAboutCtaLabel}
+            ctaUrl={siteCopy.homeAboutCtaUrl}
+            images={[
+              { id: "center", src: aboutData.homeAboutImage1, priority: true },
+              { id: "left", src: aboutData.homeAboutImage2 },
+              { id: "right", src: aboutData.homeAboutImage3 },
+            ]}
           />
 
           {/* Sliding role banner — section separator below About Me */}
-          <SlidingRoleBanner direction="right" rotation={-4.88} />
+          <SlidingRoleBanner roles={slidingRoles} direction="right" rotation={-4.88} />
 
           <RecentProjects
             heading={siteCopy.homeRecentHeading}
@@ -120,7 +167,7 @@ export default async function Home() {
           <ReviewsSection
             heading={siteCopy.homeReviewsHeading}
             intro={siteCopy.homeReviewsIntro}
-            items={siteCopy.homeReviewsItems}
+            items={mappedAchievements}
           />
         </div>
       </div>

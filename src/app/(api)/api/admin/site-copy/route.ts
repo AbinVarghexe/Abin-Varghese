@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin-auth";
 import {
@@ -19,6 +20,7 @@ const creativeCategorySchema = z.object({
   title: z.string(),
   description: z.string(),
   image: z.string(),
+  lottieUrl: z.string().optional().default(""),
 });
 
 const timelineEntrySchema = z.object({
@@ -44,20 +46,33 @@ const siteCopySchema = z.object({
   homeAboutHeading: z.string(),
   homeAboutBody: z.string(),
   homeAboutCtaLabel: z.string(),
+  homeAboutCtaUrl: z.string(),
   homeToolboxHeading: z.string(),
   homeToolboxIntro: z.string(),
   homeToolCategories: z.array(
     z.object({
-      id: z.enum(["design", "video", "development"]),
+      id: z.string(),
       name: z.string(),
       description: z.string(),
     })
   ),
+  homeTools: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string(),
+      icon: z.string(),
+      category: z.string(),
+      url: z.string().optional().default(""),
+    })
+  ).default([]),
   homeRecentHeading: z.string(),
   homeRecentIntro: z.string(),
   homeRecentWebTitle: z.string(),
   homeRecentWebCopy: z.string(),
   homeRecentWebCtaLabel: z.string(),
+  homeRecentWebProjectIds: z.array(z.string()).default([]),
+  homeSlidingRoles: z.string(),
   homeCreativeTitle: z.string(),
   homeCreativeCopy: z.string(),
   homeCreativeCtaLabel: z.string(),
@@ -122,9 +137,11 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const siteCopy = siteCopySchema.parse(normalizeSiteCopyContent(body.siteCopy ?? body));
     await upsertSiteCopyContent(siteCopy);
+    revalidatePath("/");
     return NextResponse.json({ siteCopy });
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.error("Zod validation failed for site-copy:", error.format());
       return NextResponse.json(
         { error: "Invalid input", details: error.errors },
         { status: 400 }
@@ -135,4 +152,3 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

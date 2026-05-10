@@ -1,8 +1,38 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import AdminSectionWorkspace, { 
+  SectionTitle, 
+  Field, 
+  TextareaField, 
+  SectionPanel, 
+  TinyButton, 
+  ActionButton 
+} from "@/components/admin/AdminSectionWorkspace";
+import { 
+  Save, 
+  Layers, 
+  Package, 
+  Plus, 
+  Trash2, 
+  Palette, 
+  Type, 
+  AlignLeft, 
+  List, 
+  Monitor, 
+  Smartphone, 
+  Video, 
+  Code, 
+  ImageIcon,
+  Sparkles,
+  ChevronRight,
+  Layout,
+  ExternalLink,
+  Loader2
+} from "lucide-react";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Service, ServiceContent } from "@/constants/services";
-import AdminSectionWorkspace from "@/components/admin/AdminSectionWorkspace";
 
 const defaultProjectContent: ServiceContent = {
   type: "project",
@@ -17,25 +47,18 @@ export default function AdminServicesPage() {
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [selectedProjectIndex, setSelectedProjectIndex] = useState<number>(0);
   const [status, setStatus] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     async function loadServices() {
       const response = await fetch("/api/admin/services", { cache: "no-store" });
-      if (!response.ok) {
-        return;
-      }
-
+      if (!response.ok) return;
       const data = await response.json();
       const loadedServices: Service[] = data.services || [];
       setServices(loadedServices);
-      if (loadedServices[0]) {
-        setSelectedServiceId(loadedServices[0].id);
-      }
+      if (loadedServices[0]) setSelectedServiceId(loadedServices[0].id);
     }
-
-    queueMicrotask(() => {
-      void loadServices();
-    });
+    void loadServices();
   }, []);
 
   const selectedService = useMemo(
@@ -44,343 +67,319 @@ export default function AdminServicesPage() {
   );
 
   const projectItems = useMemo(
-    () =>
-      (selectedService?.contents || [])
-        .map((item, index) => ({ item, index }))
-        .filter(({ item }) => item.type === "project"),
+    () => (selectedService?.contents || [])
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => item.type === "project"),
     [selectedService]
   );
 
   const selectedProject = projectItems[selectedProjectIndex]?.item;
 
   function updateSelectedService(patch: Partial<Service>) {
-    if (!selectedService) {
-      return;
-    }
-
-    setServices((current) =>
-      current.map((service) =>
-        service.id === selectedService.id
-          ? {
-              ...service,
-              ...patch,
-            }
-          : service
-      )
-    );
+    if (!selectedService) return;
+    setServices((current) => current.map((s) => s.id === selectedService.id ? { ...s, ...patch } : s));
   }
 
   function updateSelectedProject(patch: Partial<ServiceContent>) {
-    if (!selectedService || !selectedProject) {
-      return;
-    }
-
+    if (!selectedService || !selectedProject) return;
     const targetIndex = projectItems[selectedProjectIndex]?.index;
-    if (targetIndex === undefined) {
-      return;
-    }
+    if (targetIndex === undefined) return;
 
-    setServices((current) =>
-      current.map((service) => {
-        if (service.id !== selectedService.id) {
-          return service;
-        }
-
-        const nextContents = [...(service.contents || [])];
-        nextContents[targetIndex] = {
-          ...nextContents[targetIndex],
-          ...patch,
-        };
-
-        return {
-          ...service,
-          contents: nextContents,
-        };
-      })
-    );
+    setServices((current) => current.map((s) => {
+      if (s.id !== selectedService.id) return s;
+      const nextContents = [...(s.contents || [])];
+      nextContents[targetIndex] = { ...nextContents[targetIndex], ...patch };
+      return { ...s, contents: nextContents };
+    }));
   }
 
   function addProjectShowcase() {
-    if (!selectedService) {
-      return;
-    }
-
-    setServices((current) =>
-      current.map((service) => {
-        if (service.id !== selectedService.id) {
-          return service;
-        }
-
-        return {
-          ...service,
-          contents: [...(service.contents || []), defaultProjectContent],
-        };
-      })
-    );
-
+    if (!selectedService) return;
+    setServices((current) => current.map((s) => {
+      if (s.id !== selectedService.id) return s;
+      return { ...s, contents: [...(s.contents || []), defaultProjectContent] };
+    }));
     setSelectedProjectIndex(projectItems.length);
   }
 
   function removeProjectShowcase(indexInFiltered: number) {
-    if (!selectedService) {
-      return;
-    }
-
+    if (!selectedService) return;
     const targetIndex = projectItems[indexInFiltered]?.index;
-    if (targetIndex === undefined) {
-      return;
-    }
+    if (targetIndex === undefined) return;
 
-    setServices((current) =>
-      current.map((service) => {
-        if (service.id !== selectedService.id) {
-          return service;
-        }
-
-        const nextContents = [...(service.contents || [])];
-        nextContents.splice(targetIndex, 1);
-
-        return {
-          ...service,
-          contents: nextContents,
-        };
-      })
-    );
-
+    setServices((current) => current.map((s) => {
+      if (s.id !== selectedService.id) return s;
+      const nextContents = [...(s.contents || [])];
+      nextContents.splice(targetIndex, 1);
+      return { ...s, contents: nextContents };
+    }));
     setSelectedProjectIndex(0);
   }
 
   async function saveServices() {
-    setStatus("Saving service section...");
-
-    const response = await fetch("/api/admin/services", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ services }),
-    });
-
-    if (!response.ok) {
-      setStatus("Save failed.");
-      return;
+    setSaving(true);
+    const toastId = toast.loading("Synchronizing service portfolio...");
+    try {
+      const response = await fetch("/api/admin/services", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ services }),
+      });
+      if (!response.ok) throw new Error("Save failed");
+      toast.success("Portfolio synchronized successfully.", { id: toastId });
+    } catch {
+      toast.error("Portfolio synchronization failed.", { id: toastId });
+    } finally {
+      setSaving(false);
     }
-
-    setStatus("Service section saved.");
   }
 
   if (!selectedService) {
-    return <div className="text-sm text-[var(--color-text-body)]">Loading service section...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[500px] bg-[#f7f4ef]/50 rounded-[33px] border-[5px] border-[#e4e4e7]">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="h-16 w-16 border-4 border-[#0020d7]/10 border-t-[#0020d7] rounded-full animate-spin" />
+            <Layers className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#0020d7]" size={24} />
+          </div>
+          <p className="text-[14px] font-extrabold text-[#0b0b0c] uppercase tracking-[0.25em]">Initializing Workspace</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <AdminSectionWorkspace
-      sectionLabel="Service Section"
-      sectionTitle="Services and Subsection Projects"
-      sectionDescription="Edit each service and manage project showcase cards shown inside service details pages."
-      previewPath="/services"
+      sectionLabel="Service Architecture"
+      sectionTitle="Service Portfolio Manager"
+      sectionDescription="Refine your professional offerings. Manage detailed service descriptions and showcase project deep-dives."
+      icon={Layers}
+      iconColor="#0020d7"
     >
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-5 xl:col-span-3">
-          <h3 className="text-lg font-medium text-[#0b0b0c]">Services</h3>
-          <div className="mt-4 space-y-2">
-            {services.map((service) => (
-              <button
-                key={service.id}
-                type="button"
-                onClick={() => {
-                  setSelectedServiceId(service.id);
-                  setSelectedProjectIndex(0);
-                }}
-                className={`w-full rounded-lg border px-3 py-2 text-left text-sm ${
-                  selectedServiceId === service.id
-                    ? "border-[var(--color-border-medium)] bg-[#eef2ff] text-[#0b0b0c]"
-                    : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)]"
-                }`}
-              >
-                {service.title}
-              </button>
-            ))}
-          </div>
-        </section>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+        
+        {/* Navigation Sidebar */}
+        <aside className="xl:col-span-3 space-y-8">
+          <SectionPanel className="p-5 bg-white shadow-xl shadow-black/5">
+            <h3 className="px-4 py-3 text-[11px] font-extrabold text-[#4a4a68] uppercase tracking-[0.2em] mb-3">Professional Segments</h3>
+            <div className="space-y-2">
+              {services.map((service) => (
+                <button
+                  key={service.id}
+                  onClick={() => { setSelectedServiceId(service.id); setSelectedProjectIndex(0); }}
+                  className={`w-full flex items-center justify-between px-5 py-4 rounded-[18px] text-[13px] font-bold transition-all active:scale-[0.98] ${
+                    selectedServiceId === service.id 
+                      ? "bg-[#0b0b0c] text-white shadow-xl shadow-black/20" 
+                      : "bg-[#f7f4ef] text-[#4a4a68] hover:bg-[#e4e4e7] hover:text-[#0b0b0c]"
+                  }`}
+                >
+                  <span className="truncate">{service.title}</span>
+                  <ChevronRight size={14} className={selectedServiceId === service.id ? "opacity-100" : "opacity-0"} />
+                </button>
+              ))}
+            </div>
+          </SectionPanel>
 
-        <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-6 xl:col-span-9">
-          <h3 className="text-lg font-medium text-[#0b0b0c]">Service Details</h3>
+          <SectionPanel className="p-8 bg-[#f7f4ef] border-dashed border-[#e4e4e7]">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                <Sparkles className="text-[#0020d7]" size={24} />
+              </div>
+              <div>
+                <p className="text-[14px] font-extrabold text-[#0b0b0c] tracking-tight">Portfolio Intelligence</p>
+                <p className="text-[12px] text-[#4a4a68] mt-1.5 leading-relaxed font-medium">Each category houses specialized project deep-dives to demonstrate high-fidelity expertise.</p>
+              </div>
+            </div>
+          </SectionPanel>
+        </aside>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm">
-              <span className="text-[var(--color-text-body)]">Title</span>
-              <input
-                value={selectedService.title}
-                onChange={(event) => updateSelectedService({ title: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+        {/* Main Content Area */}
+        <main className="xl:col-span-9 space-y-10 pb-32">
+          
+          {/* Primary Details Panel */}
+          <SectionPanel className="flex flex-col gap-10 bg-white/50 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <SectionTitle title="Segment Identity" copy="Core visual and descriptive properties." icon={Type} />
+              <div 
+                className="h-10 w-10 rounded-[14px] border-2 border-white shadow-lg ring-4 ring-[#f7f4ef]" 
+                style={{ backgroundColor: selectedService.accentColor }} 
               />
-            </label>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-6">
+                <Field
+                  label="Primary Designation"
+                  value={selectedService.title}
+                  onChange={(v) => updateSelectedService({ title: v })}
+                  icon={Type}
+                />
+              </div>
+              <div className="lg:col-span-6">
+                <Field
+                  label="Brand Accent Color"
+                  value={selectedService.accentColor}
+                  onChange={(v) => updateSelectedService({ accentColor: v })}
+                  icon={Palette}
+                />
+              </div>
+              <div className="lg:col-span-12">
+                <TextareaField
+                  label="Elevator Pitch"
+                  value={selectedService.description}
+                  onChange={(v) => updateSelectedService({ description: v })}
+                  rows={2}
+                  icon={AlignLeft}
+                />
+              </div>
+              <div className="lg:col-span-12">
+                <TextareaField
+                  label="Detailed Narrative"
+                  value={selectedService.detailedDescription}
+                  onChange={(v) => updateSelectedService({ detailedDescription: v })}
+                  rows={4}
+                  icon={AlignLeft}
+                />
+              </div>
+              <div className="lg:col-span-12">
+                <TextareaField
+                  label="Deliverables (Line-separated list)"
+                  value={selectedService.providedServices.join("\n")}
+                  onChange={(v) => updateSelectedService({
+                    providedServices: v.split("\n").map(s => s.trim()).filter(Boolean)
+                  })}
+                  rows={6}
+                  icon={List}
+                />
+              </div>
+            </div>
+          </SectionPanel>
 
-            <label className="space-y-2 text-sm">
-              <span className="text-[var(--color-text-body)]">Accent Color</span>
-              <input
-                value={selectedService.accentColor}
-                onChange={(event) => updateSelectedService({ accentColor: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm md:col-span-2">
-              <span className="text-[var(--color-text-body)]">Description</span>
-              <textarea
-                rows={3}
-                value={selectedService.description}
-                onChange={(event) => updateSelectedService({ description: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm md:col-span-2">
-              <span className="text-[var(--color-text-body)]">Detailed Description</span>
-              <textarea
-                rows={4}
-                value={selectedService.detailedDescription}
-                onChange={(event) =>
-                  updateSelectedService({ detailedDescription: event.target.value })
-                }
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm md:col-span-2">
-              <span className="text-[var(--color-text-body)]">Provided Services (one per line)</span>
-              <textarea
-                rows={4}
-                value={selectedService.providedServices.join("\n")}
-                onChange={(event) =>
-                  updateSelectedService({
-                    providedServices: event.target.value
-                      .split("\n")
-                      .map((item) => item.trim())
-                      .filter(Boolean),
-                  })
-                }
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
-          </div>
-
-          <div className="mt-8 rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold text-[#0b0b0c]">Showcase Subsection Projects</h4>
-              <button
-                type="button"
+          {/* Showcase Projects Panel */}
+          <SectionPanel className="flex flex-col gap-10 bg-white/50 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <SectionTitle title="Project Showcases" copy="Curate high-fidelity deep-dive cards." icon={Package} />
+              <button 
                 onClick={addProjectShowcase}
-                className="rounded-full border border-[var(--color-border-light)] bg-white px-3 py-1 text-xs text-[var(--color-text-body)]"
+                className="flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-[#0020d7]/10 text-[#0020d7] text-[11px] font-extrabold uppercase tracking-widest hover:bg-[#0020d7]/15 transition-all active:scale-95 border-2 border-[#0020d7]/10"
               >
-                Add Project
+                <Plus size={14} strokeWidth={3} />
+                Add showcase
               </button>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
-              <div className="space-y-2 lg:col-span-4">
-                {projectItems.map(({ item }, index) => (
-                  <div key={`${item.title}-${index}`} className="rounded-lg border border-[var(--color-border-light)] bg-white p-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedProjectIndex(index)}
-                      className={`w-full rounded px-2 py-1 text-left text-xs ${
-                        selectedProjectIndex === index
-                          ? "bg-[#eef2ff] text-[#0b0b0c]"
-                          : "text-[var(--color-text-body)]"
-                      }`}
-                    >
-                      {item.title || `Project ${index + 1}`}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeProjectShowcase(index)}
-                      className="mt-2 rounded border border-red-300 bg-red-50 px-2 py-1 text-[10px] text-red-700"
-                    >
-                      Remove
-                    </button>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+              {/* Project Tab List */}
+              <div className="lg:col-span-4 space-y-3">
+                <AnimatePresence mode="popLayout">
+                  {projectItems.map(({ item }, idx) => (
+                    <motion.div key={idx} layout className="group relative">
+                      <button
+                        onClick={() => setSelectedProjectIndex(idx)}
+                        className={`w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-[12px] font-extrabold transition-all border-2 active:scale-[0.98] ${
+                          selectedProjectIndex === idx 
+                            ? "bg-[#0020d7]/5 border-[#0020d7]/30 text-[#0020d7] shadow-sm" 
+                            : "bg-white border-[#e4e4e7] text-[#4a4a68] hover:border-[#0020d7]/20 hover:text-[#0b0b0c]"
+                        }`}
+                      >
+                        <span className="truncate">{item.title || `Asset ${idx + 1}`}</span>
+                        <div className={`h-2 w-2 rounded-full transition-all ${selectedProjectIndex === idx ? "bg-[#0020d7] scale-125 shadow-[0_0_8px_rgba(0,32,215,0.4)]" : "bg-[#e4e4e7]"}`} />
+                      </button>
+                      <button
+                        onClick={() => removeProjectShowcase(idx)}
+                        className="absolute -right-2 -top-2 h-7 w-7 flex items-center justify-center rounded-full bg-[#ff3b30] text-white opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-xl shadow-[#ff3b30]/20 z-10"
+                      >
+                        <Trash2 size={12} strokeWidth={2.5} />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {projectItems.length === 0 && (
+                  <div className="p-10 rounded-[28px] border-4 border-dashed border-[#e4e4e7] text-center bg-white/50">
+                    <p className="text-[12px] font-extrabold text-[#4a4a68] uppercase tracking-widest opacity-40 italic">Empty Showcase Repository</p>
                   </div>
-                ))}
+                )}
               </div>
 
-              <div className="space-y-3 lg:col-span-8">
+              {/* Project Editor Area */}
+              <div className="lg:col-span-8">
                 {selectedProject ? (
-                  <>
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Title</span>
-                      <input
-                        value={selectedProject.title}
-                        onChange={(event) => updateSelectedProject({ title: event.target.value })}
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
-                      />
-                    </label>
-
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Description</span>
-                      <textarea
-                        rows={3}
-                        value={selectedProject.description}
-                        onChange={(event) =>
-                          updateSelectedProject({ description: event.target.value })
-                        }
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
-                      />
-                    </label>
-
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Mockup Image URL</span>
-                      <input
+                  <motion.div 
+                    key={selectedProjectIndex}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="p-8 rounded-[33px] bg-[#f7f4ef]/40 border-2 border-[#e4e4e7] space-y-8"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="md:col-span-2">
+                        <Field
+                          label="Showcase Heading"
+                          value={selectedProject.title}
+                          onChange={(v) => updateSelectedProject({ title: v })}
+                          icon={Type}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <TextareaField
+                          label="Showcase Brief"
+                          value={selectedProject.description}
+                          onChange={(v) => updateSelectedProject({ description: v })}
+                          rows={3}
+                          icon={AlignLeft}
+                        />
+                      </div>
+                      <Field
+                        label="Mockup Asset URL"
                         value={selectedProject.mockupImage || ""}
-                        onChange={(event) =>
-                          updateSelectedProject({ mockupImage: event.target.value })
-                        }
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
+                        onChange={(v) => updateSelectedProject({ mockupImage: v })}
+                        icon={ImageIcon}
                       />
-                    </label>
-
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Video URL</span>
-                      <input
+                      <Field
+                        label="Motion Preview URL"
                         value={selectedProject.videoUrl || ""}
-                        onChange={(event) => updateSelectedProject({ videoUrl: event.target.value })}
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
+                        onChange={(v) => updateSelectedProject({ videoUrl: v })}
+                        icon={Video}
                       />
-                    </label>
-
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Tech Stack (comma separated)</span>
-                      <input
-                        value={(selectedProject.techStack || []).join(", ")}
-                        onChange={(event) =>
-                          updateSelectedProject({
-                            techStack: event.target.value
-                              .split(",")
-                              .map((tag) => tag.trim())
-                              .filter(Boolean),
-                          })
-                        }
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
-                      />
-                    </label>
-                  </>
+                      <div className="md:col-span-2">
+                        <Field
+                          label="Tech Ecosystem (Comma separated)"
+                          value={(selectedProject.techStack || []).join(", ")}
+                          onChange={(v) => updateSelectedProject({
+                            techStack: v.split(",").map(t => t.trim()).filter(Boolean)
+                          })}
+                          icon={Code}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
                 ) : (
-                  <p className="text-xs text-[var(--color-text-body)]">No project selected.</p>
+                  <div className="h-full min-h-[300px] flex items-center justify-center p-12 rounded-[33px] bg-[#f7f4ef] border-4 border-dashed border-[#e4e4e7]">
+                    <p className="text-[14px] font-extrabold text-[#4a4a68] uppercase tracking-[0.2em] opacity-40">Select segment to refine</p>
+                  </div>
                 )}
               </div>
             </div>
-          </div>
+          </SectionPanel>
 
-          <div className="mt-6 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={saveServices}
-              className="rounded-full border-[2px] border-[var(--color-border-dark)] bg-[#dbe7ff] px-5 py-2 text-sm font-medium text-[#0020d7] shadow-[0_8px_18px_rgba(0,32,215,0.14)]"
-            >
-              Save Service Section
-            </button>
+          {/* Persistent Action Bar */}
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-8">
+            <div className="flex items-center justify-between gap-4 p-2.5 rounded-[24px] bg-white/95 border-2 border-[#e4e4e7] shadow-2xl backdrop-blur-md">
+              <div className="flex-1 px-4">
+                <div className="flex items-center gap-3">
+                  <div className={`h-2 w-2 rounded-full ${saving ? "bg-[#0020d7] animate-pulse shadow-[0_0_8px_rgba(0,32,215,0.4)]" : "bg-[#34c759] shadow-[0_0_8px_rgba(52,199,89,0.4)]"}`} />
+                  <p className="text-[11px] font-extrabold text-[#0b0b0c] uppercase tracking-widest opacity-80">
+                    {saving ? "Syncing..." : "System Standby"}
+                  </p>
+                </div>
+              </div>
+              <ActionButton onClick={saveServices} disabled={saving}>
+                {saving ? "Syncing..." : "Sync Portfolio"}
+                <Save size={14} strokeWidth={2.5} />
+              </ActionButton>
+            </div>
           </div>
-
-          {status ? <p className="mt-3 text-xs text-[var(--color-text-body)]">{status}</p> : null}
-        </section>
+        </main>
       </div>
     </AdminSectionWorkspace>
   );

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import AdminSectionWorkspace from "@/components/admin/AdminSectionWorkspace";
+import AdminSectionWorkspace, { SectionPanel, SectionTitle, Field, TextareaField, SelectField, ActionButton, TinyButton, StatusBadge } from "@/components/admin/AdminSectionWorkspace";
 import { uploadToStorage } from "@/lib/supabase";
-import { Upload as UploadIcon, X as XIcon, Loader2, Sparkles, Pencil, AlertCircle } from "lucide-react";
+import { Upload as UploadIcon, X as XIcon, Loader2, Sparkles, Pencil, AlertCircle, FolderKanban, Code, Palette, Github, Link2, ExternalLink, Trash2, Eye, EyeOff, Save, RefreshCw, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 type Project = {
@@ -548,135 +548,118 @@ export default function AdminProjectsPage() {
 
   return (
     <AdminSectionWorkspace
-      sectionLabel="Project Section"
-      sectionTitle="Project CRUD Management"
-      sectionDescription="Add new projects, edit existing entries, and control featured work visibility."
-      previewPath={activeWorkspace === "coding" ? "/projects?workspace=coding" : "/projects?workspace=designing"}
+      sectionLabel="Portfolio Assets"
+      sectionTitle="Project Engineering"
+      sectionDescription="Add new projects, edit existing entries, and orchestrate featured work visibility."
+      icon={FolderKanban}
     >
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-5 xl:col-span-4">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium text-[#0b0b0c]">
-                {activeWorkspace === "coding" ? "Coding Projects" : "Designing Projects"}
-              </h3>
-              <p className="mt-1 text-xs text-[var(--color-text-body)]">
-                {sidebarProjects.length} item{sidebarProjects.length === 1 ? "" : "s"} in this workspace
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={resetForm}
-              className="rounded-full border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-1 text-xs text-[var(--color-text-body)]"
-            >
-              New
-            </button>
-          </div>
+      <div className="grid grid-cols-1 gap-12 xl:grid-cols-12 pb-32">
+        {/* Project List Sidebar */}
+        <SectionPanel className="p-10 xl:col-span-4 bg-white/50 backdrop-blur-sm flex flex-col h-fit sticky top-12">
+          <SectionTitle 
+            title={activeWorkspace === "coding" ? "Coding Projects" : "Design Projects"}
+            copy={`${sidebarProjects.length} entities discovered in this workspace.`}
+            icon={activeWorkspace === "coding" ? Code : Palette}
+          />
 
-          <div className="space-y-2">
-            {sidebarProjects.map((project) => {
-              const isEditing = selectedId === project.id;
-              const isWebDesignProject =
-                activeWorkspace === "designing" &&
-                (project.category === "Web Design" || project.type === "FIGMA");
-              return (
-                <article
-                  key={project.id}
-                  className={`rounded-xl border p-3 transition-all ${
-                    isEditing
-                      ? "border-blue-400 bg-blue-50 ring-2 ring-blue-200 shadow-sm"
-                      : "border-[var(--color-border-light)] bg-[#f8f5f2] hover:border-[var(--color-border-medium)] hover:bg-white"
-                  }`}
-                >
-                  {/* Project info */}
-                  <div className="mb-2">
-                    <div className="mb-1 flex flex-wrap items-center gap-2">
-                      <p className={`text-sm font-semibold ${isEditing ? "text-blue-800" : "text-[#0b0b0c]"}`}>
-                        {project.title}
+          <div className="flex flex-col gap-4">
+            <ActionButton variant="secondary" onClick={resetForm}>
+              Draft New Entry
+              <Plus className="ml-3 inline size-5" strokeWidth={2.5} />
+            </ActionButton>
+            
+            <div className="space-y-4 mt-6">
+              {sidebarProjects.map((project) => {
+                const isEditing = selectedId === project.id;
+                const isWebDesignProject =
+                  activeWorkspace === "designing" &&
+                  (project.category === "Web Design" || project.type === "FIGMA");
+                
+                return (
+                  <article
+                    key={project.id}
+                    className={`group relative rounded-[32px] border-2 p-6 transition-all duration-300 ${
+                      isEditing
+                        ? "border-[#0020d7] bg-white shadow-xl shadow-[#0020d7]/5"
+                        : "border-[#e4e4e7] bg-[#f7f4ef]/50 hover:border-[#0020d7]/20 hover:bg-white hover:shadow-lg"
+                    }`}
+                  >
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-[#0020d7]/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-[#0020d7]">
+                              {project.category || (project.type === "CODE" ? "Coding" : "Design")}
+                            </span>
+                            {isWebDesignProject && project.featured && (
+                              <StatusBadge status="success">Main Build</StatusBadge>
+                            )}
+                          </div>
+                          <h4 className={`text-[16px] font-extrabold tracking-tight ${isEditing ? "text-[#0020d7]" : "text-[#0b0b0c]"}`}>
+                            {project.title}
+                          </h4>
+                        </div>
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${isEditing ? "bg-[#0020d7] text-white" : "bg-white border-2 border-[#e4e4e7] text-[#4a4a68]"}`}>
+                           {activeWorkspace === "coding" ? <Code size={18} strokeWidth={2.5} /> : <Palette size={18} strokeWidth={2.5} />}
+                        </div>
+                      </div>
+
+                      <p className="text-[13px] text-[#4a4a68] leading-relaxed font-medium opacity-80 line-clamp-2">
+                        {project.description}
                       </p>
-                      <span className="rounded-full bg-black/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-600">
-                        {project.category || (project.type === "CODE" ? "Coding" : "Design")}
-                      </span>
-                      {isWebDesignProject && project.featured ? (
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700">
-                          Main
-                        </span>
-                      ) : null}
+
+                      <div className="flex items-center gap-2 pt-2">
+                        {isWebDesignProject && (
+                          <TinyButton 
+                            variant={project.featured ? "primary" : "default"} 
+                            onClick={() => setMainWebDesignProject(project)}
+                            disabled={project.featured}
+                          >
+                            {project.featured ? "Main Build" : "Pin Project"}
+                          </TinyButton>
+                        )}
+                        <TinyButton 
+                          variant={isEditing ? "primary" : "default"}
+                          onClick={() => isEditing ? resetForm() : selectProject(project)}
+                        >
+                          {isEditing ? "Discard Edit" : "Configure"}
+                        </TinyButton>
+                        <TinyButton 
+                          variant="danger"
+                          onClick={() => deleteProject(project.id)}
+                        >
+                          <Trash2 size={12} strokeWidth={2.5} />
+                        </TinyButton>
+                      </div>
                     </div>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-[var(--color-text-body)]">
-                      {project.description}
-                    </p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pt-1">
-                    {isWebDesignProject ? (
-                      <button
-                        type="button"
-                        onClick={() => setMainWebDesignProject(project)}
-                        disabled={project.featured}
-                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
-                          project.featured
-                            ? "border-blue-200 bg-blue-50 text-blue-500 cursor-default"
-                            : "border-blue-200 bg-white text-blue-700 hover:bg-blue-50 hover:border-blue-300"
-                        }`}
-                      >
-                        <Sparkles size={11} />
-                        {project.featured ? "Main Project" : "Set as Main"}
-                      </button>
-                    ) : null}
-
-                    <button
-                      type="button"
-                      onClick={() => isEditing ? resetForm() : selectProject(project)}
-                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
-                        isEditing
-                          ? "border-blue-400 bg-blue-100 text-blue-700 hover:bg-blue-200"
-                          : "border-[var(--color-border-light)] bg-white text-[#0b0b0c] hover:bg-[#eef2ff] hover:border-blue-300 hover:text-blue-700"
-                      }`}
-                    >
-                      <Pencil size={11} />
-                      {isEditing ? "Cancel Edit" : "Edit"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => deleteProject(project.id)}
-                      className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 transition-all hover:bg-red-100 hover:border-red-300"
-                    >
-                      <XIcon size={11} />
-                      Delete
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
+                  </article>
+                );
+              })}
+            </div>
           </div>
 
           {activeWorkspace === "coding" ? (
-            <div className="mt-6 border-t border-[var(--color-border-light)] pt-5">
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold text-[#0b0b0c]">Repository Visibility</h4>
-                <p className="mt-1 text-xs text-[var(--color-text-body)]">
-                  Turn repositories on or off for the public coding section and set a custom banner for each one.
-                </p>
-              </div>
+            <div className="mt-10 border-t-2 border-[#f7f4ef] pt-10">
+              <SectionTitle 
+                title="Repository Visibility" 
+                copy="Control which repositories are projected to the public intelligence layer." 
+                icon={Github} 
+              />
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {isLoadingGithubRepos ? (
                   Array.from({ length: 3 }).map((_, index) => (
                     <div
                       key={index}
-                      className="rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] p-3"
+                      className="rounded-[32px] border-2 border-[#e4e4e7] bg-[#f7f4ef]/30 p-6 animate-pulse"
                     >
-                      <div className="h-4 w-2/3 animate-pulse rounded bg-zinc-200" />
-                      <div className="mt-2 h-3 w-full animate-pulse rounded bg-zinc-200" />
-                      <div className="mt-3 h-9 w-full animate-pulse rounded-xl bg-zinc-200" />
+                      <div className="h-4 w-2/3 rounded bg-[#e4e4e7]" />
+                      <div className="mt-4 h-12 w-full rounded-[18px] bg-[#e4e4e7]" />
                     </div>
                   ))
                 ) : githubRepos.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-[var(--color-border-light)] bg-[#f8f5f2] px-4 py-6 text-center text-xs text-[var(--color-text-body)]">
-                    No GitHub repositories were found for the coding section.
+                  <div className="rounded-[32px] border-2 border-dashed border-[#e4e4e7] bg-[#f7f4ef]/30 px-6 py-10 text-center">
+                    <p className="text-[13px] text-[#4a4a68] font-bold italic opacity-60">No repositories detected in the current cloud.</p>
                   </div>
                 ) : (
                   githubRepos.map((repo) => {
@@ -685,96 +668,66 @@ export default function AdminProjectsPage() {
                     return (
                       <article
                         key={repo.full_name}
-                        className="rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] p-3"
+                        className="group rounded-[32px] border-2 border-[#e4e4e7] bg-[#f7f4ef]/30 p-6 transition-all hover:bg-white hover:shadow-xl"
                       >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start justify-between gap-6">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#0b0b0c]">
+                            <h5 className="truncate text-[15px] font-extrabold text-[#0b0b0c]">
                               {repo.name}
-                            </p>
-                            <p className="mt-1 text-[11px] text-[var(--color-text-body)]">
+                            </h5>
+                            <p className="mt-1 text-[11px] font-extrabold text-[#0020d7] uppercase tracking-widest opacity-60">
                               {repo.full_name}
                             </p>
-                            {repo.description ? (
-                              <p className="mt-2 line-clamp-2 text-xs text-[var(--color-text-body)]">
+                            {repo.description && (
+                              <p className="mt-3 line-clamp-2 text-[13px] text-[#4a4a68] font-medium leading-relaxed">
                                 {repo.description}
                               </p>
-                            ) : null}
+                            )}
                           </div>
 
                           <button
                             type="button"
                             onClick={() => handleGithubRepoEnabledToggle(repo)}
                             disabled={repo.isSaving}
-                            className={`relative inline-flex h-7 w-12 flex-shrink-0 items-center rounded-full transition ${
-                              repo.enabled ? "bg-blue-600" : "bg-zinc-300"
+                            className={`relative inline-flex h-8 w-14 flex-shrink-0 items-center rounded-full transition-colors duration-300 ${
+                              repo.enabled ? "bg-[#0020d7]" : "bg-[#e4e4e7]"
                             } ${repo.isSaving ? "opacity-60" : ""}`}
-                            aria-pressed={repo.enabled}
-                            aria-label={`Toggle ${repo.name} visibility`}
                           >
                             <span
-                              className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                                repo.enabled ? "translate-x-6" : "translate-x-1"
+                              className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                                repo.enabled ? "translate-x-7" : "translate-x-1"
                               }`}
                             />
                           </button>
                         </div>
 
-                        <div className="mt-3">
-                          <label className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-[var(--color-text-body)]">
-                            Custom banner
-                          </label>
-                          <div className="flex gap-2">
-                            <input
-                              value={repo.draftImageUrl}
-                              onChange={(e) =>
-                                updateGithubRepoState(repo.full_name, (current) => ({
-                                  ...current,
-                                  draftImageUrl: e.target.value,
-                                }))
-                              }
-                              placeholder="https://... or upload an image"
-                              className="w-full rounded-xl border border-[var(--color-border-light)] bg-white px-3 py-2 text-xs text-[#0b0b0c]"
-                            />
-                            <div className="relative">
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => void handleRepoBannerUpload(repo, e)}
-                                className="absolute inset-0 cursor-pointer opacity-0"
-                                disabled={isUploadingBanner}
-                              />
-                              <button
-                                type="button"
-                                className="flex h-full items-center rounded-xl border border-[var(--color-border-light)] bg-white px-3 hover:bg-[#f8f5f2]"
-                              >
-                                {isUploadingBanner ? (
-                                  <Loader2 size={14} className="animate-spin text-blue-500" />
-                                ) : (
-                                  <UploadIcon size={14} className="text-gray-500" />
-                                )}
-                              </button>
-                            </div>
-                          </div>
+                        <div className="mt-6">
+                          <Field
+                            label="Custom Terminal Banner"
+                            value={repo.draftImageUrl}
+                            onChange={(val) => updateGithubRepoState(repo.full_name, (curr) => ({ ...curr, draftImageUrl: val }))}
+                            placeholder="https://... or upload asset"
+                            icon={UploadIcon}
+                          />
                         </div>
 
-                        <div className="mt-3 flex items-center justify-between gap-2">
+                        <div className="mt-6 flex items-center justify-between gap-4 pt-6 border-t-2 border-[#f7f4ef]">
                           <a
                             href={repo.html_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-[11px] font-medium text-blue-700 underline-offset-4 hover:underline"
+                            className="flex items-center gap-2 text-[12px] font-extrabold text-[#0020d7] uppercase tracking-widest hover:underline"
                           >
-                            Open repository
+                            <ExternalLink size={14} strokeWidth={2.5} />
+                            View Source
                           </a>
-                          <button
-                            type="button"
+                          <TinyButton
+                            variant="primary"
                             onClick={() => void handleSaveRepoBanner(repo)}
                             disabled={repo.isSaving}
-                            className="rounded-lg border border-[var(--color-border-light)] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#0b0b0c] hover:bg-[#eef2ff] disabled:opacity-60"
                           >
-                            {repo.isSaving ? "Saving..." : "Save Banner"}
-                          </button>
+                            {repo.isSaving ? "Syncing..." : "Apply Banner"}
+                          </TinyButton>
                         </div>
                       </article>
                     );
@@ -783,69 +736,69 @@ export default function AdminProjectsPage() {
               </div>
             </div>
           ) : null}
-        </section>
+        </SectionPanel>
 
-        <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-6 xl:col-span-8">
-          {/* Edit-mode banner */}
+        {/* Project Configuration Workspace */}
+        <SectionPanel className="p-10 xl:col-span-8 bg-white/50 backdrop-blur-sm">
           {selectedId ? (
-            <div className="mb-5 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-              <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-blue-500" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-blue-800">Editing project</p>
-                <p className="truncate text-xs text-blue-600 mt-0.5">
-                  {projects.find((p) => p.id === selectedId)?.title ?? ""}
-                </p>
+            <div className="mb-8 flex items-center gap-6 rounded-[32px] border-2 border-[#0020d7]/20 bg-[#0020d7]/5 p-6">
+              <div className="h-14 w-14 rounded-full bg-[#0020d7] flex items-center justify-center text-white shadow-xl shadow-[#0020d7]/20">
+                 <RefreshCw size={28} strokeWidth={2.5} className="animate-spin-slow" />
               </div>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="ml-auto flex-shrink-0 rounded-lg border border-blue-200 bg-white px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
-              >
-                Discard
-              </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#0020d7]">Calibration Mode</p>
+                <h3 className="truncate text-xl font-extrabold text-[#0b0b0c] mt-1">
+                  Editing: {projects.find((p) => p.id === selectedId)?.title ?? "Entity"}
+                </h3>
+              </div>
+              <TinyButton onClick={resetForm}>Discard Edit</TinyButton>
             </div>
           ) : (
-            <h3 className="mb-5 text-lg font-medium text-[#0b0b0c]">Create New Project</h3>
+            <SectionTitle 
+              title="Global Project Constructor" 
+              copy="Define the architecture and visual narrative for your next masterpiece."
+              icon={Plus}
+            />
           )}
 
-          <div className="mt-4 flex gap-2">
+          <div className="flex gap-4 mb-10">
             <button
               type="button"
               onClick={() => switchWorkspace("coding")}
-              className={`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all ${
+              className={`flex-1 flex items-center justify-center gap-3 rounded-[24px] border-2 py-5 text-[14px] font-extrabold uppercase tracking-widest transition-all ${
                 activeWorkspace === "coding"
-                  ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
-                  : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)] hover:bg-white"
+                  ? "border-[#0020d7] bg-[#0020d7] text-white shadow-xl shadow-[#0020d7]/20"
+                  : "border-[#e4e4e7] bg-[#f7f4ef]/50 text-[#4a4a68] hover:bg-white hover:border-[#0020d7]/20"
               }`}
-              aria-pressed={activeWorkspace === "coding"}
             >
-              💻 Coding Project
+              <Code size={18} strokeWidth={2.5} />
+              Coding Logic
             </button>
             <button
               type="button"
               onClick={() => switchWorkspace("designing")}
-              className={`flex-1 rounded-xl border py-3 text-sm font-semibold transition-all ${
+              className={`flex-1 flex items-center justify-center gap-3 rounded-[24px] border-2 py-5 text-[14px] font-extrabold uppercase tracking-widest transition-all ${
                 activeWorkspace === "designing"
-                  ? "border-purple-600 bg-purple-50 text-purple-700 shadow-sm"
-                  : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)] hover:bg-white"
+                  ? "border-[#0020d7] bg-[#0020d7] text-white shadow-xl shadow-[#0020d7]/20"
+                  : "border-[#e4e4e7] bg-[#f7f4ef]/50 text-[#4a4a68] hover:bg-white hover:border-[#0020d7]/20"
               }`}
-              aria-pressed={activeWorkspace === "designing"}
             >
-              🎨 Designing Project
+              <Palette size={18} strokeWidth={2.5} />
+              Visual Design
             </button>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="mt-10 grid grid-cols-1 gap-10 md:grid-cols-2">
             {/* Dynamic Designing Mode Flow */}
             {form.type !== "CODE" && (
-              <div className="md:col-span-2 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl bg-zinc-50 border border-zinc-200 p-4">
-                  <div className="space-y-2 text-sm">
-                    <span className="font-semibold text-zinc-900">1. Select Design Category</span>
-                    <select
+              <div className="md:col-span-2 space-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="space-y-4">
+                    <span className="text-[12px] font-extrabold text-[#4a4a68] uppercase tracking-widest px-1">1. Intelligence Category</span>
+                    <SelectField
+                      label=""
                       value={form.category}
-                      onChange={(e) => {
-                        const cat = e.target.value;
+                      onChange={(cat) => {
                         let newType = form.type;
                         let newMediaType = form.mediaType;
                         if (cat === "Web Design") {
@@ -863,74 +816,64 @@ export default function AdminProjectsPage() {
                           mediaType: newMediaType as ProjectForm["mediaType"],
                         }));
                       }}
-                      className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
-                    >
-                      <option value="">Select Category</option>
-                      <option value="Graphic design">Graphic design</option>
-                      <option value="Web Design">Web Design</option>
-                      <option value="Motion Graphics">Motion Graphics</option>
-                      <option value="VFX & 3D Animation">VFX &amp; 3D Animation</option>
-                    </select>
+                      options={[
+                        { label: "Select Category", value: "" },
+                        { label: "Graphic design", value: "Graphic design" },
+                        { label: "Web Design", value: "Web Design" },
+                        { label: "Motion Graphics", value: "Motion Graphics" },
+                        { label: "VFX & 3D Animation", value: "VFX & 3D Animation" },
+                      ]}
+                    />
                   </div>
-                  <div className="space-y-2 text-sm">
-                    <span className="font-semibold text-zinc-900">2. Platform</span>
-                    <select
+                  <div className="space-y-4">
+                    <span className="text-[12px] font-extrabold text-[#4a4a68] uppercase tracking-widest px-1">2. Target Platform</span>
+                    <SelectField
+                      label=""
                       value={form.type}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, type: e.target.value as ProjectForm["type"] }))
+                      onChange={(val) => setForm((prev) => ({ ...prev, type: val as ProjectForm["type"] }))}
+                      options={
+                        form.category === "Graphic design" ? [
+                          { label: "Behance Case Study", value: "BEHANCE" },
+                          { label: "Pinterest Pin", value: "PINTEREST" },
+                        ] : form.category === "Web Design" ? [
+                          { label: "Figma Prototype", value: "FIGMA" },
+                          { label: "Behance Case Study", value: "BEHANCE" },
+                        ] : form.category === "Motion Graphics" || form.category === "VFX & 3D Animation" ? [
+                          { label: "Pinterest Pin", value: "PINTEREST" },
+                        ] : [
+                          { label: "Behance Case Study", value: "BEHANCE" },
+                          { label: "Figma Prototype", value: "FIGMA" },
+                          { label: "Pinterest Pin", value: "PINTEREST" },
+                        ]
                       }
-                      className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
-                    >
-                      {form.category === "Graphic design" ? (
-                        <>
-                          <option value="BEHANCE">Behance Case Study</option>
-                          <option value="PINTEREST">Pinterest Pin</option>
-                        </>
-                      ) : form.category === "Web Design" ? (
-                        <>
-                          <option value="FIGMA">Figma Prototype</option>
-                          <option value="BEHANCE">Behance Case Study</option>
-                        </>
-                      ) : form.category === "Motion Graphics" ||
-                        form.category === "VFX & 3D Animation" ? (
-                        <option value="PINTEREST">Pinterest Pin</option>
-                      ) : (
-                        <>
-                          <option value="BEHANCE">Behance Case Study</option>
-                          <option value="FIGMA">Figma Prototype</option>
-                          <option value="PINTEREST">Pinterest Pin</option>
-                        </>
-                      )}
-                    </select>
+                    />
                   </div>
 
                   {form.category && (
-                    <div className="md:col-span-2 space-y-2 text-sm animate-in fade-in slide-in-from-top-2 duration-300">
-                      <span className="font-semibold text-zinc-900">3. Paste Project Link</span>
-                      <div className="flex gap-2">
-                        <input
+                    <div className="md:col-span-2 space-y-4 animate-in fade-in slide-in-from-top-4 duration-500 bg-[#f7f4ef]/50 p-6 rounded-[28px] border-2 border-[#e4e4e7]">
+                      <span className="text-[12px] font-extrabold text-[#4a4a68] uppercase tracking-widest px-1">3. External Entity Link</span>
+                      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
+                        <Field
+                          label=""
                           value={form.externalUrl}
-                          onChange={(e) =>
-                            setForm((prev) => ({ ...prev, externalUrl: e.target.value }))
-                          }
-                          placeholder={
-                            form.type === "BEHANCE" ? "https://behance.net/..." : "https://..."
-                          }
-                          className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
+                          onChange={(val) => setForm((prev) => ({ ...prev, externalUrl: val }))}
+                          placeholder={form.type === "BEHANCE" ? "https://behance.net/..." : "https://..."}
+                          icon={Link2}
                         />
-                        <button
-                          type="button"
-                          onClick={handleAIDesignFetch}
-                          disabled={isGeneratingContent || !form.externalUrl}
-                          className="flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-zinc-800 disabled:opacity-50"
-                        >
-                          {isGeneratingContent ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : (
-                            <Sparkles size={14} className="text-amber-400" />
-                          )}
-                          {isGeneratingContent ? "Generating..." : "Fetch & AI Draft"}
-                        </button>
+                        <div className="pt-1">
+                          <ActionButton
+                            onClick={handleAIDesignFetch}
+                            disabled={isGeneratingContent || !form.externalUrl}
+                            className="w-full"
+                          >
+                            {isGeneratingContent ? (
+                              <Loader2 size={18} className="animate-spin" />
+                            ) : (
+                              <Sparkles size={18} className="text-white" />
+                            )}
+                            <span className="ml-3">{isGeneratingContent ? "Generating..." : "AI DRAFT"}</span>
+                          </ActionButton>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -939,284 +882,247 @@ export default function AdminProjectsPage() {
             )}
 
             {form.type === "CODE" && (
-              <div className="md:col-span-2 space-y-6">
-                <div className="rounded-2xl bg-blue-50/50 border border-blue-100 p-4">
-                  <div className="space-y-2 text-sm">
-                    <span className="font-semibold text-blue-900">
-                      1. Paste GitHub Repository URL
+              <div className="md:col-span-2 space-y-10">
+                <div className="rounded-[33px] bg-[#0020d7]/5 border-2 border-[#0020d7]/10 p-8">
+                  <div className="space-y-4">
+                    <span className="text-[12px] font-extrabold text-[#0020d7] uppercase tracking-widest px-1">
+                      1. Intelligence Repository (GitHub)
                     </span>
-                    <div className="flex gap-2">
-                      <input
-                        value={form.externalUrl}
-                        onChange={(e) =>
-                          setForm((prev) => ({ ...prev, externalUrl: e.target.value }))
-                        }
-                        onBlur={() => {
-                          if (form.externalUrl.includes("github.com")) {
-                            handleGithubFetch();
-                          }
-                        }}
-                        placeholder="https://github.com/owner/repo"
-                        className="w-full rounded-xl border border-blue-200 bg-white px-3 py-2 text-sm text-[#0b0b0c]"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleGithubFetch}
-                        disabled={isFetchingGithub || !form.externalUrl}
-                        className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-blue-700 disabled:opacity-50 shadow-sm"
-                      >
-                        {isFetchingGithub ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <Sparkles size={14} className="text-white" />
-                        )}
-                        {isFetchingGithub ? "Fetching..." : "Fetch & Sync"}
-                      </button>
+                    <div className="flex gap-4">
+                      <div className="flex-1">
+                        <Field
+                          label=""
+                          value={form.externalUrl}
+                          onChange={(val) => setForm((prev) => ({ ...prev, externalUrl: val }))}
+                          onBlur={() => {
+                            if (form.externalUrl.includes("github.com")) {
+                              handleGithubFetch();
+                            }
+                          }}
+                          placeholder="https://github.com/owner/repo"
+                          icon={Github}
+                        />
+                      </div>
+                      <div className="pt-1">
+                        <ActionButton
+                          onClick={handleGithubFetch}
+                          disabled={isFetchingGithub || !form.externalUrl}
+                        >
+                          {isFetchingGithub ? (
+                            <Loader2 size={18} className="animate-spin" />
+                          ) : (
+                            <RefreshCw size={18} />
+                          )}
+                          <span className="ml-3">{isFetchingGithub ? "Syncing..." : "SYNC"}</span>
+                        </ActionButton>
+                      </div>
                     </div>
-                    <p className="text-[10px] text-blue-600/70 font-medium px-1">
-                      This will automatically draft your Title, Description, Tags, and Live Link.
+                    <p className="text-[11px] text-[#0020d7]/60 font-extrabold uppercase tracking-widest px-2">
+                      Automated calibration for Title, Narrative, Technologies, and Deployment link.
                     </p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Sub-fields shown after category/fetch or for CODE mode */}
+            {/* Core Attribution Fields */}
             {(form.type === "CODE" || form.category) && (
-              <>
-                <label className="space-y-2 text-sm md:col-span-2">
-                  <span className="text-[var(--color-text-body)]">Project Title</span>
-                  <input
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="md:col-span-2">
+                  <Field
+                    label="Project Identity"
                     value={form.title}
-                    onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                    placeholder="My Awesome Project"
-                    className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                    onChange={(val) => setForm((prev) => ({ ...prev, title: val }))}
+                    placeholder="Entity Designation"
+                    icon={FolderKanban}
                   />
-                </label>
-
-                <div className="space-y-2 text-sm">
-                  <span className="text-[var(--color-text-body)]">Media Type</span>
-                  <select
-                    value={form.mediaType}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        mediaType: e.target.value as ProjectForm["mediaType"],
-                      }))
-                    }
-                    className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-                  >
-                    {form.type === "CODE" ? (
-                      <>
-                        <option value="IMAGE">Static Image</option>
-                        <option value="GIF">Animated GIF</option>
-                      </>
-                    ) : form.category === "VFX & 3D Animation" ||
-                      form.category === "Motion Graphics" ? (
-                      <>
-                        <option value="VIDEO">Video</option>
-                        <option value="MODEL">3D Model (GLB/GLTF)</option>
-                        <option value="IMAGE">Static Image</option>
-                        <option value="GIF">Animated GIF</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="IMAGE">Static Image</option>
-                        <option value="VIDEO">Video</option>
-                        <option value="GIF">Animated GIF</option>
-                      </>
-                    )}
-                  </select>
                 </div>
 
-                {(form.type === "CODE" || Boolean(form.category)) && (
-                  <label className="space-y-2 text-sm md:col-span-2">
-                    <span className="text-[var(--color-text-body)] flex items-center justify-between">
-                      <span>
-                        {form.type === "CODE"
-                          ? "Project Thumbnail (Image or GIF)"
-                          : "Cover Image / Media Asset"}
-                      </span>
-                      {isUploading && <Loader2 size={14} className="animate-spin text-blue-500" />}
-                    </span>
-                    <div className="flex gap-2">
-                      <input
-                        value={form.mediaUrl}
-                        onChange={(e) =>
-                          setForm((prev) => ({ ...prev, mediaUrl: e.target.value }))
-                        }
-                        placeholder="https://..."
-                        className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-                      />
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept="image/*,video/*"
-                          onChange={handleUpload}
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          disabled={isUploading}
-                        />
-                        <button
-                          type="button"
-                          className="flex h-full items-center rounded-xl border border-[var(--color-border-light)] bg-white px-3 hover:bg-[#f8f5f2]"
-                        >
-                          <UploadIcon size={16} className="text-gray-500" />
-                        </button>
-                      </div>
-                    </div>
+                <SelectField
+                  label="Visual Medium"
+                  value={form.mediaType}
+                  onChange={(val) => setForm((prev) => ({ ...prev, mediaType: val as ProjectForm["mediaType"] }))}
+                  options={
+                    form.type === "CODE" ? [
+                      { label: "Static Projection (Image)", value: "IMAGE" },
+                      { label: "Kinetic Sequence (GIF)", value: "GIF" },
+                    ] : (form.category === "VFX & 3D Animation" || form.category === "Motion Graphics") ? [
+                      { label: "High-Frequency Video", value: "VIDEO" },
+                      { label: "Spatial Intelligence (3D Model)", value: "MODEL" },
+                      { label: "Static Projection (Image)", value: "IMAGE" },
+                      { label: "Kinetic Sequence (GIF)", value: "GIF" },
+                    ] : [
+                      { label: "Static Projection (Image)", value: "IMAGE" },
+                      { label: "High-Frequency Video", value: "VIDEO" },
+                      { label: "Kinetic Sequence (GIF)", value: "GIF" },
+                    ]
+                  }
+                />
 
-                    {/* Media Preview — handles IMAGE, GIF, and VIDEO */}
-                    {form.mediaUrl && (
-                      <div className="relative mt-2 aspect-video w-full max-w-[220px] overflow-hidden rounded-lg border bg-black/5">
-                        {form.mediaType === "VIDEO" ? (
-                          <video
-                            src={form.mediaUrl}
-                            className="h-full w-full object-cover"
-                            controls
-                          />
-                        ) : (
-                          <img
-                            src={form.mediaUrl}
-                            alt="Preview"
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                "https://placehold.co/600x400?text=Preview+Unavailable";
-                            }}
-                          />
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setForm((prev) => ({ ...prev, mediaUrl: "" }))}
-                          className="absolute top-1 right-1 z-10 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
-                        >
-                          <XIcon size={12} />
-                        </button>
-                      </div>
-                    )}
-                  </label>
-                )}
+                <div className="md:col-span-2">
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <span className="text-[12px] font-extrabold text-[#4a4a68] uppercase tracking-widest">
+                      {form.type === "CODE" ? "Projection Thumbnail" : "Main Visual Asset"}
+                    </span>
+                    {isUploading && <Loader2 size={18} className="animate-spin text-[#0020d7]" />}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4">
+                    <Field
+                      label=""
+                      value={form.mediaUrl}
+                      onChange={(val) => setForm((prev) => ({ ...prev, mediaUrl: val }))}
+                      placeholder="https://static.assets..."
+                      icon={UploadIcon}
+                    />
+                    <div className="relative pt-1">
+                      <input
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={handleUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                        disabled={isUploading}
+                      />
+                      <ActionButton variant="secondary" className="w-full">
+                        <UploadIcon size={18} strokeWidth={2.5} />
+                      </ActionButton>
+                    </div>
+                  </div>
+
+                  {form.mediaUrl && (
+                    <div className="relative mt-6 aspect-video w-full max-w-md overflow-hidden rounded-[28px] border-4 border-[#e4e4e7] bg-[#f7f4ef]/50 shadow-2xl group">
+                      {form.mediaType === "VIDEO" ? (
+                        <video src={form.mediaUrl} className="h-full w-full object-cover" controls />
+                      ) : (
+                        <img 
+                          src={form.mediaUrl} 
+                          alt="Entity Preview" 
+                          className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                          onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/600x400?text=Asset+Unavailable"; }}
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, mediaUrl: "" }))}
+                        className="absolute top-4 right-4 z-20 h-10 w-10 rounded-full bg-black/50 text-white backdrop-blur-md flex items-center justify-center hover:bg-[#ff3b30] transition-colors"
+                      >
+                        <XIcon size={20} strokeWidth={2.5} />
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {form.type !== "PINTEREST" && (
-                  <label className="space-y-2 text-sm">
-                    <span className="text-[var(--color-text-body)]">
-                      {form.type === "BEHANCE"
-                        ? "Behance Embed Code/URL"
-                        : form.type === "FIGMA"
-                        ? "Figma Prototype URL"
-                        : form.type === "CODE"
-                        ? "Live Demo / Website URL"
-                        : "Embed URL (Iframe)"}
-                    </span>
-                    <input
-                      value={form.iframeUrl}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, iframeUrl: e.target.value }))
-                      }
-                      placeholder="https://..."
-                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-                    />
-                  </label>
+                  <Field
+                    label={
+                      form.type === "BEHANCE" ? "Behance Payload (Embed/URL)" :
+                      form.type === "FIGMA" ? "Figma Architecture URL" :
+                      form.type === "CODE" ? "Deployment URL (Live Demo)" : "System Embed (Iframe)"
+                    }
+                    value={form.iframeUrl}
+                    onChange={(val) => setForm((prev) => ({ ...prev, iframeUrl: val }))}
+                    placeholder="https://deployment..."
+                    icon={ExternalLink}
+                  />
                 )}
 
                 {form.type === "CODE" && (
-                  <label className="space-y-2 text-sm">
-                    <span className="text-[var(--color-text-body)]">Technologies / Tags</span>
-                    <input
-                      value={form.tags}
-                      onChange={(e) => setForm((prev) => ({ ...prev, tags: e.target.value }))}
-                      placeholder="React, Next.js, etc."
-                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-                    />
-                  </label>
+                  <Field
+                    label="Intelligence Stack (Tags)"
+                    value={form.tags}
+                    onChange={(val) => setForm((prev) => ({ ...prev, tags: val }))}
+                    placeholder="React, Next.js, etc."
+                    icon={Code}
+                  />
                 )}
 
                 {form.type !== "CODE" && (
-                  <label className="space-y-2 text-sm">
-                    <span className="text-[var(--color-text-body)]">Dominant Color (Hex)</span>
-                    <input
-                      value={form.dominantColor}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, dominantColor: e.target.value }))
-                      }
-                      placeholder="#1a1a1a"
-                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-                    />
-                  </label>
+                  <Field
+                    label="Brand Signature (Dominant Hex)"
+                    value={form.dominantColor}
+                    onChange={(val) => setForm((prev) => ({ ...prev, dominantColor: val }))}
+                    placeholder="#0020D7"
+                    icon={Palette}
+                  />
                 )}
 
-                {form.type !== "BEHANCE" && (
-                  <label className="space-y-2 text-sm md:col-span-2">
-                    <span className="text-[var(--color-text-body)]">Short Description</span>
-                    <textarea
-                      rows={3}
-                      value={form.description}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, description: e.target.value }))
-                      }
-                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-                    />
-                  </label>
-                )}
+                <div className="md:col-span-2">
+                  <TextareaField
+                    label="Strategic Narrative (Description)"
+                    value={form.description}
+                    onChange={(val) => setForm((prev) => ({ ...prev, description: val }))}
+                    placeholder="Brief architectural overview..."
+                    icon={FileText}
+                    rows={4}
+                  />
+                </div>
 
                 {form.type !== "CODE" && form.type !== "BEHANCE" && (
-                  <label className="space-y-2 text-sm md:col-span-2">
-                    <span className="text-[var(--color-text-body)]">
-                      Detailed Case Study (Markdown)
-                    </span>
-                    <textarea
-                      rows={10}
+                  <div className="md:col-span-2">
+                    <TextareaField
+                      label="Deep Technical Architecture (Markdown)"
                       value={form.content}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, content: e.target.value }))
-                      }
-                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                      onChange={(val) => setForm((prev) => ({ ...prev, content: val }))}
+                      placeholder="Comprehensive technical documentation..."
+                      icon={FileText}
+                      rows={10}
                     />
-                  </label>
+                  </div>
                 )}
 
                 {form.type !== "CODE" && (
-                  <label className="space-y-2 text-sm md:col-span-2">
-                    <span className="text-[var(--color-text-body)]">Tags (comma separated)</span>
-                    <input
+                  <div className="md:col-span-2">
+                    <Field
+                      label="Metadata Attribution (Tags)"
                       value={form.tags}
-                      onChange={(e) => setForm((prev) => ({ ...prev, tags: e.target.value }))}
-                      className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+                      onChange={(val) => setForm((prev) => ({ ...prev, tags: val }))}
+                      placeholder="Design, Prototyping, etc."
+                      icon={Link2}
                     />
-                  </label>
+                  </div>
                 )}
-              </>
+              </div>
             )}
           </div>
 
-          <label className="mt-4 inline-flex items-center gap-2 text-sm text-[#0b0b0c]">
-            <input
-              type="checkbox"
-              checked={form.featured}
-              onChange={(e) => setForm((prev) => ({ ...prev, featured: e.target.checked }))}
-            />
-            {form.category === "Web Design" || form.type === "FIGMA"
-              ? "Main project in Web Design section"
-              : "Featured project"}
-          </label>
-
-          <div className="mt-6 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={saveProject}
-              className="rounded-full border-[2px] border-[var(--color-border-dark)] bg-[#dbe7ff] px-5 py-2 text-sm font-medium text-[#0020d7] shadow-[0_8px_18px_rgba(0,32,215,0.14)]"
-            >
-              {selectedId ? "Update Project" : "Create Project"}
-            </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              className="rounded-full border border-[var(--color-border-light)] bg-[#f8f5f2] px-4 py-2 text-sm text-[var(--color-text-body)]"
-            >
-              Reset
-            </button>
+          <div className="mt-10 flex items-center gap-6 p-8 rounded-[33px] bg-[#f7f4ef]/50 border-2 border-[#e4e4e7]">
+            <div className="flex items-center gap-4 text-[#4a4a68]">
+              <input
+                type="checkbox"
+                id="featured"
+                checked={form.featured}
+                onChange={(e) => setForm((prev) => ({ ...prev, featured: e.target.checked }))}
+                className="h-6 w-6 rounded-lg border-2 border-[#e4e4e7] text-[#0020d7] focus:ring-[#0020d7]/20"
+              />
+              <label htmlFor="featured" className="text-[14px] font-extrabold uppercase tracking-widest cursor-pointer select-none">
+                {form.category === "Web Design" || form.type === "FIGMA"
+                  ? "Elevate to Main Build"
+                  : "Highlight as Featured"}
+              </label>
+            </div>
           </div>
-        </section>
+
+          {/* Persistent Action Bar */}
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-8">
+            <div className="flex items-center justify-between gap-4 p-2.5 rounded-[24px] bg-white/95 border-2 border-[#e4e4e7] shadow-2xl backdrop-blur-md">
+              <div className="flex-1 px-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 rounded-full bg-[#34c759] shadow-[0_0_8px_rgba(52,199,89,0.4)]" />
+                  <p className="text-[11px] font-extrabold text-[#0b0b0c] uppercase tracking-widest opacity-80">Workspace Online</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <TinyButton onClick={resetForm}>Reset</TinyButton>
+                <ActionButton
+                  onClick={saveProject}
+                >
+                  {selectedId ? "Sync Updates" : "Deploy Entity"}
+                  <Save size={14} strokeWidth={2.5} />
+                </ActionButton>
+              </div>
+            </div>
+          </div>
+        </SectionPanel>
       </div>
     </AdminSectionWorkspace>
   );

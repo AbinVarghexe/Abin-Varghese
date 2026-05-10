@@ -77,6 +77,9 @@ function resolveServiceContent(
     ...fallback,
     title: matched.title,
     description: matched.description,
+    projectsUrl: matched.projectsUrl,
+    projectsLabel: matched.projectsLabel,
+    iconUrl: matched.iconUrl,
   };
 }
 
@@ -118,7 +121,7 @@ const vfxParticleConfigs = [
 ];
 
 // ─── Types ─────────────────────────────────────────────────────────────────
-type BaseService = (typeof homeServiceCards)[number];
+type BaseService = (typeof homeServiceCards)[number] & { projectsUrl?: string; projectsLabel?: string; iconUrl?: string };
 type LottieService = BaseService & { lottieUrl: string; isTall?: boolean; isWide?: boolean; };
 
 // ─── Main Section ───────────────────────────────────────────────────────────
@@ -138,7 +141,7 @@ export default function ServicesSection({
   return (
     <section 
       id="services" 
-      className="relative z-10 pt-24 pb-6 px-4 md:px-8 lg:px-20 overflow-hidden"
+      className="relative z-10 pt-24 pb-20 px-4 md:px-8 lg:px-20 overflow-hidden"
     >
       <div className="max-w-[1200px] mx-auto">
 
@@ -188,7 +191,8 @@ interface CardShellProps {
 
 function CardShell({ service, children, className = '', onMouseEnter, onMouseLeave, showArrow = true }: CardShellProps) {
   return (
-    <motion.div
+    <motion.a
+      href={service.projectsUrl || `/services/${service.id}`}
       variants={{
         initial: { opacity: 0, y: 30 },
         visible: { opacity: 1, y: 0 },
@@ -201,7 +205,7 @@ function CardShell({ service, children, className = '', onMouseEnter, onMouseLea
       whileHover="hover"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      className={`group relative rounded-[28px] border-[5px] border-zinc-200 bg-white overflow-hidden transition-all hover:shadow-2xl hover:border-zinc-300 cursor-pointer ${service.className} ${className}`}
+      className={`group relative rounded-[28px] border-[5px] border-zinc-200 bg-white overflow-hidden transition-all hover:shadow-2xl hover:border-zinc-300 cursor-pointer no-underline ${service.className} ${className}`}
     >
       {/* Background washing */}
       <div className={`absolute inset-0 bg-linear-to-br ${service.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
@@ -231,6 +235,12 @@ function CardShell({ service, children, className = '', onMouseEnter, onMouseLea
         </div>
       )}
 
+      {service.iconUrl ? (
+        <div className="absolute left-6 top-6 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white/80 p-2 shadow-sm backdrop-blur-sm">
+          <img src={service.iconUrl} alt="" className="h-full w-full object-contain" />
+        </div>
+      ) : null}
+
       {/* Accent sliding top bar */}
       <motion.div
         className="absolute top-0 left-0 h-[3px] rounded-full z-40"
@@ -255,7 +265,7 @@ function CardShell({ service, children, className = '', onMouseEnter, onMouseLea
         </h3>
         <p className="text-zinc-500 text-xs leading-tight line-clamp-2 mt-0.5 mx-auto md:mx-0">{service.description}</p>
       </div>
-    </motion.div>
+    </motion.a>
   );
 }
 

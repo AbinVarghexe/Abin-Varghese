@@ -32,6 +32,7 @@ export interface Service {
   contents?: ServiceContent[];
   projectsUrl?: string; // New: Redirect link for 'View More'
   projectsLabel?: string; // New: Dynamic label for 'View More'
+  iconUrl?: string; // Optional homepage/service card icon or image
 }
 
 export const services: Service[] = [

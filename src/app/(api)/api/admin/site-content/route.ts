@@ -6,6 +6,9 @@ import { getAboutContent, upsertAboutContent, getHeroContent, upsertHeroContent,
 
 const aboutContentSchema = z.object({
   aboutImage: z.string(),
+  homeAboutImage1: z.string(),
+  homeAboutImage2: z.string(),
+  homeAboutImage3: z.string(),
   aboutInstagramImage1: z.string(),
   aboutInstagramImage2: z.string(),
   aboutInstagramImage3: z.string(),
@@ -37,6 +40,15 @@ const homeContentSchema = z.object({
     linkedin: z.string(),
     instagram: z.string(),
   }),
+  otherSocialLinks: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        url: z.string(),
+      })
+    )
+    .default([]),
   pageLinks: z.object({
     about: z.string(),
     projects: z.string(),
@@ -127,6 +139,9 @@ export async function PUT(request: NextRequest) {
     }
 
     console.error("Update site content error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : String(error) }, 
+      { status: 500 }
+    );
   }
 }

@@ -263,7 +263,7 @@ const Herosection = ({
   statusLine,
 }: {
   data: HeroContent;
-  homeLinks: Pick<HomeContent, 'socialLinks' | 'pageLinks'>;
+  homeLinks: Pick<HomeContent, 'socialLinks' | 'otherSocialLinks' | 'pageLinks'>;
   statusLine: string;
 }) => {
   const { previewData, isPreviewing } = usePreview();
@@ -516,21 +516,31 @@ const Herosection = ({
             variants={scaleIn}
             className="pointer-events-auto relative z-10 mt-8 md:mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6"
           >
-            {(Object.keys(homeLinks.socialLinks) as Array<keyof HomeContent['socialLinks']>).map((key, index) => {
-              const Icon = socialIconMap[key];
-              const href = homeLinks.socialLinks[key];
-
-              return (
+            {[
+              ...(Object.keys(homeLinks.socialLinks) as Array<keyof HomeContent['socialLinks']>).map((key) => ({
+                key,
+                icon: socialIconMap[key],
+                label: socialLabelMap[key],
+                href: homeLinks.socialLinks[key],
+              })),
+              ...(homeLinks.otherSocialLinks || []).map((item) => ({
+                key: item.id,
+                icon: ArrowUpRight,
+                label: item.label,
+                href: item.url,
+              })),
+            ]
+              .filter((item) => item.href)
+              .map((item, index) => (
                 <SocialTile
-                  key={key}
-                  icon={Icon}
-                  label={socialLabelMap[key]}
-                  href={href}
+                  key={item.key}
+                  icon={item.icon}
+                  label={item.label}
+                  href={item.href}
                   rotate={index % 2 === 0 ? -10 : 10}
                   delay={0.42 + index * 0.07}
                 />
-              );
-            })}
+              ))}
           </motion.div>
         </motion.div>
       </div>

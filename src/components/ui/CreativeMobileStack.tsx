@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { Zap } from "lucide-react";
 
 interface CreativeItem {
   title: string;
@@ -121,23 +122,48 @@ function SwipeCard({ item, index, total, onSwipe }: {
       className="absolute inset-0 rounded-[12px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.3)] bg-white cursor-grab active:cursor-grabbing touch-none border-2 border-white"
     >
       <div className="w-full h-full relative bg-zinc-900">
-        {item.lottieUrl?.endsWith('.mp4') ? (
-          <video 
-            src={item.lottieUrl} 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
-            className="w-full h-full object-cover pointer-events-none"
-          />
-        ) : (
-          <img 
-            src={item.lottieUrl || item.image} 
-            alt={item.title} 
-            className="w-full h-full object-cover pointer-events-none" 
-          />
-        )}
-        {/* Gradients and Overlays to match About Me style */}
+                {(() => {
+                  const urlLower = item.lottieUrl?.toLowerCase() || '';
+                  const imgLower = item.image?.toLowerCase() || '';
+                  
+                  const isVideo = urlLower.endsWith('.mp4') || imgLower.endsWith('.mp4');
+                  const isGif = urlLower.includes('pinimg') || urlLower.includes('pinterest') || urlLower.endsWith('.gif') || 
+                                imgLower.includes('pinimg') || imgLower.includes('pinterest') || imgLower.endsWith('.gif');
+                  const isOtherImage = urlLower.endsWith('.png') || urlLower.endsWith('.jpg') || urlLower.endsWith('.jpeg') || urlLower.endsWith('.webp') ||
+                                       imgLower.endsWith('.png') || imgLower.endsWith('.jpg') || imgLower.endsWith('.jpeg') || imgLower.endsWith('.webp');
+                  
+                  if (isVideo) {
+                    const videoSrc = urlLower.endsWith('.mp4') ? item.lottieUrl : item.image;
+                    return (
+                      <video 
+                        src={videoSrc} 
+                        autoPlay 
+                        loop 
+                        muted 
+                        playsInline 
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                    );
+                  }
+
+                  if (isGif || isOtherImage) {
+                    const imgSrc = (isGif && urlLower.includes('pin')) || (isGif && urlLower.endsWith('.gif')) ? item.lottieUrl : item.image;
+                    return (
+                      <img 
+                        src={imgSrc || item.image} 
+                        alt={item.title} 
+                        className="w-full h-full object-cover pointer-events-none" 
+                      />
+                    );
+                  }
+
+                  // Fallback for JSON or missing media
+                  return (
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-zinc-300">
+                      <Zap className="w-8 h-8" />
+                    </div>
+                  );
+                })()}
         {index > 0 && <div className="absolute inset-0 bg-black/10" />}
         <div className="absolute inset-0 bg-linear-to-b from-black/0 to-black/20" />
       </div>

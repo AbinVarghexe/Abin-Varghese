@@ -21,7 +21,7 @@ import { gsap } from 'gsap';
  *  - rAF + quickSetter is lighter and completely deterministic
  */
 
-const ROLES = ['Web Developer', 'Graphic Designer', 'Video Editor', 'VFX Artist'];
+
 
 interface SlidingRoleBannerProps {
   /** Which way the text flows when scrolling down */
@@ -31,6 +31,7 @@ interface SlidingRoleBannerProps {
   /** Pixels moved per 1px of page scroll (tune speed here) */
   speed?: number;
   className?: string;
+  roles?: string[];
 }
 
 export default function SlidingRoleBanner({
@@ -38,6 +39,7 @@ export default function SlidingRoleBanner({
   rotation = 5,
   speed = 0.4,
   className = '',
+  roles = ['Web Developer', 'Graphic Designer', 'Video Editor', 'VFX Artist']
 }: SlidingRoleBannerProps) {
   const stripRef   = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -114,7 +116,7 @@ export default function SlidingRoleBanner({
   }, [direction, rotation, speed]);
 
   // Exactly 2 copies — unit = scrollWidth / 2 — seam is invisible
-  const items = [...ROLES, ...ROLES];
+  const items = [...roles, ...roles];
 
   return (
     <div

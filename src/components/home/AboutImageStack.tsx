@@ -33,8 +33,15 @@ const CONFIG: Record<State, Record<string, object>> = {
 const EASE = 'power2.out';
 const DUR = 0.38;
 
-export default function AboutImageStack() {
-  const [cards, setCards] = useState(IMAGES);
+type AboutStackImage = {
+  id: string;
+  src: string;
+  priority?: boolean;
+};
+
+export default function AboutImageStack({ images = IMAGES }: { images?: AboutStackImage[] }) {
+  const stackImages = images.length >= 3 ? images : IMAGES;
+  const [cards, setCards] = useState(stackImages);
   // Threshold increased to 1024px to cover Tablets/iPads with the Swipe interaction
   const [useSwipe, setUseSwipe] = useState(false);
 
@@ -43,6 +50,10 @@ export default function AboutImageStack() {
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setCards(stackImages);
+  }, [stackImages]);
 
   useEffect(() => {
     const checkViewport = () => setUseSwipe(window.innerWidth < 1024);
@@ -132,15 +143,15 @@ export default function AboutImageStack() {
           onMouseLeave={() => applyState('default')}
         >
           <div ref={leftRef} className="absolute inset-0 rounded-[12px] overflow-hidden shadow-[0_8px_28px_rgba(0,0,0,0.22)]">
-            <Image src="/about/Abin_2.png" alt="" fill className="object-cover object-top" sizes="300px" />
+            <Image src={stackImages[1]?.src || "/about/Abin_2.png"} alt="" fill className="object-cover object-top" sizes="300px" />
             <div className="absolute inset-0 bg-black/20" />
           </div>
           <div ref={rightRef} className="absolute inset-0 rounded-[12px] overflow-hidden shadow-[0_8px_28px_rgba(0,0,0,0.22)]">
-            <Image src="/about/Abin_3.png" alt="" fill className="object-cover object-top" sizes="300px" />
+            <Image src={stackImages[2]?.src || "/about/Abin_3.png"} alt="" fill className="object-cover object-top" sizes="300px" />
             <div className="absolute inset-0 bg-black/20" />
           </div>
           <div ref={centerRef} className="absolute inset-0 rounded-[12px] overflow-hidden shadow-[0_18px_52px_rgba(0,0,0,0.34)]">
-            <Image src="/about/About_Image.png" alt="Abin Varghese" fill className="object-cover object-top" sizes="300px" priority />
+            <Image src={stackImages[0]?.src || "/about/About_Image.png"} alt="Abin Varghese" fill className="object-cover object-top" sizes="300px" priority />
           </div>
         </div>
       )}
@@ -148,7 +159,17 @@ export default function AboutImageStack() {
   );
 }
 
-function SwipeCard({ card, index, total, onSwipe }: { card: any, index: number, total: number, onSwipe: (dir: any) => void }) {
+function SwipeCard({
+  card,
+  index,
+  total,
+  onSwipe,
+}: {
+  card: AboutStackImage;
+  index: number;
+  total: number;
+  onSwipe: (dir: 'left' | 'right') => void;
+}) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-30, 30]);
   const opacity = useTransform(x, [-250, -150, 0, 150, 250], [0, 1, 1, 1, 0]);

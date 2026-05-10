@@ -51,6 +51,7 @@ const serviceSchema = z.object({
   contents: z.array(serviceContentSchema).optional(),
   projectsUrl: z.string().optional(),
   projectsLabel: z.string().optional(),
+  iconUrl: z.string().optional(),
 });
 
 const payloadSchema = z.object({

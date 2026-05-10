@@ -1,405 +1,303 @@
-# Next.js 16 Full-Stack Portfolio WebsiteThis is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<div align="center">
 
+<!-- ═══════════════════════════════════════════════════════════════
+     BRAND HEADER — inline SVG matching the site's visual identity
+     ═══════════════════════════════════════════════════════════════ -->
+<svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width: 800px;">
+  <defs>
+    <!-- Site's signature blue gradient -->
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7da3f6"/>
+      <stop offset="100%" stop-color="#0020d7"/>
+    </linearGradient>
+    <!-- Subtle background glow -->
+    <radialGradient id="glow" cx="80%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="rgba(125,163,246,0.08)"/>
+      <stop offset="100%" stop-color="rgba(125,163,246,0)"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background canvas -->
+  <rect width="800" height="200" rx="33" fill="#fafcfe" stroke="#e4e4e7" stroke-width="1.5"/>
+  <rect width="800" height="200" rx="33" fill="url(#glow)"/>
+  
+  <!-- Floating dot accents (matching the hero section) -->
+  <circle cx="60" cy="40" r="2.5" fill="rgba(125,163,246,0.35)"/>
+  <circle cx="740" cy="160" r="2.5" fill="rgba(125,163,246,0.35)"/>
+  <circle cx="680" cy="55" r="2" fill="rgba(0,32,215,0.2)"/>
+  <circle cx="120" cy="170" r="2" fill="rgba(0,32,215,0.15)"/>
+  
+  <!-- Grid pattern (subtle, like the hero) -->
+  <g stroke="rgba(0,32,215,0.06)" stroke-width="0.5">
+    <line x1="0" y1="84" x2="800" y2="84"/>
+    <line x1="0" y1="168" x2="800" y2="168"/>
+    <line x1="168" y1="0" x2="168" y2="200"/>
+    <line x1="336" y1="0" x2="336" y2="200"/>
+    <line x1="504" y1="0" x2="504" y2="200"/>
+    <line x1="672" y1="0" x2="672" y2="200"/>
+  </g>
+  
+  <!-- Main display text (Vina-style feel) -->
+  <text x="400" y="88" text-anchor="middle" font-family="'Poppins', -apple-system, sans-serif" font-size="52" font-weight="700" letter-spacing="-0.04em" fill="url(#brand-grad)">
+    ABIN VARGHESE
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="400" y="130" text-anchor="middle" font-family="'Poppins', -apple-system, sans-serif" font-size="16" font-weight="500" fill="#4a4a68" letter-spacing="0.02em">
+    Full-Stack Developer  ·  UI/UX Designer  ·  Creative Technologist
+  </text>
+  
+  <!-- Decorative line -->
+  <line x1="300" y1="155" x2="500" y2="155" stroke="#e4e4e7" stroke-width="1"/>
+  <circle cx="400" cy="155" r="3" fill="#0020d7" opacity="0.6"/>
+</svg>
 
+<!-- ── Subtle tagline ── -->
+<p align="center" style="margin-top: 16px; font-family: 'Poppins', sans-serif; font-size: 14px; color: #4a4a68;">
+  I work best where design and development meet.
+</p>
 
-A modern, full-stack portfolio website built with Next.js 16 App Router, TypeScript, Prisma, and PostgreSQL. Features dynamic project management, contact form with email notifications, and beautiful UI with Tailwind CSS.## Getting Started
+<!-- ── Status badges ── -->
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-0b0b0c?style=flat-square&logo=next.js&logoColor=white&labelColor=0b0b0c" alt="Next.js 16"/>
+  <img src="https://img.shields.io/badge/React-19-0020d7?style=flat-square&logo=react&logoColor=white&labelColor=0020d7" alt="React 19"/>
+  <img src="https://img.shields.io/badge/TypeScript-5.0-3178c6?style=flat-square&logo=typescript&logoColor=white&labelColor=3178c6" alt="TypeScript 5"/>
+  <img src="https://img.shields.io/badge/Tailwind-4-0ea5e9?style=flat-square&logo=tailwindcss&logoColor=white&labelColor=0ea5e9" alt="Tailwind CSS 4"/>
+  <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?style=flat-square&logo=supabase&logoColor=white&labelColor=3ecf8e" alt="Supabase"/>
+</p>
 
+</div>
 
+---
 
-## 🎯 FeaturesFirst, run the development server:
+<!-- ═══════════════════════════════════════════════════════════════
+     SECTION DIVIDER — matching the site's card aesthetic
+     ═══════════════════════════════════════════════════════════════ -->
 
+## Overview
 
+> **Design-led digital work by Abin Varghese.**
+>
+> A full-stack developer and UI/UX designer from Idukki, Kerala, building modern websites, product interfaces, and creative digital experiences. This portfolio is built with Next.js 16, React 19, TypeScript, and Tailwind CSS — and it ships with a complete design system derived from a custom Figma file.
 
-- **4 Main Pages:**```bash
+This is a production-grade portfolio website featuring dynamic content management, an AI-powered assistant, real-time project showcases, and a fully custom visual identity.
 
-  - `/` - Hero section with profile, CTA buttons, and social linksnpm run dev
+---
 
-  - `/projects` - Dynamic project list fetched from PostgreSQL database# or
+<!-- ═══════════════════════════════════════════════════════════════
+     FEATURES — card-grid style layout
+     ═══════════════════════════════════════════════════════════════ -->
 
-  - `/about` - Biography, experience timeline, and skills gridyarn dev
+## Features
 
-  - `/contact` - Contact form that saves to DB and sends email notifications# or
+| Feature | Description |
+|---------|-------------|
+| **Dynamic CMS** | Content managed via Supabase with real-time preview from an admin panel |
+| **AI Assistant — JARVIS** | Integrated AI chat assistant powered by NVIDIA NIM and Google Gemini |
+| **3D Hero Section** | Interactive Three.js scene with a flying robot character |
+| **Portfolio Showcase** | Dynamic project gallery with GitHub & Behance integration |
+| **Motion Design** | Framer Motion animations throughout, with GSAP for complex scroll effects |
+| **SEO Optimized** | Structured data, Open Graph, and per-page metadata |
+| **Contact System** | Form submissions, Cal.com booking, and email via Resend |
+| **Design System** | Complete token-based system from Figma with type-safe utilities |
 
-pnpm dev
+---
 
-- **Backend API Routes:**# or
+## Tech Stack
 
-  - `GET /api/projects` - Fetch all projectsbun dev
+<!-- Visual tech stack using styled badges matching the brand -->
+<div align="center">
 
-  - `POST /api/contact` - Handle contact form submissions```
+**Frontend**
 
+<img src="https://img.shields.io/badge/Next.js-16-0b0b0c?style=flat-square&logo=next.js&logoColor=white" alt="Next.js"/> <img src="https://img.shields.io/badge/React-19-0020d7?style=flat-square&logo=react&logoColor=white" alt="React"/> <img src="https://img.shields.io/badge/TypeScript-5-3178c6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"/> <img src="https://img.shields.io/badge/Tailwind_CSS-4-0ea5e9?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind"/> <img src="https://img.shields.io/badge/Framer_Motion-11-ff4da6?style=flat-square&logo=framer&logoColor=white" alt="Framer Motion"/> <img src="https://img.shields.io/badge/GSAP-3-88ce02?style=flat-square&logo=greensock&logoColor=white" alt="GSAP"/>
 
+**Backend & Data**
 
-- **Database:**Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+<img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?style=flat-square&logo=supabase&logoColor=white" alt="Supabase"/> <img src="https://img.shields.io/badge/NVIDIA_NIM-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="NVIDIA NIM"/> <img src="https://img.shields.io/badge/Google_Gemini-4285F4?style=flat-square&logo=google&logoColor=white" alt="Google Gemini"/> <img src="https://img.shields.io/badge/Resend-Email-black?style=flat-square&logo=mailgun&logoColor=white" alt="Resend"/>
 
-  - PostgreSQL (Neon serverless)
+**3D & Visual**
 
-  - Prisma ORM for type-safe database accessYou can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+<img src="https://img.shields.io/badge/Three.js-WebGL-000000?style=flat-square&logo=three.js&logoColor=white" alt="Three.js"/> <img src="https://img.shields.io/badge/React_Three_Fiber-9.5-000000?style=flat-square&logo=three.js&logoColor=white" alt="R3F"/>
 
-  - Models: Project, Message
+</div>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-- **Email:**
+## Design System
 
-  - Resend API for contact form emails## Learn More
-
-  - Email templates with HTML formatting
-
-To learn more about Next.js, take a look at the following resources:
-
-## 🛠️ Tech Stack
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-
-- **Frontend:** Next.js 16 (App Router), TypeScript, React 19- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-- **Styling:** Tailwind CSS 4, Framer Motion, Lucide Icons
-
-- **Database:** PostgreSQL (Neon), Prisma ORMYou can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-- **Email:** Resend
-
-- **Validation:** Zod## Deploy on Vercel
-
-- **Deployment:** Vercel (optimized for serverless)
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-## 📦 Project Structure
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project uses a **Figma-derived design system** with precise tokens for colors, typography, spacing, and components.
 
 ```
+Design Tokens:     src/lib/design-system.ts
+Utilities:         src/lib/design-utils.ts
+Global Styles:     src/styles/globals.css
+Figma File:        https://www.figma.com/design/UwNN3KEicJ7NYsNT1sCcCw/Abin-Portfolio
+```
+
+**Fonts**
+- **Display:** Vina (custom local font)
+- **Sans:** Poppins (Google Fonts)
+- **Serif:** Lora (Google Fonts)
+- **Script:** Dancing Script (decorative)
+
+**Key Colors**
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `color-blue` | `#0020d7` | Primary accent, CTAs, links |
+| `color-primary` | `#0b0b0c` | Body text, headings |
+| `color-indigo` | `#0e0e2c` | Deep headings |
+| `color-white-main` | `#fafcfe` | Off-white backgrounds |
+| `color-text-body` | `#4a4a68` | Body text, paragraphs |
+| `color-bg-main` | `#ececec` | Page background |
+
+**Gradients**
+- Blue: `linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)`
+- Gray: `linear-gradient(180deg, #484848 0%, #333333 100%)`
+- Text: `linear-gradient(180deg, #3c3c3c 0%, #323232 100%)`
+
+---
+
+## Project Structure
+
 ```
 portfolio-website/
 ├── src/
-│   ├── app/                       # Next.js App Router
-│   │   ├── api/
-│   │   │   ├── contact/
-│   │   │   │   └── route.ts       # POST: Contact form handler
-│   │   │   └── projects/
-│   │   │       └── route.ts       # GET: Fetch projects
-│   │   ├── about/
-│   │   │   └── page.tsx           # About page
-│   │   ├── contact/
-│   │   │   └── page.tsx           # Contact form page
-│   │   ├── projects/
-│   │   │   └── page.tsx           # Projects list page
-│   │   ├── layout.tsx             # Root layout with Navbar/Footer
-│   │   └── page.tsx               # Home page (hero)
+│   ├── app/                  # Next.js App Router
+│   │   ├── (main)/           # Main layout group (home, about, projects, services, contact)
+│   │   ├── admin/            # Admin dashboard with CMS preview
+│   │   ├── api/              # API routes (contact, cal, projects, etc.)
+│   │   └── layout.tsx        # Root layout with fonts & SEO
 │   ├── components/
-│   │   ├── Navbar.tsx             # Navigation with floating effect
-│   │   ├── Footer.tsx             # Footer component
-│   │   └── MouseTrail.tsx         # WebGL mouse trail effect
-│   ├── lib/
-│   │   ├── prisma.ts              # Prisma client singleton
-│   │   └── email.ts               # Email utility with Resend
-│   └── styles/
-│       └── globals.css            # Global styles and Tailwind
-├── prisma/
-│   ├── schema.prisma              # Database schema (Project, Message)
-│   └── seed.ts                    # Seed dummy projects
-├── public/
-│   ├── profile.jpg                # Profile picture
-│   └── projects/                  # Project images
-├── .env.example                   # Environment variables template
-├── package.json                   # Dependencies and scripts
-└── tsconfig.json                  # TypeScript configuration
+│   │   ├── home/             # Hero, About, Projects, Reviews sections
+│   │   ├── about/            # Scrapbook hero, timeline, typewriter
+│   │   ├── projects/         # Gallery, cards, tech stack marquee
+│   │   ├── services/         # Bento grid, FAQ, services hero
+│   │   ├── contact/          # Contact form card
+│   │   ├── ui/               # Reusable UI (3D layer, keyboard, mouse trail, JARVIS)
+│   │   ├── common/           # Dock, navbar, resume dropdown
+│   │   └── layout/           # Footer, preloader
+│   ├── lib/                  # Utilities, design system, content defaults
+│   ├── store/                # Zustand stores (Jarvis assistant state)
+│   ├── types/                # TypeScript types
+│   └── seo/                  # SEO metadata & structured data
+├── docs/                     # Design system docs, content master
+├── supabase/                 # SQL migrations & vector store
+├── public/                   # Static assets, 3D models, Lottie animations
+└── next.config.ts            # Optimized Next.js config
 ```
 
-## 🚀 Getting Started
+---
 
-### 1. Clone and Install
+## Getting Started
+
+### Prerequisites
+
+- **Node.js** 20+ (recommended: use `nvm` or `fnm`)
+- **pnpm** (package manager)
+- **Supabase** account (for database)
+
+### Installation
 
 ```bash
-git clone <your-repo-url>
+# Clone the repository
+git clone <repo-url>
 cd portfolio-website
-pnpm install  # or npm install / yarn install
-```
 
-### 2. Set Up Environment Variables
+# Install dependencies
+pnpm install
 
-Copy `.env.example` to `.env` and fill in your values:
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase, Resend, and other credentials
 
-```bash
-cp .env.example .env
-```
-
-**Required environment variables:**
-
-```env
-# Neon Database URLs
-DATABASE_URL="postgresql://..."
-DIRECT_URL="postgresql://..."
-
-# Resend API Key
-RESEND_API_KEY="re_..."
-
-# Contact email recipient
-CONTACT_EMAIL="your.email@example.com"
-```
-
-**Get credentials:**
-- **Neon:** Sign up at [neon.tech](https://neon.tech) (free tier)
-- **Resend:** Get API key at [resend.com](https://resend.com) (free tier)
-
-### 3. Set Up Database
-
-```bash
-# Generate Prisma Client
-pnpm prisma:generate
-
-# Push schema to database
-pnpm prisma:push
-
-# Seed dummy projects
-pnpm prisma:seed
-```
-
-### 4. Run Development Server
-
-```bash
+# Run the development server
 pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 📝 Available Scripts
+**Build for production:**
 
 ```bash
-pnpm dev              # Start development server
-pnpm build            # Build for production
-pnpm start            # Start production server
-pnpm lint             # Run ESLint
-
-# Prisma commands
-pnpm prisma:generate  # Generate Prisma Client
-pnpm prisma:push      # Push schema to database
-pnpm prisma:studio    # Open Prisma Studio (DB GUI)
-pnpm prisma:seed      # Seed database with dummy data
+pnpm build
 ```
-
-## 🗄️ Database Schema
-
-### Project Model
-```prisma
-model Project {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  content     String
-  imageUrl    String
-  demoUrl     String?
-  githubUrl   String?
-  tags        String[]
-  featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-```
-
-### Message Model
-```prisma
-model Message {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  subject   String?
-  message   String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-}
-```
-
-## 🔄 Frontend ↔ Backend Interaction
-
-### Projects Page Flow
-1. `/projects` page calls `fetch('/api/projects')` during server-side rendering
-2. API route queries Prisma: `prisma.project.findMany()`
-3. Returns JSON array of projects
-4. Page component renders project cards
-
-### Contact Form Flow
-1. User submits form on `/contact` page
-2. Client calls `POST /api/contact` with form data
-3. API route validates data with Zod schema
-4. Saves message to database: `prisma.message.create()`
-5. Sends email via Resend API
-6. Returns success/error response
-7. Client displays feedback to user
-
-## 🎨 Customization
-
-### Update Profile Information
-
-1. **Home page** (`app/page.tsx`):
-   - Change "Your Name" and bio text
-   - Update social links (GitHub, LinkedIn, Twitter, email)
-
-2. **Profile picture**:
-   - Add your photo to `public/profile.jpg`
-
-3. **About page** (`app/about/page.tsx`):
-   - Update biography, experience timeline, and skills
-
-### Add Your Projects
-
-Option 1: **Use Prisma Studio** (GUI):
-```bash
-pnpm prisma:studio
-```
-
-Option 2: **Edit seed file** (`prisma/seed.ts`):
-- Add your projects
-- Run `pnpm prisma:seed`
-
-### Configure Email
-
-Update `lib/email.ts`:
-- Change sender domain (requires verified domain in Resend)
-- Customize email template HTML
-
-## 🚢 Deployment
-
-### Deploy to Vercel
-
-1. Push code to GitHub
-2. Import project to [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
-4. Deploy!
-
-**Important:**
-- Vercel automatically detects Next.js and Prisma
-- Build command: `prisma generate && next build`
-- Neon database works perfectly in serverless environment
-
-### Environment Variables for Production
-
-Add in Vercel dashboard:
-```
-DATABASE_URL=...
-DIRECT_URL=...
-RESEND_API_KEY=...
-CONTACT_EMAIL=...
-NEXT_PUBLIC_BASE_URL=https://your-domain.vercel.app
-```
-
-## 🔐 Security Best Practices
-
-- ✅ API routes validate input with Zod
-- ✅ Prisma prevents SQL injection
-- ✅ Environment variables not exposed to client
-- ✅ CORS handled by Next.js
-- ✅ Email rate limiting (implement as needed)
-
-## 📚 Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Prisma Documentation](https://www.prisma.io/docs)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-- [Resend Documentation](https://resend.com/docs)
-
-## 📄 License
-
-MIT License - feel free to use this template for your own portfolio!
 
 ---
 
-**Built with ❤️ using Next.js 16, Prisma, and PostgreSQL**
+## Environment Variables
 
-## Development
+Create `.env.local` and add the following:
 
-### Site
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-This repository includes a typed design system and Tailwind-based utilities that define the current site design styles. Use these patterns to keep UI consistent.
+# Resend (Contact form emails)
+RESEND_API_KEY=your-resend-key
+CONTACT_EMAIL=your@email.com
 
-• Fonts
+# NVIDIA NIM (JARVIS AI)
+NVIDIA_NIM_API_KEY=your-nvidia-api-key
 
-- Display: Vina
-- Sans: Poppins
+# Cal.com (Availability)
+CAL_API_KEY=your-cal-api-key
 
-• Colors and Gradients (CSS variables)
-
-Refer to `src/styles/globals.css` for CSS variables like:
-
-```
---color-primary, --color-blue, --color-indigo,
---color-text-body, --color-text-secondary, --color-text-muted,
---color-bg-main, --color-bg-card, --color-bg-secondary,
---gradient-blue, --gradient-gray, --gradient-text
-```
-
-• Type-safe tokens and utilities
-
-- Tokens: `src/lib/design-system.ts` (colors, spacing, typography, radii, shadows)
-- Utilities: `src/lib/design-utils.ts` (headingClass, textClass, buttonClass, cardClass, tagClass, sectionClass, etc.)
-
-• Common patterns (examples)
-
-Headings and text:
-
-```tsx
-import { headingClass, textClass } from '@/lib/design-utils';
-
-<h1 className={headingClass('h1')}>My Creative Toolbox</h1>
-<p className={textClass('body')}>Body text</p>
+# Admin Panel
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=your-secure-password
 ```
 
-Buttons:
+---
 
-```tsx
-import { buttonClass } from '@/lib/design-utils';
+## Scripts
 
-<button className={buttonClass('primary')}>Contact me</button>
-<button className={buttonClass('blue')}>Resume</button>
-```
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start the development server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start the production server |
+| `pnpm lint` | Run ESLint |
 
-Cards and tags:
+---
 
-```tsx
-import { cardClass, tagClass } from '@/lib/design-utils';
+## Design Philosophy
 
-<div className={cardClass('default')}>
-  <h3 className={headingClass('h3')}>Web Development</h3>
-  <p className={textClass('subtitle')}>Description…</p>
+> *"Good design gets attention. Good product design keeps it."*
+
+This portfolio is built around three core principles that mirror the site itself:
+
+1. **Clarity first** — Every element has a purpose. No decoration without function.
+2. **Performance as design** — Animations are smooth, images are optimized, and interactions feel instant.
+3. **Content as structure** — The CMS-driven content shapes the layout, not the other way around.
+
+---
+
+## License
+
+MIT — feel free to use this as a reference for your own portfolio.
+
+---
+
+<div align="center">
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FOOTER — minimalist signature matching the brand
+     ═══════════════════════════════════════════════════════════════ -->
+
+<svg viewBox="0 0 400 40" xmlns="http://www.w3.org/2000/svg" width="300px">
+  <text x="200" y="28" text-anchor="middle" font-family="'Poppins', -apple-system, sans-serif" font-size="12" font-weight="500" fill="#4a4a68" letter-spacing="0.08em">
+    BUILT WITH CARE IN IDUKKI, KERALA
+  </text>
+  <!-- Subtle decorative line -->
+  <line x1="140" y1="34" x2="260" y2="34" stroke="#c2c2c2" stroke-width="0.75"/>
+</svg>
+
+<p style="font-family: 'Poppins', sans-serif; font-size: 11px; color: #9b9b9b; margin-top: 4px;">
+  Next.js · React · TypeScript · Tailwind · Supabase
+</p>
+
 </div>
-
-<button className={tagClass(true)}>Graphic Design</button>
-<button className={tagClass(false)}>Video Editing</button>
-```
-
-Gradient text and sections:
-
-```tsx
-import { gradientTextClass, gradientSectionClass } from '@/lib/design-utils';
-
-<h2 className={gradientTextClass('blue')}>Brands & Companies</h2>
-<section className={gradientSectionClass()}>
-  <p className="text-white/80">Content…</p>
-</section>
-```
-
-Layout helpers:
-
-```tsx
-import { sectionClass, spacingClass } from '@/lib/design-utils';
-
-<section className={sectionClass(spacingClass('py', 'xl'))}>
-  {/* content */}
-</section>
-```
-
-• Tailwind inline theme
-
-Tailwind tokens are mapped from CSS variables in `globals.css` via `@theme inline`. Prefer design tokens over ad-hoc colors (e.g., use text classes or utilities instead of arbitrary Tailwind color names).
-
-• UI components barrel
-
-Import ready-to-use UI components from `@/components/ui`:
-
-```ts
-import { Button, MouseTrail, RotatingText, Slidingbanner, SquaresBackground } from '@/components/ui';
-```
-
-For deeper guidance, see `DESIGN_SYSTEM.md`.

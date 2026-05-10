@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import type { HomeContent } from "@/lib/home-content-defaults";
 import { 
   type SiteCopyReviewItem,
@@ -8,7 +9,8 @@ import {
   type SiteCopyFaqItem,
   type SiteCopyContent,
   siteCopyDefaults,
-  type PublicSiteShellContent
+  type PublicSiteShellContent,
+  type SiteCopyTool
 } from "@/types/site-copy";
 import { type ContactSectionSettings } from "@/types/contact";
 
@@ -62,17 +64,18 @@ function normalizeCreativeCategories(value: unknown): SiteCopyCreativeCategory[]
     return siteCopyDefaults.homeCreativeCategories;
   }
 
-  const normalized = value
-    .map((item) => {
-      if (!isRecord(item)) return null;
+  const normalized = value.reduce<SiteCopyCreativeCategory[]>((items, item) => {
+      if (!isRecord(item)) return items;
 
-      return {
+      const normalizedItem: SiteCopyCreativeCategory = {
         title: normalizeString(item.title, ""),
         description: normalizeString(item.description, ""),
         image: normalizeString(item.image, ""),
+        lottieUrl: normalizeString(item.lottieUrl, ""),
       };
-    })
-    .filter((item): item is SiteCopyCreativeCategory => Boolean(item && item.title));
+      if (normalizedItem.title) items.push(normalizedItem);
+      return items;
+    }, []);
 
   return normalized.length > 0 ? normalized : siteCopyDefaults.homeCreativeCategories;
 }
@@ -144,23 +147,42 @@ function normalizeToolCategories(
     return siteCopyDefaults.homeToolCategories;
   }
 
-  const expectedIds = ["design", "video", "development"] as const;
+  const normalized = value
+    .map((item) => {
+      if (!isRecord(item)) return null;
 
-  return expectedIds.map((id, index) => {
-    const item = value[index];
-    if (!isRecord(item)) {
-      return siteCopyDefaults.homeToolCategories[index];
-    }
+      return {
+        id: normalizeString(item.id, ""),
+        name: normalizeString(item.name, ""),
+        description: normalizeString(item.description, ""),
+      };
+    })
+    .filter((item): item is { id: string; name: string; description: string } => Boolean(item && item.id && item.name));
 
-    return {
-      id,
-      name: normalizeString(item.name, siteCopyDefaults.homeToolCategories[index].name),
-      description: normalizeString(
-        item.description,
-        siteCopyDefaults.homeToolCategories[index].description
-      ),
-    };
-  });
+  return normalized.length > 0 ? normalized : siteCopyDefaults.homeToolCategories;
+}
+
+function normalizeTools(value: unknown): SiteCopyTool[] {
+  if (!Array.isArray(value)) {
+    return siteCopyDefaults.homeTools;
+  }
+
+  const normalized = value.reduce<SiteCopyTool[]>((items, item) => {
+      if (!isRecord(item)) return items;
+
+      const normalizedItem: SiteCopyTool = {
+        id: normalizeString(item.id, ""),
+        name: normalizeString(item.name, ""),
+        description: normalizeString(item.description, ""),
+        icon: normalizeString(item.icon, ""),
+        category: normalizeString(item.category, "design"),
+        url: normalizeString(item.url, ""),
+      };
+      if (normalizedItem.id && normalizedItem.name) items.push(normalizedItem);
+      return items;
+    }, []);
+
+  return normalized.length > 0 ? normalized : siteCopyDefaults.homeTools;
 }
 
 export function normalizeSiteCopyContent(value: unknown): SiteCopyContent {
@@ -168,82 +190,89 @@ export function normalizeSiteCopyContent(value: unknown): SiteCopyContent {
     return siteCopyDefaults;
   }
 
+  // Handle potential nested structure from previous save bug
+  const target = isRecord(value.siteCopy) ? value.siteCopy : value;
+
   return {
-    heroStatusLine: normalizeString(value.heroStatusLine, siteCopyDefaults.heroStatusLine),
-    homeAboutHeading: normalizeString(value.homeAboutHeading, siteCopyDefaults.homeAboutHeading),
-    homeAboutBody: normalizeString(value.homeAboutBody, siteCopyDefaults.homeAboutBody),
-    homeAboutCtaLabel: normalizeString(value.homeAboutCtaLabel, siteCopyDefaults.homeAboutCtaLabel),
-    homeToolboxHeading: normalizeString(value.homeToolboxHeading, siteCopyDefaults.homeToolboxHeading),
-    homeToolboxIntro: normalizeString(value.homeToolboxIntro, siteCopyDefaults.homeToolboxIntro),
-    homeToolCategories: normalizeToolCategories(value.homeToolCategories),
-    homeRecentHeading: normalizeString(value.homeRecentHeading, siteCopyDefaults.homeRecentHeading),
-    homeRecentIntro: normalizeString(value.homeRecentIntro, siteCopyDefaults.homeRecentIntro),
-    homeRecentWebTitle: normalizeString(value.homeRecentWebTitle, siteCopyDefaults.homeRecentWebTitle),
-    homeRecentWebCopy: normalizeString(value.homeRecentWebCopy, siteCopyDefaults.homeRecentWebCopy),
+    heroStatusLine: normalizeString(target.heroStatusLine, siteCopyDefaults.heroStatusLine),
+    homeAboutHeading: normalizeString(target.homeAboutHeading, siteCopyDefaults.homeAboutHeading),
+    homeAboutBody: normalizeString(target.homeAboutBody, siteCopyDefaults.homeAboutBody),
+    homeAboutCtaLabel: normalizeString(target.homeAboutCtaLabel, siteCopyDefaults.homeAboutCtaLabel),
+    homeAboutCtaUrl: normalizeString(target.homeAboutCtaUrl, siteCopyDefaults.homeAboutCtaUrl),
+    homeToolboxHeading: normalizeString(target.homeToolboxHeading, siteCopyDefaults.homeToolboxHeading),
+    homeToolboxIntro: normalizeString(target.homeToolboxIntro, siteCopyDefaults.homeToolboxIntro),
+    homeToolCategories: normalizeToolCategories(target.homeToolCategories),
+    homeTools: normalizeTools(target.homeTools),
+    homeRecentHeading: normalizeString(target.homeRecentHeading, siteCopyDefaults.homeRecentHeading),
+    homeRecentIntro: normalizeString(target.homeRecentIntro, siteCopyDefaults.homeRecentIntro),
+    homeRecentWebTitle: normalizeString(target.homeRecentWebTitle, siteCopyDefaults.homeRecentWebTitle),
+    homeRecentWebCopy: normalizeString(target.homeRecentWebCopy, siteCopyDefaults.homeRecentWebCopy),
     homeRecentWebCtaLabel: normalizeString(
-      value.homeRecentWebCtaLabel,
+      target.homeRecentWebCtaLabel,
       siteCopyDefaults.homeRecentWebCtaLabel
     ),
-    homeCreativeTitle: normalizeString(value.homeCreativeTitle, siteCopyDefaults.homeCreativeTitle),
-    homeCreativeCopy: normalizeString(value.homeCreativeCopy, siteCopyDefaults.homeCreativeCopy),
+    homeRecentWebProjectIds: Array.isArray(target.homeRecentWebProjectIds) ? target.homeRecentWebProjectIds : siteCopyDefaults.homeRecentWebProjectIds,
+    homeSlidingRoles: normalizeString(target.homeSlidingRoles, siteCopyDefaults.homeSlidingRoles),
+    homeCreativeTitle: normalizeString(target.homeCreativeTitle, siteCopyDefaults.homeCreativeTitle),
+    homeCreativeCopy: normalizeString(target.homeCreativeCopy, siteCopyDefaults.homeCreativeCopy),
     homeCreativeCtaLabel: normalizeString(
-      value.homeCreativeCtaLabel,
+      target.homeCreativeCtaLabel,
       siteCopyDefaults.homeCreativeCtaLabel
     ),
-    homeCreativeCategories: normalizeCreativeCategories(value.homeCreativeCategories),
-    homeServicesHeading: normalizeString(value.homeServicesHeading, siteCopyDefaults.homeServicesHeading),
-    homeServicesIntro: normalizeString(value.homeServicesIntro, siteCopyDefaults.homeServicesIntro),
-    homeReviewsHeading: normalizeString(value.homeReviewsHeading, siteCopyDefaults.homeReviewsHeading),
-    homeReviewsIntro: normalizeString(value.homeReviewsIntro, siteCopyDefaults.homeReviewsIntro),
-    homeReviewsItems: normalizeReviewItems(value.homeReviewsItems),
-    aboutStickyNote: normalizeString(value.aboutStickyNote, siteCopyDefaults.aboutStickyNote),
+    homeCreativeCategories: normalizeCreativeCategories(target.homeCreativeCategories),
+    homeServicesHeading: normalizeString(target.homeServicesHeading, siteCopyDefaults.homeServicesHeading),
+    homeServicesIntro: normalizeString(target.homeServicesIntro, siteCopyDefaults.homeServicesIntro),
+    homeReviewsHeading: normalizeString(target.homeReviewsHeading, siteCopyDefaults.homeReviewsHeading),
+    homeReviewsIntro: normalizeString(target.homeReviewsIntro, siteCopyDefaults.homeReviewsIntro),
+    homeReviewsItems: normalizeReviewItems(target.homeReviewsItems),
+    aboutStickyNote: normalizeString(target.aboutStickyNote, siteCopyDefaults.aboutStickyNote),
     aboutLowerRightNote: normalizeString(
-      value.aboutLowerRightNote,
+      target.aboutLowerRightNote,
       siteCopyDefaults.aboutLowerRightNote
     ),
-    aboutFooterTag: normalizeString(value.aboutFooterTag, siteCopyDefaults.aboutFooterTag),
-    aboutIntroTitle: normalizeString(value.aboutIntroTitle, siteCopyDefaults.aboutIntroTitle),
-    aboutIntroBody: normalizeString(value.aboutIntroBody, siteCopyDefaults.aboutIntroBody),
-    aboutBookImage: normalizeString(value.aboutBookImage, siteCopyDefaults.aboutBookImage),
-    aboutTimelineTitle: normalizeString(value.aboutTimelineTitle, siteCopyDefaults.aboutTimelineTitle),
-    aboutTimelineEntries: normalizeTimelineEntries(value.aboutTimelineEntries),
+    aboutFooterTag: normalizeString(target.aboutFooterTag, siteCopyDefaults.aboutFooterTag),
+    aboutIntroTitle: normalizeString(target.aboutIntroTitle, siteCopyDefaults.aboutIntroTitle),
+    aboutIntroBody: normalizeString(target.aboutIntroBody, siteCopyDefaults.aboutIntroBody),
+    aboutBookImage: normalizeString(target.aboutBookImage, siteCopyDefaults.aboutBookImage),
+    aboutTimelineTitle: normalizeString(target.aboutTimelineTitle, siteCopyDefaults.aboutTimelineTitle),
+    aboutTimelineEntries: normalizeTimelineEntries(target.aboutTimelineEntries),
     aboutTypewriterQuote: normalizeString(
-      value.aboutTypewriterQuote,
+      target.aboutTypewriterQuote,
       siteCopyDefaults.aboutTypewriterQuote
     ),
-    servicesHeroTitle: normalizeString(value.servicesHeroTitle, siteCopyDefaults.servicesHeroTitle),
-    servicesWhyEyebrow: normalizeString(value.servicesWhyEyebrow, siteCopyDefaults.servicesWhyEyebrow),
-    servicesWhyHeading: normalizeString(value.servicesWhyHeading, siteCopyDefaults.servicesWhyHeading),
-    servicesWhyIntro: normalizeString(value.servicesWhyIntro, siteCopyDefaults.servicesWhyIntro),
-    servicesWhyCtaLabel: normalizeString(value.servicesWhyCtaLabel, siteCopyDefaults.servicesWhyCtaLabel),
-    servicesWhyCtaUrl: normalizeString(value.servicesWhyCtaUrl, siteCopyDefaults.servicesWhyCtaUrl),
-    servicesWhyFeatures: normalizeComparisonFeatures(value.servicesWhyFeatures),
-    servicesFaqEyebrow: normalizeString(value.servicesFaqEyebrow, siteCopyDefaults.servicesFaqEyebrow),
-    servicesFaqHeading: normalizeString(value.servicesFaqHeading, siteCopyDefaults.servicesFaqHeading),
-    servicesFaqIntro: normalizeString(value.servicesFaqIntro, siteCopyDefaults.servicesFaqIntro),
-    servicesFaqItems: normalizeFaqItems(value.servicesFaqItems),
-    servicesFaqCtaText: normalizeString(value.servicesFaqCtaText, siteCopyDefaults.servicesFaqCtaText),
+    servicesHeroTitle: normalizeString(target.servicesHeroTitle, siteCopyDefaults.servicesHeroTitle),
+    servicesWhyEyebrow: normalizeString(target.servicesWhyEyebrow, siteCopyDefaults.servicesWhyEyebrow),
+    servicesWhyHeading: normalizeString(target.servicesWhyHeading, siteCopyDefaults.servicesWhyHeading),
+    servicesWhyIntro: normalizeString(target.servicesWhyIntro, siteCopyDefaults.servicesWhyIntro),
+    servicesWhyCtaLabel: normalizeString(target.servicesWhyCtaLabel, siteCopyDefaults.servicesWhyCtaLabel),
+    servicesWhyCtaUrl: normalizeString(target.servicesWhyCtaUrl, siteCopyDefaults.servicesWhyCtaUrl),
+    servicesWhyFeatures: normalizeComparisonFeatures(target.servicesWhyFeatures),
+    servicesFaqEyebrow: normalizeString(target.servicesFaqEyebrow, siteCopyDefaults.servicesFaqEyebrow),
+    servicesFaqHeading: normalizeString(target.servicesFaqHeading, siteCopyDefaults.servicesFaqHeading),
+    servicesFaqIntro: normalizeString(target.servicesFaqIntro, siteCopyDefaults.servicesFaqIntro),
+    servicesFaqItems: normalizeFaqItems(target.servicesFaqItems),
+    servicesFaqCtaText: normalizeString(target.servicesFaqCtaText, siteCopyDefaults.servicesFaqCtaText),
     servicesFaqCtaLabel: normalizeString(
-      value.servicesFaqCtaLabel,
+      target.servicesFaqCtaLabel,
       siteCopyDefaults.servicesFaqCtaLabel
     ),
-    contactEyebrow: normalizeString(value.contactEyebrow, siteCopyDefaults.contactEyebrow),
-    contactHeading: normalizeString(value.contactHeading, siteCopyDefaults.contactHeading),
+    contactEyebrow: normalizeString(target.contactEyebrow, siteCopyDefaults.contactEyebrow),
+    contactHeading: normalizeString(target.contactHeading, siteCopyDefaults.contactHeading),
     contactSupportLine: normalizeString(
-      value.contactSupportLine,
+      target.contactSupportLine,
       siteCopyDefaults.contactSupportLine
     ),
-    contactGiantText: normalizeString(value.contactGiantText, siteCopyDefaults.contactGiantText),
+    contactGiantText: normalizeString(target.contactGiantText, siteCopyDefaults.contactGiantText),
     footerBrandEyebrow: normalizeString(
-      value.footerBrandEyebrow,
+      target.footerBrandEyebrow,
       siteCopyDefaults.footerBrandEyebrow
     ),
-    footerSupportCopy: normalizeString(value.footerSupportCopy, siteCopyDefaults.footerSupportCopy),
-    footerEmail: normalizeString(value.footerEmail, siteCopyDefaults.footerEmail),
-    footerCtaHeading: normalizeString(value.footerCtaHeading, siteCopyDefaults.footerCtaHeading),
-    footerCtaCopy: normalizeString(value.footerCtaCopy, siteCopyDefaults.footerCtaCopy),
-    footerCopyright: normalizeString(value.footerCopyright, siteCopyDefaults.footerCopyright),
-    footerCredit: normalizeString(value.footerCredit, siteCopyDefaults.footerCredit),
+    footerSupportCopy: normalizeString(target.footerSupportCopy, siteCopyDefaults.footerSupportCopy),
+    footerEmail: normalizeString(target.footerEmail, siteCopyDefaults.footerEmail),
+    footerCtaHeading: normalizeString(target.footerCtaHeading, siteCopyDefaults.footerCtaHeading),
+    footerCtaCopy: normalizeString(target.footerCtaCopy, siteCopyDefaults.footerCtaCopy),
+    footerCopyright: normalizeString(target.footerCopyright, siteCopyDefaults.footerCopyright),
+    footerCredit: normalizeString(target.footerCredit, siteCopyDefaults.footerCredit),
   };
 }
 
@@ -268,14 +297,18 @@ export async function getSiteCopyContent(): Promise<SiteCopyContent> {
 }
 
 export async function upsertSiteCopyContent(content: SiteCopyContent) {
-  const supabase = await createClient();
-  await supabase
+  const supabase = createAdminClient();
+  const { error } = await supabase
     .from("site_content")
     .upsert({ 
       key: SITE_COPY_CONTENT_KEY, 
-      value: JSON.stringify(content),
-      updated_at: new Date().toISOString()
+      value: JSON.stringify(content)
     }, { onConflict: "key" });
+
+  if (error) {
+    console.error("Supabase upsert error (site_copy):", error);
+    throw error;
+  }
 }
 
 

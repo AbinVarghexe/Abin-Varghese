@@ -36,9 +36,11 @@ type AboutSectionProps = {
   heading: string;
   body: string;
   ctaLabel: string;
+  ctaUrl?: string;
+  images?: Array<{ id: string; src: string; priority?: boolean }>;
 };
 
-export default function AboutSection({ heading, body, ctaLabel }: AboutSectionProps) {
+export default function AboutSection({ heading, body, ctaLabel, ctaUrl = "/about", images }: AboutSectionProps) {
   const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function AboutSection({ heading, body, ctaLabel }: AboutSectionPr
       <div className="relative z-20 max-w-[1200px] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
         
         {/* Right column: Image Stack (Swipeable on Mobile, Interactive on Desktop) */}
-        <AboutImageStack />
+        <AboutImageStack images={images} />
 
         {/* Left column: text */}
         <div ref={textRef} className="flex flex-col items-center lg:items-start text-center lg:text-left gap-6 w-full lg:w-[55%] pointer-events-auto order-2 lg:order-1">
@@ -100,7 +102,7 @@ export default function AboutSection({ heading, body, ctaLabel }: AboutSectionPr
           </p>
 
           <Link
-            href="/about"
+            href={ctaUrl}
             className="lg:self-start group inline-flex items-center no-underline pointer-events-auto shadow-xl transition-transform duration-200 hover:scale-[1.03]"
             style={{
               gap: '12px',

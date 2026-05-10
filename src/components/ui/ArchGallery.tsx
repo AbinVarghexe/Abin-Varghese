@@ -40,16 +40,20 @@ function useLottieData(url?: string) {
 
 const LottieCardPlayer = ({ url, fallbackImage }: { url?: string, fallbackImage?: string }) => {
   const urlLower = url?.toLowerCase() || '';
-  const isVideo = urlLower.endsWith('.mp4');
-  const isImage = urlLower.endsWith('.gif') || urlLower.endsWith('.png') || urlLower.endsWith('.jpg') || urlLower.endsWith('.jpeg') || urlLower.endsWith('.webp');
+  const fallbackLower = fallbackImage?.toLowerCase() || '';
   
-  const { animationData, error } = useLottieData(isVideo || isImage ? undefined : url);
+  const isVideo = urlLower.endsWith('.mp4') || fallbackLower.endsWith('.mp4');
+  const isGif = urlLower.includes('pinimg') || urlLower.includes('pinterest') || urlLower.endsWith('.gif') || 
+                fallbackLower.includes('pinimg') || fallbackLower.includes('pinterest') || fallbackLower.endsWith('.gif');
+  const isOtherImage = urlLower.endsWith('.png') || urlLower.endsWith('.jpg') || urlLower.endsWith('.jpeg') || urlLower.endsWith('.webp') ||
+                       fallbackLower.endsWith('.png') || fallbackLower.endsWith('.jpg') || fallbackLower.endsWith('.jpeg') || fallbackLower.endsWith('.webp');
 
   if (isVideo) {
+    const videoSrc = urlLower.endsWith('.mp4') ? url : fallbackImage;
     return (
       <div className="w-full h-full relative bg-black">
         <video 
-          src={url} 
+          src={videoSrc} 
           autoPlay 
           loop 
           muted 
@@ -60,15 +64,18 @@ const LottieCardPlayer = ({ url, fallbackImage }: { url?: string, fallbackImage?
     );
   }
 
-  if (isImage) {
+  if (isGif || isOtherImage) {
+    const imgSrc = (isGif && urlLower.includes('pin')) || (isGif && urlLower.endsWith('.gif')) ? url : fallbackImage;
     return (
       <img 
-        src={url} 
+        src={imgSrc || fallbackImage} 
         alt="Creative content" 
         className="w-full h-full object-cover"
       />
     );
   }
+
+  const { animationData, error } = useLottieData(url);
 
   if (error || (!url && !fallbackImage)) {
     return (
@@ -78,8 +85,7 @@ const LottieCardPlayer = ({ url, fallbackImage }: { url?: string, fallbackImage?
     );
   }
 
-  const isLottie = url && !isVideo && !isImage;
-  if (isLottie && !animationData) {
+  if (url && !animationData) {
     return <div className="w-full h-full bg-zinc-100 animate-pulse" />;
   }
 
@@ -96,12 +102,21 @@ const LottieCardPlayer = ({ url, fallbackImage }: { url?: string, fallbackImage?
     );
   }
 
+  // Final fallback: Show the image if it exists, otherwise the Zap icon
+  if (fallbackImage) {
+    return (
+      <img 
+        src={fallbackImage} 
+        alt="Card graphic" 
+        className="w-full h-full object-cover"
+      />
+    );
+  }
+
   return (
-    <img 
-      src={fallbackImage} 
-      alt="Card graphic" 
-      className="w-full h-full object-cover"
-    />
+    <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-zinc-300">
+      <Zap className="w-12 h-12" />
+    </div>
   );
 };
 

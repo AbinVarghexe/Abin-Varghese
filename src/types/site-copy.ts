@@ -13,6 +13,16 @@ export interface SiteCopyCreativeCategory {
   title: string;
   description: string;
   image: string;
+  lottieUrl?: string;
+}
+
+export interface SiteCopyTool {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+  url?: string;
 }
 
 export interface SiteCopyTimelineEntry {
@@ -38,18 +48,22 @@ export interface SiteCopyContent {
   homeAboutHeading: string;
   homeAboutBody: string;
   homeAboutCtaLabel: string;
+  homeAboutCtaUrl: string;
   homeToolboxHeading: string;
   homeToolboxIntro: string;
   homeToolCategories: Array<{
-    id: "design" | "video" | "development";
+    id: string;
     name: string;
     description: string;
   }>;
+  homeTools: SiteCopyTool[];
   homeRecentHeading: string;
   homeRecentIntro: string;
   homeRecentWebTitle: string;
   homeRecentWebCopy: string;
   homeRecentWebCtaLabel: string;
+  homeRecentWebProjectIds: string[];
+  homeSlidingRoles: string;
   homeCreativeTitle: string;
   homeCreativeCopy: string;
   homeCreativeCtaLabel: string;
@@ -100,6 +114,7 @@ export const siteCopyDefaults: SiteCopyContent = {
   homeAboutBody:
     "I started out being drawn to visuals, layout systems, and design tools. Over time that pulled me deeper into frontend development and product building, and now I enjoy working on projects where I can shape both the interface and the implementation.",
   homeAboutCtaLabel: "More about",
+  homeAboutCtaUrl: "/about",
   homeToolboxHeading: "My Creative [Toolbox]",
   homeToolboxIntro:
     "The tools I use reflect how I work. Some help me design, some help me build, and some help me present ideas more clearly from rough concept to finished product.",
@@ -108,53 +123,76 @@ export const siteCopyDefaults: SiteCopyContent = {
     { id: "video", name: "Motion and Video", description: "Motion graphics, editing, and 3D" },
     { id: "development", name: "Development Tools", description: "Frontend engineering and creative coding" },
   ],
-  homeRecentHeading: "My Recent [Projects]",
+  homeTools: [
+    { id: "figma", name: "Figma", description: "Interface Design & Prototyping", icon: "https://skillicons.dev/icons?i=figma", category: "design", url: "" },
+    { id: "photoshop", name: "Photoshop", description: "Image Manipulation & Editing", icon: "https://skillicons.dev/icons?i=ps", category: "design", url: "" },
+    { id: "illustrator", name: "Illustrator", description: "Vector Graphics Software", icon: "https://skillicons.dev/icons?i=ai", category: "design", url: "" },
+    { id: "aftereffects", name: "After Effects", description: "VFX & Motion Graphics", icon: "https://skillicons.dev/icons?i=ae", category: "video", url: "" },
+    { id: "premiere", name: "Premiere Pro", description: "Video Editing Software", icon: "https://skillicons.dev/icons?i=pr", category: "video", url: "" },
+    { id: "blender", name: "Blender", description: "3D Creation Suite", icon: "https://skillicons.dev/icons?i=blender", category: "video", url: "" },
+    { id: "davinci", name: "DaVinci Resolve", description: "Color Correction & Editing", icon: "https://cdn.simpleicons.org/davinciresolve", category: "video", url: "" },
+    { id: "react", name: "React", description: "UI Library", icon: "https://skillicons.dev/icons?i=react", category: "development", url: "" },
+    { id: "nextjs", name: "Next.js", description: "React Framework", icon: "https://skillicons.dev/icons?i=nextjs", category: "development", url: "" },
+    { id: "tailwind", name: "Tailwind CSS", description: "Utility-first CSS Framework", icon: "https://skillicons.dev/icons?i=tailwind", category: "development", url: "" },
+    { id: "js", name: "JavaScript", description: "Programming Language", icon: "https://skillicons.dev/icons?i=js", category: "development", url: "" },
+  ],
+  homeRecentHeading: "My Recent [Project's]",
   homeRecentIntro:
-    "These projects show the kind of work I enjoy most: useful products, clear interfaces, and builds that solve real problems without losing visual quality.",
+    "Exploring the intersection of high-performance engineering and creative visual storytelling across multiple digital disciplines.",
   homeRecentWebTitle: "Web Development",
   homeRecentWebCopy:
-    "Building responsive products with strong frontend structure, clean interaction, and practical implementation. I like turning rough ideas into websites and interfaces people can actually use.",
+    "Building highly-performant, responsive web applications using modern technologies like React, Next.js, and Tailwind CSS. I specialize in turning complex requirements into seamless digital experiences.",
   homeRecentWebCtaLabel: "View Projects",
-  homeCreativeTitle: "Creative Stuff",
+  homeRecentWebProjectIds: [],
+  homeSlidingRoles:
+    "Creative Director, UI Designer, Motion Graphics artist, Frontend Engineer, UX Researcher",
+  homeCreativeTitle: "Creative [Stuff]",
   homeCreativeCopy:
-    "Alongside product and web work, I spend time on branding, motion, layouts, and visual experiments. That creative side feeds back into how I approach websites and interfaces.",
+    "Beyond engineering, I dive deep into visual aesthetics and digital artistry. From cinematic motion graphics to immersive 3D environments, these pieces represent my passion for pushing the boundaries of creative storytelling.",
   homeCreativeCtaLabel: "Contact me",
   homeCreativeCategories: [
     {
       title: "Motion Graphics",
-      description: "Motion pieces that add rhythm, clarity, and energy to brand and product storytelling.",
+      description: "Bringing static designs to life with fluid animations and cinematic storytelling that captivates audiences.",
       image: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=600",
+      lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/5f/13/31/5f1331c04272eb0210b7f42997bc4c5f_720w.mp4"
     },
     {
       title: "UI/UX Design",
-      description: "Interfaces planned around clarity, flow, and how real people move through a product.",
+      description: "Crafting intuitive, user-centered interfaces that blend aesthetic beauty with seamless functional experiences.",
       image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600",
+      lottieUrl: "https://i.pinimg.com/originals/9d/1f/1f/9d1f1fb1b6004da53df6ae2aa320aeea.gif"
     },
     {
-      title: "Video Editing",
-      description: "Edits shaped around pacing, clean transitions, and a stronger visual story.",
+      title: "Video Production",
+      description: "High-quality video editing and direction, focusing on rhythm, color grading, and impactful visual narratives.",
       image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=600",
+      lottieUrl: "https://i.pinimg.com/originals/05/a9/ca/05a9ca456daeb936b7715aaa52477cb2.gif"
     },
     {
-      title: "Visual Effects",
-      description: "Atmospheric effects and visual treatments that add depth and impact to a piece.",
+      title: "VFX Animation",
+      description: "Creating mind-bending visual effects and high-fidelity animations for a truly immersive digital experience.",
       image: "https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=600",
+      lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/48/e7/83/48e783773884e91eb65eb4a8bfbeee2c_720w.mp4"
     },
     {
-      title: "3D Design",
-      description: "3D concepts, product visuals, and renders that help ideas feel more real.",
+      title: "3D Modeling",
+      description: "Developing detailed 3D assets and environments with realistic textures, lighting, and spatial depth.",
       image: "https://images.unsplash.com/photo-1616423640778-28d1b53229bd?q=80&w=600",
+      lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/99/25/c4/9925c401f8eaa36ac99d6472df701a84_720w.mp4"
     },
     {
-      title: "Graphic Design",
-      description: "Posters, identity systems, and digital graphics built with consistency and personality.",
+      title: "Visual Branding",
+      description: "Designing cohesive brand identities that tell a unique story through color, typography, and iconography.",
       image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=600",
+      lottieUrl: "https://i.pinimg.com/originals/bf/1c/a1/bf1ca126169bd06a802f17b1c218416d.gif"
     },
     {
-      title: "Brand Visuals",
-      description: "Visual systems that help a brand look coherent across web, social, and presentations.",
+      title: "Character Design",
+      description: "Giving personality to digital entities through expressive character concepts and detailed illustrations.",
       image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600",
-    },
+      lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/68/3f/7b/683f7bd1a42b8ac5dd38110fe29ac0e9_720w.mp4"
+    }
   ],
   homeServicesHeading: "My [Services]",
   homeServicesIntro:

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { motion, useSpring } from "framer-motion";
 import CardSwap, { Card } from "@/components/effects/CardSwap";
@@ -9,50 +10,9 @@ import { ArchGallery } from "@/components/ui/ArchGallery";
 import { MobileProjectStack } from "@/components/ui/MobileProjectStack";
 import { CreativeMobileStack } from "@/components/ui/CreativeMobileStack";
 
-const CREATIVE_CATEGORIES = [
-  {
-    title: "Motion Graphics",
-    description: "Bringing static designs to life with fluid animations and cinematic storytelling that captivates audiences.",
-    image: "https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=80&w=600",
-    lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/5f/13/31/5f1331c04272eb0210b7f42997bc4c5f_720w.mp4"
-  },
-  {
-    title: "UI/UX Design",
-    description: "Crafting intuitive, user-centered interfaces that blend aesthetic beauty with seamless functional experiences.",
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600",
-    lottieUrl: "https://i.pinimg.com/originals/9d/1f/1f/9d1f1fb1b6004da53df6ae2aa320aeea.gif"
-  },
-  {
-    title: "Video Production",
-    description: "High-quality video editing and direction, focusing on rhythm, color grading, and impactful visual narratives.",
-    image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=600",
-    lottieUrl: "https://i.pinimg.com/originals/05/a9/ca/05a9ca456daeb936b7715aaa52477cb2.gif"
-  },
-  {
-    title: "VFX Animation",
-    description: "Creating mind-bending visual effects and high-fidelity animations for a truly immersive digital experience.",
-    image: "https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=600",
-    lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/48/e7/83/48e783773884e91eb65eb4a8bfbeee2c_720w.mp4"
-  },
-  {
-    title: "3D Modeling",
-    description: "Developing detailed 3D assets and environments with realistic textures, lighting, and spatial depth.",
-    image: "https://images.unsplash.com/photo-1616423640778-28d1b53229bd?q=80&w=600",
-    lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/99/25/c4/9925c401f8eaa36ac99d6472df701a84_720w.mp4"
-  },
-  {
-    title: "Visual Branding",
-    description: "Designing cohesive brand identities that tell a unique story through color, typography, and iconography.",
-    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=600",
-    lottieUrl: "https://i.pinimg.com/originals/bf/1c/a1/bf1ca126169bd06a802f17b1c218416d.gif"
-  },
-  {
-    title: "Character Design",
-    description: "Giving personality to digital entities through expressive character concepts and detailed illustrations.",
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600",
-    lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/68/3f/7b/683f7bd1a42b8ac5dd38110fe29ac0e9_720w.mp4"
-  }
-];
+import { siteCopyDefaults } from "@/types/site-copy";
+
+import { splitAccentHeading } from "@/lib/accent-heading";
 
 export default function RecentProjects({
   heading,
@@ -82,7 +42,12 @@ export default function RecentProjects({
   const cursorX = useSpring(-100, { stiffness: 400, damping: 28 });
   const cursorY = useSpring(-100, { stiffness: 400, damping: 28 });
 
-  const activeCategory = CREATIVE_CATEGORIES[activeCreativeIndex];
+  const displayCategories = creativeCategories && creativeCategories.length > 0 ? creativeCategories : siteCopyDefaults.homeCreativeCategories;
+  const activeCategory = displayCategories[activeCreativeIndex];
+
+  const headingParts = splitAccentHeading(heading);
+  const webTitleParts = splitAccentHeading(webTitle);
+  const creativeTitleParts = splitAccentHeading(creativeTitle);
 
   return (
     <section className="pt-24 pb-8 px-4 md:px-8 lg:px-20 w-full bg-transparent relative z-20">
@@ -103,7 +68,7 @@ export default function RecentProjects({
              opacity: isHoveringCard ? 1 : 0, 
              scale: isHoveringCard ? 1 : 0.5 
            }}
-           className="w-auto px-6 h-12 bg-[#3b5bdb]/90 backdrop-blur-sm rounded-full flex items-center justify-center text-white text-sm font-medium shadow-xl whitespace-nowrap"
+           className="hidden md:flex w-auto px-6 h-12 bg-[#3b5bdb]/90 backdrop-blur-sm rounded-full items-center justify-center text-white text-sm font-medium shadow-xl whitespace-nowrap"
         >
            {hoveredUrl}
         </motion.div>
@@ -111,10 +76,14 @@ export default function RecentProjects({
         {/* HEADER SECTION */}
         <div className="flex flex-col items-center text-center w-full mb-8">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-2 text-black">
-            My Recent <span className="text-blue-600 font-serif italic font-medium">Project&apos;s</span>
+            {headingParts.before}
+            {headingParts.accent ? (
+              <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
+            ) : null}
+            {headingParts.after}
           </h2>
           <p className="text-black/70 text-base md:text-lg leading-relaxed max-w-3xl">
-            Exploring the intersection of high-performance engineering and creative visual storytelling across multiple digital disciplines.
+            {intro}
           </p>
         </div>
 
@@ -129,10 +98,14 @@ export default function RecentProjects({
           {/* Section Heading */}
           <div className="flex flex-col gap-3 max-w-[800px] mb-4">
             <h3 className="text-2xl md:text-3xl font-bold text-zinc-900">
-              Web Development
+              {webTitleParts.before}
+              {webTitleParts.accent ? (
+                <span className="text-blue-600 font-serif italic font-medium">{webTitleParts.accent}</span>
+              ) : null}
+              {webTitleParts.after}
             </h3>
             <p className="text-zinc-500 text-sm md:text-base leading-relaxed max-w-3xl">
-              Building highly-performant, responsive web applications using modern technologies like React, Next.js, and Tailwind CSS. I specialize in turning complex requirements into seamless digital experiences.
+              {webCopy}
             </p>
           </div>
 
@@ -159,7 +132,7 @@ export default function RecentProjects({
                   fontSize: '14px', color: '#fff', textDecoration: 'none',
                 }}
               >
-                <span style={{ minWidth: '80px', textAlign: 'center' }}>View Projects</span>
+                <span style={{ minWidth: '80px', textAlign: 'center' }}>{webCtaLabel}</span>
                 <span
                   className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
                   style={{ width: '38px', height: '38px' }}
@@ -213,7 +186,7 @@ export default function RecentProjects({
                     el.style.transform = 'scale(1)';
                   }}
                 >
-                  <span style={{ minWidth: '80px', textAlign: 'center' }}>View Projects</span>
+                  <span style={{ minWidth: '80px', textAlign: 'center' }}>{webCtaLabel}</span>
                   <span
                     className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
                     style={{ width: '38px', height: '38px' }}
@@ -257,7 +230,7 @@ export default function RecentProjects({
                              <div className="w-7 shrink-0"></div>
                          </div>
                          <div className="flex-1 w-full relative bg-zinc-200">
-                             <img src={project.imageUrl || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=600&auto=format&fit=crop"} alt={project.title || "Web Project"} className="absolute inset-0 w-full h-full object-cover object-top" />
+                             <Image src={project.imageUrl || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=600&auto=format&fit=crop"} alt={project.title || "Web Project"} fill sizes="(max-width: 768px) 100vw, 33vw" className="absolute inset-0 w-full h-full object-cover object-top" />
                          </div>
                        </a>
                      </Card>
@@ -279,10 +252,12 @@ export default function RecentProjects({
           {/* Section Heading */}
           <div className="flex flex-col gap-3 max-w-[800px] mb-4">
             <h3 className="text-2xl md:text-3xl font-bold text-zinc-900">
-              Creative Stuff
+              {creativeTitleParts.before}
+              {creativeTitleParts.accent}
+              {creativeTitleParts.after}
             </h3>
             <p className="text-zinc-500 text-sm md:text-base leading-relaxed max-w-3xl">
-              Beyond engineering, I dive deep into visual aesthetics and digital artistry. From cinematic motion graphics to immersive 3D environments, these pieces represent my passion for pushing the boundaries of creative storytelling.
+              {creativeCopy}
             </p>
           </div>
 
@@ -290,7 +265,7 @@ export default function RecentProjects({
           <div className="md:hidden w-full flex flex-col gap-12 mt-4 mb-8">
             <div className="flex flex-col items-center">
               <CreativeMobileStack 
-                items={CREATIVE_CATEGORIES}
+                items={displayCategories}
                 currentIndex={activeCreativeIndex}
                 onIndexChange={setActiveCreativeIndex}
               />
@@ -298,10 +273,10 @@ export default function RecentProjects({
             
             <div className="text-center flex flex-col items-center px-4 -mt-4">
                 <h3 className="text-3xl font-bold text-zinc-900 mb-4 leading-tight">
-                  {activeCategory.title}
+                  {activeCategory?.title}
                 </h3>
                 <p className="text-zinc-600 text-sm mb-10 max-w-sm mx-auto leading-relaxed">
-                  {activeCategory.description}
+                  {activeCategory?.description}
                 </p>
                 
                 <Link
@@ -317,7 +292,7 @@ export default function RecentProjects({
                     fontSize: '14px', color: '#fff', textDecoration: 'none',
                   }}
                 >
-                  <span style={{ minWidth: '80px', textAlign: 'center' }}>Contact me</span>
+                  <span style={{ minWidth: '80px', textAlign: 'center' }}>{creativeCtaLabel}</span>
                   <span
                     className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
                     style={{ width: '38px', height: '38px' }}
@@ -333,20 +308,19 @@ export default function RecentProjects({
              
              {/* Arched Gallery Background */}
              <ArchGallery 
-                categories={CREATIVE_CATEGORIES} 
+                categories={displayCategories} 
                 selectedIndex={activeCreativeIndex} 
                 onSelect={(idx: number) => setActiveCreativeIndex(idx)} 
              />
 
              {/* Center Call to Action Text with Navigation */}
              <div className="z-20 text-center flex flex-col items-center max-w-2xl px-6 relative pointer-events-auto">
-====
                  {/* Navigation Buttons above the heading */}
                  <div className="flex items-center gap-4 mb-6">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => setActiveCreativeIndex((prev) => (prev - 1 + CREATIVE_CATEGORIES.length) % CREATIVE_CATEGORIES.length)}
+                      onClick={() => setActiveCreativeIndex((prev) => (prev - 1 + displayCategories.length) % displayCategories.length)}
                       className="w-10 h-10 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-sm hover:shadow-md transition-all"
                       aria-label="Previous"
                     >
@@ -358,7 +332,7 @@ export default function RecentProjects({
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => setActiveCreativeIndex((prev) => (prev + 1) % CREATIVE_CATEGORIES.length)}
+                      onClick={() => setActiveCreativeIndex((prev) => (prev + 1) % displayCategories.length)}
                       className="w-10 h-10 rounded-full bg-white border border-zinc-200 flex items-center justify-center text-zinc-900 shadow-sm hover:shadow-md transition-all"
                       aria-label="Next"
                     >
@@ -367,13 +341,14 @@ export default function RecentProjects({
                       </svg>
                     </motion.button>
                  </div>
+
                  
                  <h3 className="text-3xl md:text-5xl font-bold text-zinc-900 mb-6 leading-tight">
-                   {activeCategory.title}
+                   {activeCategory?.title}
                  </h3>
 
                  <p className="text-zinc-600 text-sm md:text-base mb-10 max-w-md mx-auto leading-relaxed">
-                   {activeCategory.description}
+                   {activeCategory?.description}
                  </p>
                  
                  <Link
@@ -398,7 +373,7 @@ export default function RecentProjects({
                      el.style.transform = 'scale(1)';
                    }}
                  >
-                   <span style={{ minWidth: '80px', textAlign: 'center' }}>Contact me</span>
+                   <span style={{ minWidth: '80px', textAlign: 'center' }}>{creativeCtaLabel}</span>
                    <span
                      className="flex items-center justify-center bg-white rounded-full shrink-0 transition-transform duration-300 group-hover:rotate-45"
                      style={{ width: '38px', height: '38px' }}

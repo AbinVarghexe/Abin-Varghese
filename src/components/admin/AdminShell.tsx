@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import "@/styles/admin.css"; // Import isolated admin styles
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,22 +12,25 @@ import {
   FolderKanban,
   Home,
   Layers3,
+  LayoutDashboard,
   LogOut,
   Mail,
-  LayoutDashboard,
   User,
+  Settings,
+  Bell,
+  Search,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const navItems = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard },
-  { href: "/admin/home", label: "Home", icon: Home },
-  { href: "/admin/about", label: "About", icon: User },
-  { href: "/admin/projects", label: "Project Section", icon: FolderKanban },
-  { href: "/admin/services", label: "Service Section", icon: Layers3 },
-  { href: "/admin/contact", label: "Contact", icon: Mail },
-  { href: "/admin/import", label: "Import Section", icon: Database },
+  { href: "/admin", label: "Overview", icon: LayoutDashboard, color: "text-[#007aff]", bg: "bg-[#007aff]/5" },
+  { href: "/admin/home", label: "Home", icon: Home, color: "text-[#ff9500]", bg: "bg-[#ff9500]/5" },
+  { href: "/admin/about", label: "About", icon: User, color: "text-[#ff3b30]", bg: "bg-[#ff3b30]/5" },
+  { href: "/admin/projects", label: "Project Section", icon: FolderKanban, color: "text-[#af52de]", bg: "bg-[#af52de]/5" },
+  { href: "/admin/services", label: "Service Section", icon: Layers3, color: "text-[#34c759]", bg: "bg-[#34c759]/5" },
+  { href: "/admin/contact", label: "Contact", icon: Mail, color: "text-[#ff2d55]", bg: "bg-[#ff2d55]/5" },
+  { href: "/admin/import", label: "Import Section", icon: Database, color: "text-[#5856d6]", bg: "bg-[#5856d6]/5" },
 ];
 
 export default function AdminShell({ 
@@ -38,7 +42,7 @@ export default function AdminShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true); // Default expanded for better productivity
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const activeHref = useMemo(() => {
@@ -63,42 +67,45 @@ export default function AdminShell({
   };
 
   if (pathname.startsWith("/admin/login")) {
-    return <>{children}</>;
+    return <div className="admin-theme">{children}</div>;
   }
 
   return (
-    <div className="flex h-screen bg-[linear-gradient(180deg,#f7f4ef_0%,#f0eee9_60%,#ece7df_100%)] text-[#0b0b0c] font-sans overflow-hidden">
+    <div className="admin-theme flex h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans overflow-hidden">
+      {/* Sidebar */}
       <aside
-        className={`${isSidebarExpanded ? "w-72" : "w-[88px]"} h-screen bg-white/85 border-r border-[var(--color-border-light)] flex flex-col relative z-20 transition-all duration-300 ease-in-out shrink-0 backdrop-blur`}
+        className={`${isSidebarExpanded ? "w-64" : "w-[80px]"} h-screen bg-white/80 border-r border-black/5 flex flex-col relative z-20 transition-all duration-300 ease-in-out shrink-0 backdrop-blur-xl`}
       >
+        {/* Header/Logo */}
         <div
-          className={`p-6 border-b border-[var(--color-border-light)] flex items-center ${
+          className={`p-6 flex items-center ${
             isSidebarExpanded ? "justify-between" : "justify-center"
           }`}
         >
           {isSidebarExpanded ? (
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#dbe7ff] border border-[var(--color-border-dark)] rounded-xl flex items-center justify-center shadow-[0_8px_18px_rgba(0,32,215,0.16)] shrink-0">
-                <FileCode2 className="w-5 h-5 text-[#0020d7]" />
+              <div className="w-9 h-9 bg-black rounded-[10px] flex items-center justify-center shadow-sm shrink-0">
+                <FileCode2 className="w-5 h-5 text-white" />
               </div>
               <div className="overflow-hidden">
-                <h1 className="text-[#0b0b0c] font-semibold tracking-wide truncate">ADMIN STUDIO</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-[#0020d7] animate-pulse" />
-                  <span className="text-[10px] text-[#0020d7] font-mono tracking-widest uppercase truncate">
-                    Live Editing
+                <h1 className="text-[#1d1d1f] font-bold tracking-tight truncate text-[13px] uppercase">Studio</h1>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 shrink-0 rounded-full bg-[#34c759] shadow-[0_0_8px_rgba(52,199,89,0.5)]" />
+                  <span className="text-[10px] text-[#86868b] font-medium tracking-wide uppercase truncate">
+                    Editing
                   </span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="w-10 h-10 bg-[#dbe7ff] border border-[var(--color-border-dark)] rounded-xl flex items-center justify-center shadow-[0_8px_18px_rgba(0,32,215,0.16)] shrink-0">
-              <FileCode2 className="w-5 h-5 text-[#0020d7]" />
+            <div className="w-9 h-9 bg-black rounded-[10px] flex items-center justify-center shadow-sm shrink-0">
+              <FileCode2 className="w-5 h-5 text-white" />
             </div>
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-2 no-scrollbar">
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1 no-scrollbar">
           {navItems.map((item) => {
             const active = activeHref === item.href;
 
@@ -107,88 +114,100 @@ export default function AdminShell({
                 key={item.href}
                 href={item.href}
                 title={!isSidebarExpanded ? item.label : undefined}
-                className={`w-full flex items-center ${isSidebarExpanded ? "gap-3 px-4" : "justify-center px-0"} py-3 rounded-xl transition-all duration-200 ${
+                className={`w-full flex items-center ${isSidebarExpanded ? "gap-3 px-3" : "justify-center px-0"} py-2 rounded-lg transition-all duration-200 group ${
                   active
-                    ? "bg-[#dbe7ff] border border-[var(--color-border-dark)] text-[#0020d7] shadow-[0_8px_18px_rgba(0,32,215,0.14)] relative"
-                    : "hover:bg-[#f3f4f6] text-[var(--color-text-body)] hover:text-[#0b0b0c]"
+                    ? `bg-white border border-black/[0.03] shadow-sm relative text-[#1d1d1f]`
+                    : "hover:bg-black/[0.03] text-[#86868b] hover:text-[#1d1d1f]"
                 }`}
               >
-                <item.icon className={`w-4 h-4 shrink-0 ${active ? "text-[#0020d7]" : ""}`} />
+                <div className={`flex items-center justify-center w-7 h-7 rounded-md transition-colors ${active ? item.bg : "bg-transparent"}`}>
+                  <item.icon className={`w-[18px] h-[18px] shrink-0 ${active ? item.color : "text-[#86868b] group-hover:text-[#1d1d1f]"}`} strokeWidth={active ? 2 : 1.5} />
+                </div>
                 {isSidebarExpanded ? (
-                  <span className="font-medium text-sm whitespace-nowrap truncate">{item.label}</span>
-                ) : null}
-                {!isSidebarExpanded && active ? (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#0020d7] rounded-r-md" />
+                  <span className={`text-[13px] font-medium whitespace-nowrap truncate`}>{item.label}</span>
                 ) : null}
               </Link>
             );
           })}
         </div>
 
-        <div className="px-4 py-2">
+        {/* Footer Actions */}
+        <div className="px-4 py-4 border-t border-black/[0.05] space-y-1">
           <button
             type="button"
             onClick={() => setIsSidebarExpanded((current) => !current)}
-            className={`w-full flex items-center ${isSidebarExpanded ? "justify-start px-4 gap-3" : "justify-center px-0"} py-3 rounded-xl hover:bg-[#f3f4f6] text-[var(--color-text-body)] hover:text-[#0b0b0c] transition-colors border border-transparent hover:border-[var(--color-border-light)]`}
-            title={isSidebarExpanded ? "Collapse Sidebar" : "Expand Sidebar"}
+            className={`w-full flex items-center ${isSidebarExpanded ? "justify-start px-3 gap-3" : "justify-center px-0"} py-2 rounded-lg text-[#86868b] hover:bg-black/[0.03] hover:text-[#1d1d1f] transition-all`}
+            title={isSidebarExpanded ? "Collapse" : "Expand"}
           >
-            {isSidebarExpanded ? (
-              <ChevronLeft className="w-4 h-4 shrink-0" />
-            ) : (
-              <ChevronRight className="w-4 h-4 shrink-0" />
-            )}
-            {isSidebarExpanded ? <span className="text-sm font-medium">Collapse</span> : null}
+            {isSidebarExpanded ? <ChevronLeft className="w-[18px] h-[18px]" /> : <ChevronRight className="w-[18px] h-[18px]" />}
+            {isSidebarExpanded && <span className="text-[13px] font-medium">Collapse</span>}
           </button>
-        </div>
-
-        <div
-          className={`p-4 border-t border-[var(--color-border-light)] flex items-center ${
-            isSidebarExpanded ? "justify-between" : "flex-col gap-4 justify-center"
-          }`}
-        >
-          <div className={`flex items-center gap-3 overflow-hidden ${!isSidebarExpanded ? "justify-center" : ""}`}>
-            {user?.user_metadata?.avatar_url ? (
-              <img
-                src={user.user_metadata.avatar_url}
-                alt="User"
-                className="w-9 h-9 shrink-0 rounded-full border border-[var(--color-border-medium)]"
-              />
-            ) : (
-              <div className="w-9 h-9 shrink-0 bg-[#f1f2f6] rounded-full flex items-center justify-center">
-                <FileCode2 className="w-4 h-4 text-[#0b0b0c]" />
-              </div>
-            )}
-
-            {isSidebarExpanded ? (
-              <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-sm font-medium text-[#0b0b0c] truncate">
-                  {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Admin"}
-                </span>
-                <span className="text-[10px] text-[var(--color-text-body)] truncate">
-                  {user?.email || "Unknown user"}
-                </span>
-              </div>
-            ) : null}
-          </div>
-
+          
           <button
             type="button"
             onClick={handleSignOut}
             disabled={isLoggingOut}
-            className={`flex items-center gap-3 p-2 hover:bg-[#fff1f1] rounded-lg transition-colors text-[var(--color-text-body)] hover:text-red-600 shrink-0 disabled:opacity-50 group border border-transparent hover:border-red-100 ${!isSidebarExpanded ? "justify-center" : ""}`}
+            className={`w-full flex items-center ${isSidebarExpanded ? "justify-start px-3 gap-3" : "justify-center px-0"} py-2 rounded-lg text-[#86868b] hover:bg-[#ff3b30]/5 hover:text-[#ff3b30] transition-all disabled:opacity-50`}
             title="Log Out"
           >
-            <LogOut className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 ${isLoggingOut ? "animate-pulse" : ""}`} />
-            {isSidebarExpanded && <span className="text-sm font-medium">Logout</span>}
+            <LogOut className={`w-[18px] h-[18px] ${isLoggingOut ? "animate-pulse" : ""}`} />
+            {isSidebarExpanded && <span className="text-[13px] font-medium">Logout</span>}
           </button>
         </div>
       </aside>
 
-      <main className="relative min-w-0 flex-1 h-screen overflow-y-auto overflow-x-hidden">
-        <div className="pointer-events-none absolute -top-20 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-[#7da3f6]/30 blur-[110px]" />
-        <div className="pointer-events-none absolute bottom-[-12rem] right-[-9rem] h-80 w-80 rounded-full bg-[#dcd6ff]/35 blur-[100px]" />
-        <div className="relative p-6 lg:p-8">{children}</div>
+      {/* Main Content */}
+      <main className="relative min-w-0 flex-1 h-screen overflow-y-auto overflow-x-hidden flex flex-col">
+        {/* Top Header */}
+        <header className="h-16 shrink-0 border-b border-black/[0.05] bg-white/60 backdrop-blur-xl flex items-center justify-between px-8 z-10 sticky top-0">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="relative max-w-md w-full hidden md:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
+              <input 
+                type="text" 
+                placeholder="Search resources..." 
+                className="w-full bg-black/[0.03] border-none rounded-full py-1.5 pl-10 pr-4 text-[13px] outline-none focus:ring-1 focus:ring-[#007aff]/30 transition-all placeholder:text-[#86868b]"
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <button className="p-2 text-[#86868b] hover:text-[#1d1d1f] transition-colors relative">
+              <Bell className="w-5 h-5" strokeWidth={1.5} />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-[#ff3b30] rounded-full border-2 border-white" />
+            </button>
+            <button className="p-2 text-[#86868b] hover:text-[#1d1d1f] transition-colors">
+              <Settings className="w-5 h-5" strokeWidth={1.5} />
+            </button>
+            <div className="h-6 w-[1px] bg-black/[0.05] mx-1" />
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-end hidden sm:flex">
+                <span className="text-[12px] font-semibold text-[#1d1d1f]">
+                  {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Admin"}
+                </span>
+                <span className="text-[10px] text-[#86868b]">System Admin</span>
+              </div>
+              {user?.user_metadata?.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt="User"
+                  className="w-8 h-8 rounded-full border border-black/5"
+                />
+              ) : (
+                <div className="w-8 h-8 bg-[#f5f5f7] rounded-full flex items-center justify-center border border-black/5 shadow-inner">
+                  <User className="w-4 h-4 text-[#86868b]" />
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <div className="relative flex-1 p-8 lg:p-10">
+          <div className="pointer-events-none absolute -top-40 left-1/2 h-[30rem] w-[50rem] -translate-x-1/2 rounded-full bg-[#007aff]/5 blur-[120px]" />
+          <div className="relative">{children}</div>
+        </div>
       </main>
     </div>
   );
 }
+

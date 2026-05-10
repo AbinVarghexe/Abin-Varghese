@@ -12,107 +12,15 @@ import Image from "next/image";
 import { splitAccentHeading } from "@/lib/accent-heading";
 import type { SiteCopyContent } from "@/types/site-copy";
 
-interface Tool {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: string;
-}
-
-const tools: Tool[] = [
-  // Design Tools
-  {
-    id: "figma",
-    name: "Figma",
-    description: "Interface Design & Prototyping",
-    icon: "https://skillicons.dev/icons?i=figma",
-    category: "design",
-  },
-  {
-    id: "photoshop",
-    name: "Photoshop",
-    description: "Image Manipulation & Editing",
-    icon: "https://skillicons.dev/icons?i=ps",
-    category: "design",
-  },
-  {
-    id: "illustrator",
-    name: "Illustrator",
-    description: "Vector Graphics Software",
-    icon: "https://skillicons.dev/icons?i=ai",
-    category: "design",
-  },
-
-  // Motion/VideoEditing Tools
-  {
-    id: "aftereffects",
-    name: "After Effects",
-    description: "VFX & Motion Graphics",
-    icon: "https://skillicons.dev/icons?i=ae",
-    category: "video",
-  },
-  {
-    id: "premiere",
-    name: "Premiere Pro",
-    description: "Video Editing Software",
-    icon: "https://skillicons.dev/icons?i=pr",
-    category: "video",
-  },
-  {
-    id: "blender",
-    name: "Blender",
-    description: "3D Creation Suite",
-    icon: "https://skillicons.dev/icons?i=blender",
-    category: "video",
-  },
-  {
-    id: "davinci",
-    name: "DaVinci Resolve",
-    description: "Color Correction & Editing",
-    icon: "https://cdn.simpleicons.org/davinciresolve",
-    category: "video",
-  },
-
-  // Development Tools
-  {
-    id: "react",
-    name: "React",
-    description: "UI Library",
-    icon: "https://skillicons.dev/icons?i=react",
-    category: "development",
-  },
-  {
-    id: "nextjs",
-    name: "Next.js",
-    description: "React Framework",
-    icon: "https://skillicons.dev/icons?i=nextjs",
-    category: "development",
-  },
-  {
-    id: "tailwind",
-    name: "Tailwind CSS",
-    description: "Utility-first CSS Framework",
-    icon: "https://skillicons.dev/icons?i=tailwind",
-    category: "development",
-  },
-  {
-    id: "js",
-    name: "JavaScript",
-    description: "Programming Language",
-    icon: "https://skillicons.dev/icons?i=js",
-    category: "development",
-  },
-];
-
 type CreativeToolboxProps = {
   heading: string;
   intro: string;
   categories: SiteCopyContent["homeToolCategories"];
+  tools: SiteCopyContent["homeTools"];
 };
 
-const CreativeToolbox = ({ heading, intro, categories }: CreativeToolboxProps) => {
-  const [selectedCategory, setSelectedCategory] = useState(categories[0].id);
+const CreativeToolbox = ({ heading, intro, categories, tools }: CreativeToolboxProps) => {
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]?.id || "design");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const { scrollY } = useScroll();
@@ -214,9 +122,12 @@ const CreativeToolbox = ({ heading, intro, categories }: CreativeToolboxProps) =
           <div className="w-full lg:flex-1">
             <div className="grid grid-cols-1 gap-4">
               {filteredTools.map((tool) => (
-                <div
+                <a
                   key={tool.id}
-                  className="flex items-center gap-6 p-4 md:p-6 bg-white rounded-[24px] border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all pointer-events-auto"
+                  href={tool.url || undefined}
+                  target={tool.url?.startsWith("http") ? "_blank" : undefined}
+                  rel={tool.url?.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="flex items-center gap-6 p-4 md:p-6 bg-white rounded-[24px] border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all pointer-events-auto no-underline"
                 >
                   <div className="w-14 h-14 bg-zinc-50 rounded-lg flex items-center justify-center shrink-0 p-1">
                     <img
@@ -233,7 +144,7 @@ const CreativeToolbox = ({ heading, intro, categories }: CreativeToolboxProps) =
                       {tool.description}
                     </p>
                   </div>
-                </div>
+                </a>
               ))}
             </div>
           </div>

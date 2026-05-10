@@ -382,6 +382,7 @@ function Model() {
         <mesh 
           position={[0, 0.5, 1]} 
           onPointerDown={(e) => {
+            if (isMobile) return; // Disable drag on mobile to allow scrolling
             e.stopPropagation();
             (e.target as any).setPointerCapture(e.pointerId);
             dragStartPos.current.set(mouse.x, mouse.y);
@@ -453,6 +454,15 @@ function Model() {
 useGLTF.preload('/3d_model/flying_bot.glb');
 
 export default function Hero3DLayer() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className="h-full w-full outline-none pointer-events-auto">
       <Canvas 
@@ -464,7 +474,7 @@ export default function Hero3DLayer() {
           outputColorSpace: THREE.SRGBColorSpace,
           preserveDrawingBuffer: true
         }}
-        style={{ pointerEvents: 'auto', touchAction: 'none' }}
+        style={{ pointerEvents: 'auto', touchAction: isMobile ? 'pan-y' : 'none' }}
       >
         <Suspense fallback={null}>
           <ambientLight intensity={1.5} />

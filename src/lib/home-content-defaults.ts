@@ -7,6 +7,11 @@ export type HomeContent = {
     linkedin: string;
     instagram: string;
   };
+  otherSocialLinks: Array<{
+    id: string;
+    label: string;
+    url: string;
+  }>;
   pageLinks: {
     about: string;
     projects: string;
@@ -29,6 +34,7 @@ export const homeContentDefaults: HomeContent = {
     linkedin: "https://www.linkedin.com/in/abinvarghese",
     instagram: "https://www.instagram.com/abinvarghese",
   },
+  otherSocialLinks: [],
   pageLinks: {
     about: "/about",
     projects: "/projects",
