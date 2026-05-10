@@ -385,23 +385,6 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
 
       {/* Mobile Ancient Scroll View */}
       <div className="flex md:hidden flex-col items-center w-full z-20 w-[95vw] sm:w-[90vw] mx-auto">
-        <div className="w-full flex justify-between px-4 mb-4 z-40">
-           <button 
-               onClick={prevSpread} 
-               disabled={spread === 0}
-               className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8b5a2b] disabled:opacity-30 flex items-center gap-2 transition-opacity"
-           >
-               <span className="text-sm">↑</span> Prev Scroll
-           </button>
-           <button 
-               onClick={nextSpread} 
-               disabled={spread > totalSpreads}
-               className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8b5a2b] disabled:opacity-30 flex items-center gap-2 transition-opacity"
-           >
-               Next Scroll <span className="text-sm">↓</span>
-           </button>
-        </div>
-
         {/* Scroll Top Roller */}
         <div className="w-[105%] h-6 sm:h-8 rounded-full bg-linear-to-b from-[#8b5a2b] via-[#a06b38] to-[#5c3a21] shadow-md z-30 relative border border-[#4a2e1b]">
             <div className="absolute left-[-6px] sm:left-[-10px] top-[2px] sm:top-[4px] w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-[#5c3a21] border-2 border-[#8b5a2b] shadow-inner"></div>
@@ -455,6 +438,23 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
         <div className="w-[105%] h-6 sm:h-8 rounded-full bg-linear-to-b from-[#8b5a2b] via-[#a06b38] to-[#5c3a21] shadow-[0_10px_20px_rgba(0,0,0,0.4)] z-30 relative border border-[#4a2e1b]">
             <div className="absolute left-[-6px] sm:left-[-10px] top-[2px] sm:top-[4px] w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-[#5c3a21] border-2 border-[#8b5a2b] shadow-inner"></div>
             <div className="absolute right-[-6px] sm:right-[-10px] top-[2px] sm:top-[4px] w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-[#5c3a21] border-2 border-[#8b5a2b] shadow-inner"></div>
+        </div>
+
+        <div className="w-full flex justify-between px-4 mt-6 z-40">
+           <button 
+               onClick={prevSpread} 
+               disabled={spread === 0}
+               className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8b5a2b] disabled:opacity-30 flex items-center gap-2 transition-opacity"
+           >
+               <span className="text-sm">↑</span> Prev Scroll
+           </button>
+           <button 
+               onClick={nextSpread} 
+               disabled={spread > totalSpreads}
+               className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8b5a2b] disabled:opacity-30 flex items-center gap-2 transition-opacity"
+           >
+               Next Scroll <span className="text-sm">↓</span>
+           </button>
         </div>
 
       </div>
@@ -573,49 +573,90 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
       </div>
 
       {/* Resume/Portfolio Modal */}
-      {activePdfModal !== null && (
-        <Dialog open={activePdfModal !== null} onClose={() => setActivePdfModal(null)} className="relative z-[100]">
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity" aria-hidden="true" />
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Dialog.Panel className="w-full max-w-4xl h-[85vh] bg-[#fdfaf5] border-2 border-[#8b5a2b]/20 shadow-2xl overflow-hidden flex flex-col relative" style={{ borderRadius: '4px' }}>
-              
-              <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}></div>
-              
-              <div className="flex justify-between items-center p-4 md:p-6 border-b border-[#d4bc96]/50 bg-[#f4e8d1] relative z-10">
-                <Dialog.Title className="text-lg md:text-xl font-serif font-bold text-[#4a331e] uppercase tracking-widest">
-                  {activePdfModal === "resume" ? "Resume Archive" : "Design Resume Archive"}
-                </Dialog.Title>
-                <button onClick={() => setActivePdfModal(null)} className="w-8 h-8 flex items-center justify-center rounded-full border border-[#8b5a2b]/30 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-[#fdfaf5] transition-all">
-                  <span className="sr-only">Close</span>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-              </div>
-              
-              <div className="flex-1 overflow-auto bg-[#fffcf5] relative z-10 p-2 md:p-6">
-                <div className="w-full h-full border border-[#d4bc96]/50 bg-white shadow-inner flex flex-col items-center justify-center">
-                    {/* Placeholder for actual PDF embed */}
-                    <embed src={activePdfModal === "resume" ? "/resume.pdf" : "/design-resume.pdf"} type="application/pdf" className="w-full h-full" />
-                    {/* Fallback if PDF doesn't load/isn't found */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-10">
-                        <div className="text-center">
-                            <svg className="w-16 h-16 text-[#d4bc96] mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            <p className="font-serif text-[#8b5a2b] italic">{activePdfModal === "resume" ? "Resume document placeholder" : "Design Resume placeholder"}</p>
-                            <p className="text-xs font-mono mt-2 text-[#8b5a2b]/50 uppercase">{activePdfModal === "resume" ? "/public/resume.pdf" : "/public/design-resume.pdf"}</p>
-                        </div>
+      <AnimatePresence>
+        {activePdfModal !== null && (
+          <Dialog open={activePdfModal !== null} onClose={() => setActivePdfModal(null)} className="relative z-[999999]">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-[#0b0b0c]/80 backdrop-blur-xl transition-opacity z-[999999]" 
+              aria-hidden="true" 
+            />
+            <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 md:p-8 z-[999999]">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="w-full max-w-5xl h-[85vh] md:h-[90vh] flex"
+              >
+                <Dialog.Panel className="w-full h-full bg-[#fdfaf5]/95 backdrop-blur-2xl border border-[#d4bc96]/30 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col relative rounded-[32px]">
+                
+                {/* Elegant Header */}
+                <div className="flex justify-between items-center px-6 md:px-8 py-5 border-b border-[#d4bc96]/30 bg-white/50 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-[#8b5a2b]/10 flex items-center justify-center border border-[#8b5a2b]/20">
+                      <svg className="w-5 h-5 text-[#8b5a2b]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     </div>
+                    <div>
+                      <Dialog.Title className="text-sm md:text-base font-serif font-bold text-[#4a331e] uppercase tracking-[0.2em]">
+                        {activePdfModal === "resume" ? "Resume Archive" : "Design Resume Archive"}
+                      </Dialog.Title>
+                      <p className="text-[10px] md:text-xs font-mono text-[#8b5a2b]/60 uppercase tracking-widest mt-0.5">
+                        Abin Varghese • 2026 Edition
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <a 
+                      href={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume/Abin_Varghese_Resume.pdf"} 
+                      download 
+                      className="hidden sm:flex group items-center justify-center gap-2 px-5 py-2 bg-[#8b5a2b] border border-[#8b5a2b] text-[#fdfaf5] font-serif text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#5a3b1c] hover:shadow-lg hover:shadow-[#8b5a2b]/20 rounded-full"
+                    >
+                      Download
+                      <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    </a>
+                    <div className="w-px h-6 bg-[#d4bc96]/50 mx-1 hidden sm:block"></div>
+                    <button 
+                      onClick={() => setActivePdfModal(null)} 
+                      className="group w-10 h-10 flex items-center justify-center rounded-full bg-white border border-[#d4bc96]/50 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] transition-all hover:shadow-md hover:scale-105"
+                    >
+                      <span className="sr-only">Close</span>
+                      <svg className="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex justify-end p-4 md:p-6 border-t border-[#d4bc96]/50 bg-[#f4e8d1] relative z-10">
-                <a href={activePdfModal === "resume" ? "/resume.pdf" : "/design-resume.pdf"} download className="group flex items-center justify-center gap-2 px-6 py-2.5 bg-[#8b5a2b] border border-[#8b5a2b] text-[#fdfaf5] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#5a3b1c] shadow-sm cursor-pointer rounded-full">
-                  Download PDF
-                  <svg className="w-4 h-4 transition-transform group-hover:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                </a>
-              </div>
-            </Dialog.Panel>
-          </div>
-        </Dialog>
-      )}
+                
+                {/* PDF Viewer Area */}
+                <div className="flex-1 w-full bg-[#f4e8d1]/30 relative z-10 overflow-hidden">
+                  {/* Fallback pattern behind PDF */}
+                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(135deg, #8b5a2b 0px, #8b5a2b 1px, transparent 1px, transparent 15px)" }}></div>
+                  
+                  <embed 
+                    src={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume/Abin_Varghese_Resume.pdf"} 
+                    type="application/pdf" 
+                    className="w-full h-full relative z-20" 
+                  />
+                  
+                  {/* Mobile download fallback inside viewer area (if PDF fails or on small screens) */}
+                  <div className="absolute inset-0 flex sm:hidden items-center justify-center pointer-events-none z-0">
+                    <a 
+                      href={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume/Abin_Varghese_Resume.pdf"} 
+                      download 
+                      className="pointer-events-auto flex items-center gap-2 px-6 py-3 bg-[#8b5a2b] text-[#fdfaf5] rounded-full text-xs font-bold uppercase tracking-widest shadow-xl"
+                    >
+                      Tap to Download PDF
+                    </a>
+                  </div>
+                </div>
+              </Dialog.Panel>
+              </motion.div>
+            </div>
+          </Dialog>
+        )}
+      </AnimatePresence>
 
     </section>
   );
