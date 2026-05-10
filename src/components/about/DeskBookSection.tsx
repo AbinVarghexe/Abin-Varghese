@@ -643,17 +643,6 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
                     className="w-full h-full relative border-0" 
                     style={{ colorScheme: "light" }}
                   />
-                  
-                  {/* Mobile download fallback inside viewer area (if PDF fails or on small screens) */}
-                  <div className="absolute inset-0 flex sm:hidden items-center justify-center pointer-events-none z-0">
-                    <a 
-                      href={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume/Abin_Varghese_Resume.pdf"} 
-                      download 
-                      className="pointer-events-auto flex items-center gap-2 px-6 py-3 bg-[#8b5a2b] text-[#fdfaf5] rounded-full text-xs font-bold uppercase tracking-widest shadow-xl"
-                    >
-                      Tap to Download PDF
-                    </a>
-                  </div>
                 </div>
               </Dialog.Panel>
               </motion.div>
