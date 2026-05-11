@@ -21,7 +21,8 @@ import {
   ArrowDown,
   Trash2,
   Loader2,
-  FileDown
+  FileDown,
+  AlignLeft
 } from "lucide-react";
 import AdminSectionWorkspace, {
   SectionTitle,
@@ -373,7 +374,7 @@ export default function AdminAboutPage() {
                         value={siteCopy.aboutIntroBody}
                         onChange={(v) => updateSiteCopy("aboutIntroBody", v)}
                         rows={12}
-                        icon={AlignLeftIcon}
+                        icon={AlignLeft}
                       />
                     </div>
                     <div className="lg:col-span-5 space-y-8">
@@ -728,23 +729,4 @@ function AboutAdminTabs({
   );
 }
 
-function AlignLeftIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="21" x2="3" y1="6" y2="6" />
-      <line x1="15" x2="3" y1="12" y2="12" />
-      <line x1="17" x2="3" y1="18" y2="18" />
-    </svg>
-  );
-}
+

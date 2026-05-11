@@ -38,6 +38,8 @@ export const metadata: Metadata = createPageMetadata({
   ],
 });
 
+export const revalidate = 3600;
+
 export default async function Home() {
   const heroData = await getHeroContent();
   const homeData = await getHomeContent();

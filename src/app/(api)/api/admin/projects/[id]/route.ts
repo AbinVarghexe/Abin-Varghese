@@ -8,8 +8,8 @@ import { requireAdminSession } from '@/lib/admin-auth';
 import { z } from 'zod';
 
 const projectSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().min(1).optional(),
+  title: z.string().optional(),
+  description: z.string().optional(),
   content: z.string().optional().nullable(),
   type: z.enum(['CODE', 'FIGMA', 'BEHANCE', 'PINTEREST']).optional(),
   mediaType: z.enum(['IMAGE', 'VIDEO', 'GIF', 'MODEL']).optional(),
@@ -83,20 +83,20 @@ export async function PUT(
     const supabase = createAdminClient();
     
     const updateData: Record<string, unknown> = {};
-    if (data.title) updateData.title = data.title;
-    if (data.description) updateData.description = data.description;
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
     if (data.content !== undefined) updateData.content = data.content;
-    if (data.mediaUrl) updateData.media_url = data.mediaUrl;
+    if (data.mediaUrl !== undefined) updateData.media_url = data.mediaUrl;
     if (data.externalUrl !== undefined) updateData.external_url = data.externalUrl;
     if (data.iframeUrl !== undefined) updateData.iframe_url = data.iframeUrl;
     if (data.category !== undefined) updateData.category = data.category;
-    if (data.tags) updateData.tags = data.tags;
+    if (data.tags !== undefined) updateData.tags = data.tags;
     if (data.dominantColor !== undefined) updateData.dominant_color = data.dominantColor;
     if (data.previewHeight !== undefined) updateData.preview_height = data.previewHeight;
     if (data.featured !== undefined) updateData.featured = data.featured;
-    if (data.type) updateData.type = data.type;
-    if (data.mediaType) updateData.media_type = data.mediaType;
-    if (data.workspace) updateData.workspace = data.workspace;
+    if (data.type !== undefined) updateData.type = data.type;
+    if (data.mediaType !== undefined) updateData.media_type = data.mediaType;
+    if (data.workspace !== undefined) updateData.workspace = data.workspace;
     updateData.updated_at = new Date().toISOString();
 
     const { data: project, error } = await supabase

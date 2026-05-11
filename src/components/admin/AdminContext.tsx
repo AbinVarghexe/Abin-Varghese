@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 
 interface AdminContextType {
   saveAction: (() => Promise<void>) | null;
-  setSaveAction: (action: (() => Promise<void>) | null) => void;
+  setSaveAction: React.Dispatch<React.SetStateAction<((() => Promise<void>) | null)>>;
   isSaving: boolean;
   setIsSaving: (loading: boolean) => void;
   statusText: string;

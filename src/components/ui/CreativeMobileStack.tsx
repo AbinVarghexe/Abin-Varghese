@@ -28,8 +28,9 @@ export function CreativeMobileStack({
 
   // Sync internal stack when external currentIndex changes (e.g., from buttons)
   useEffect(() => {
-    if (stack[0].originalIndex !== currentIndex) {
+    if (stack.length > 0 && stack[0].originalIndex !== currentIndex) {
       setStack((prev) => {
+        if (prev.length === 0) return prev;
         const next = [...prev];
         const targetIdx = next.findIndex((item) => item.originalIndex === currentIndex);
         if (targetIdx !== -1) {
@@ -43,20 +44,22 @@ export function CreativeMobileStack({
 
   const handleSwipe = () => {
     setStack((prev) => {
+      if (prev.length === 0) return prev;
       const next = [...prev];
       const swiped = next.shift();
       if (swiped) {
         next.push(swiped);
       }
-      // Report the new top item's index
-      onIndexChange(next[0].originalIndex);
+      // Report the new top item's index if it exists
+      if (next.length > 0) {
+        onIndexChange(next[0].originalIndex);
+      }
       return next;
     });
   };
 
   // If the parent updates the index (e.g., via buttons), we need to ensure 
-  // the stack reflects the correct top item. For simplicity in a swipe-first 
-  // UI, we assume the stack is the source of truth, but we could sync if needed.
+  if (stack.length === 0) return null;
   
   return (
     <div className="relative w-[300px] h-[390px] mx-auto mb-8">

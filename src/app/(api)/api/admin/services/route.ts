@@ -27,8 +27,8 @@ const projectLinkSchema = z.object({
 const serviceContentSchema = z.object({
   type: z.enum(["image", "video", "text", "project"]),
   url: z.string().optional(),
-  title: z.string(),
-  description: z.string(),
+  title: z.string().optional().default(""),
+  description: z.string().optional().default(""),
   date: z.string().optional(),
   duration: z.string().optional(),
   role: z.string().optional(),
@@ -38,6 +38,9 @@ const serviceContentSchema = z.object({
   videoUrl: z.string().optional(),
   projectLinks: z.array(projectLinkSchema).optional(),
   techStack: z.array(z.string()).optional(),
+  projectId: z.string().optional(),
+  projectSlug: z.string().optional(),
+  iframeUrl: z.string().optional(),
   bgColor: z.string().optional(),
 });
 

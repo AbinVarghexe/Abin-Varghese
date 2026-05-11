@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import Lottie, { LottieRefCurrentProps } from 'lottie-react';
+import { motion, useInView } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import type { LottieRefCurrentProps } from 'lottie-react';
 import { ArrowUpRight, Sparkles } from 'lucide-react';
 import Folder from '@/components/ui/Folder';
 import { OrbitingCircles } from '@/components/ui/orbiting-circles';
 import { splitAccentHeading } from '@/lib/accent-heading';
 import type { Service } from '@/constants/services';
+
+const Lottie = dynamic(() => import('lottie-react').then((mod) => mod.default), { ssr: false });
 
 // ─── Services Data ─────────────────────────────────────────────────────────
 const homeServiceCards = [
@@ -84,30 +87,30 @@ function resolveServiceContent(
 }
 
 // ─── Lottie fetch hook ──────────────────────────────────────────────────────
-function useLottieData(url?: string) {
+function useLottieData(url?: string, enabled = true) {
   const [animationData, setAnimationData] = useState<unknown>(null);
   useEffect(() => {
-    if (!url) return;
+    if (!url || !enabled) return;
     let cancelled = false;
     fetch(url)
       .then(res => res.json())
       .then(data => { if (!cancelled) setAnimationData(data); })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [url]);
+  }, [url, enabled]);
   return animationData;
 }
 
 // ─── UI Paper Contents for the Folder ─────────────────────────────────────
 const folderPapers: React.ReactNode[] = [
   <div key="ps" className="w-full h-full p-3.5 flex items-center justify-center rounded-md pointer-events-none">
-    <img src="https://skillicons.dev/icons?i=ps" alt="Photoshop" className="w-8 h-8 object-contain" />
+    <img src="https://skillicons.dev/icons?i=ps" alt="Photoshop" className="w-8 h-8 object-contain" loading="lazy" decoding="async" />
   </div>,
   <div key="ai" className="w-full h-full p-3.5 flex items-center justify-center rounded-md pointer-events-none">
-    <img src="https://skillicons.dev/icons?i=ai" alt="Illustrator" className="w-8 h-8 object-contain" />
+    <img src="https://skillicons.dev/icons?i=ai" alt="Illustrator" className="w-8 h-8 object-contain" loading="lazy" decoding="async" />
   </div>,
   <div key="figma" className="w-full h-full p-3 flex items-center justify-center rounded-md pointer-events-none">
-    <img src="https://skillicons.dev/icons?i=figma" alt="Figma" className="w-10 h-10 object-contain" />
+    <img src="https://skillicons.dev/icons?i=figma" alt="Figma" className="w-10 h-10 object-contain" loading="lazy" decoding="async" />
   </div>,
 ];
 
@@ -187,11 +190,21 @@ interface CardShellProps {
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   showArrow?: boolean;
+  innerRef?: React.Ref<HTMLAnchorElement>;
 }
 
-function CardShell({ service, children, className = '', onMouseEnter, onMouseLeave, showArrow = true }: CardShellProps) {
+function CardShell({
+  service,
+  children,
+  className = '',
+  onMouseEnter,
+  onMouseLeave,
+  showArrow = true,
+  innerRef,
+}: CardShellProps) {
   return (
     <motion.a
+      ref={innerRef}
       href={service.projectsUrl || `/services/${service.id}`}
       variants={{
         initial: { opacity: 0, y: 30 },
@@ -237,7 +250,7 @@ function CardShell({ service, children, className = '', onMouseEnter, onMouseLea
 
       {service.iconUrl ? (
         <div className="absolute left-6 top-6 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white/80 p-2 shadow-sm backdrop-blur-sm">
-          <img src={service.iconUrl} alt="" className="h-full w-full object-contain" />
+          <img src={service.iconUrl} alt="" className="h-full w-full object-contain" loading="lazy" decoding="async" />
         </div>
       ) : null}
 
@@ -320,23 +333,23 @@ function MotionGraphicsCard({ service }: { service: BaseService }) {
           {/* Inner Circles — Design Tools */}
           <OrbitingCircles iconSize={40} radius={65} duration={18} speed={1.2}>
             <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110 pointer-events-auto">
-              <img src="https://skillicons.dev/icons?i=figma" alt="Figma" className="w-full h-full object-contain" />
+              <img src="https://skillicons.dev/icons?i=figma" alt="Figma" className="w-full h-full object-contain" loading="lazy" decoding="async" />
             </div>
             <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110 pointer-events-auto">
-              <img src="https://skillicons.dev/icons?i=blender" alt="Blender" className="w-full h-full object-contain" />
+              <img src="https://skillicons.dev/icons?i=blender" alt="Blender" className="w-full h-full object-contain" loading="lazy" decoding="async" />
             </div>
           </OrbitingCircles>
 
           {/* Outer Circles — Motion & Publishing */}
           <OrbitingCircles iconSize={52} radius={125} duration={25} reverse speed={0.8}>
             <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110 pointer-events-auto">
-              <img src="https://skillicons.dev/icons?i=ae" alt="After Effects" className="w-full h-full object-contain" />
+              <img src="https://skillicons.dev/icons?i=ae" alt="After Effects" className="w-full h-full object-contain" loading="lazy" decoding="async" />
             </div>
             <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110 pointer-events-auto">
-              <img src="https://skillicons.dev/icons?i=pr" alt="Premiere Pro" className="w-full h-full object-contain" />
+              <img src="https://skillicons.dev/icons?i=pr" alt="Premiere Pro" className="w-full h-full object-contain" loading="lazy" decoding="async" />
             </div>
             <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110 pointer-events-auto">
-              <img src="https://cdn.simpleicons.org/davinciresolve" alt="DaVinci Resolve" className="w-full h-full object-contain" />
+              <img src="https://cdn.simpleicons.org/davinciresolve" alt="DaVinci Resolve" className="w-full h-full object-contain" loading="lazy" decoding="async" />
             </div>
           </OrbitingCircles>
         </div>
@@ -442,14 +455,14 @@ function VideoEditingCard({ service }: { service: BaseService }) {
 // ─── Lottie Card ────────────────────────────────────────────────────────────
 function LottieCard({ service }: { service: LottieService }) {
   const lottieRef = useRef<LottieRefCurrentProps>(null);
-  const animationData = useLottieData(service.lottieUrl);
+  const cardRef = useRef<HTMLAnchorElement>(null);
+  const isInView = useInView(cardRef, { once: true, margin: '-120px 0px' });
+  const animationData = useLottieData(service.lottieUrl, isInView);
 
   return (
-    <CardShell
-      service={service}
-    >
+    <CardShell service={service} innerRef={cardRef}>
       <div className={`w-full h-full flex items-center justify-center p-4 md:p-6 pb-20 md:${service.isTall ? 'pb-32' : 'pb-24'}`}>
-        {animationData ? (
+        {isInView && animationData ? (
           <Lottie
             lottieRef={lottieRef}
             animationData={animationData}

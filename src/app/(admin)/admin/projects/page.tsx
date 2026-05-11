@@ -15,7 +15,7 @@ type Project = {
   title: string;
   description: string;
   content: string | null;
-  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST";
+  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST" | "GRAPHIC";
   mediaType: "IMAGE" | "VIDEO" | "GIF" | "MODEL";
   mediaUrl: string;
   externalUrl: string | null;
@@ -33,7 +33,7 @@ type ProjectForm = {
   title: string;
   description: string;
   content: string;
-  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST";
+  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST" | "GRAPHIC";
   mediaType: "IMAGE" | "VIDEO" | "GIF" | "MODEL";
   mediaUrl: string;
   externalUrl: string;
@@ -75,6 +75,39 @@ const defaultForm: ProjectForm = {
   previewHeight: "",
   featured: false,
 };
+
+function extractVideoThumbnail(url: string): string | null {
+  if (!url) return null;
+  // YouTube
+  const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  if (ytMatch?.[1]) {
+    return `https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`;
+  }
+  return null;
+}
+
+function formatBehanceLink(input: string): string {
+  let url = input.trim();
+  
+  // 1. If it's an iframe embed code, extract the src
+  if (url.includes('<iframe')) {
+    const srcMatch = url.match(/src=["']([^"']+)["']/);
+    if (srcMatch?.[1]) {
+      url = srcMatch[1];
+    }
+  }
+
+  // 2. Extract project ID from either gallery or embed URL
+  // Matches: behance.net/gallery/12345/Title OR behance.net/embed/project/12345
+  const projectIdMatch = url.match(/behance\.net\/(?:gallery|embed\/project)\/(\d+)/);
+  
+  if (projectIdMatch?.[1]) {
+    // Return a clean embed URL with optimal parameters for the preview
+    return `https://www.behance.net/embed/project/${projectIdMatch[1]}?share=1&antisocial=1&editable=0`;
+  }
+
+  return url;
+}
 
 type AdminWorkspace = "coding" | "designing";
 
@@ -205,7 +238,6 @@ export default function AdminProjectsPage() {
 
   const resetForm = useCallback((workspace?: AdminWorkspace, category?: string, type?: Project["type"]) => {
     setSelectedId(null);
-    setIsAdding(!!workspace || !!category);
     const defaults = createDefaultForm(
       workspace || (activeMainTab === "coding" ? "coding" : "designing"),
       category || (activeMainTab === "designing" ? designingSubTabs.find(t => t.id === activeSubTab)?.category : undefined)
@@ -213,6 +245,7 @@ export default function AdminProjectsPage() {
     setForm({
       ...defaults,
       type: type || (activeSubTab === "graphic" ? activeGraphicCategory : defaults.type),
+      mediaType: (category === "Motion Graphics" || category === "VFX & 3D") ? "VIDEO" : defaults.mediaType,
     });
   }, [activeMainTab, activeSubTab, activeGraphicCategory]);
 
@@ -325,6 +358,35 @@ export default function AdminProjectsPage() {
     };
   }, [isSaving, isSavingBehance, isSavingPinterest, setSaveAction, setIsSaving, setStatusText]);
 
+  // Auto-fetch video thumbnails
+  useEffect(() => {
+    const isVideoCategory = form.category === "Motion Graphics" || form.category === "VFX & 3D";
+    if (!isVideoCategory || !form.externalUrl) return;
+
+    // YouTube
+    const ytThumb = extractVideoThumbnail(form.externalUrl);
+    if (ytThumb) {
+      if (form.mediaUrl !== ytThumb) {
+        setForm(prev => ({ ...prev, mediaUrl: ytThumb }));
+      }
+      return;
+    }
+
+    // Vimeo
+    const vimeoMatch = form.externalUrl.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/);
+    if (vimeoMatch?.[1]) {
+      const vimeoId = vimeoMatch[1];
+      fetch(`https://vimeo.com/api/v2/video/${vimeoId}.json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data?.[0]?.thumbnail_large && form.mediaUrl !== data[0].thumbnail_large) {
+            setForm(prev => ({ ...prev, mediaUrl: data[0].thumbnail_large }));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [form.externalUrl, form.category]);
+
   useEffect(() => {
     queueMicrotask(() => {
       void Promise.all([loadProjects(), loadGithubRepos(), loadShowcases()]);
@@ -406,7 +468,7 @@ export default function AdminProjectsPage() {
       const data = await res.json();
       setForm(prev => ({
         ...prev,
-        title: prev.title || data.name.replace(/[-_]+/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+        title: prev.title || data.name.replace(/[-_]+/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
         description: prev.description || data.description || "",
         iframeUrl: prev.iframeUrl || data.homepage || "",
       }));
@@ -452,7 +514,7 @@ export default function AdminProjectsPage() {
       <div className="flex items-center gap-4 mb-10 overflow-x-auto no-scrollbar pb-2">
         {projectMainTabs.map((tab) => {
           const active = activeMainTab === tab.id;
-          const Icon = tab.icon;
+          const Icon = tab.icon as any;
           return (
             <button
               key={tab.id}
@@ -461,6 +523,7 @@ export default function AdminProjectsPage() {
                 const firstSub = tab.id === "coding" ? "live-website" : "graphic";
                 setActiveSubTab(firstSub);
                 resetForm(tab.id, tab.id === "designing" ? designingSubTabs.find(t => t.id === firstSub)?.category : undefined);
+                setIsAdding(false);
               }}
               className={`flex items-center gap-3 px-8 py-4 rounded-[28px] text-[14px] font-extrabold uppercase tracking-widest transition-all border-2 ${
                 active 
@@ -480,13 +543,14 @@ export default function AdminProjectsPage() {
         <div className="flex items-center gap-2 p-2 rounded-[32px] bg-white border-2 border-[#e4e4e7] overflow-x-auto no-scrollbar max-w-fit">
           {(activeMainTab === "coding" ? codingSubTabs : designingSubTabs).map((tab) => {
             const active = activeSubTab === tab.id;
-            const Icon = tab.icon;
+            const Icon = tab.icon as any;
             return (
               <button
                 key={tab.id}
                 onClick={() => {
                   setActiveSubTab(tab.id);
                   resetForm(activeMainTab, (tab as any).category);
+                  setIsAdding(false);
                 }}
                 className={`flex items-center gap-2.5 px-6 py-3 rounded-[24px] text-[12px] font-bold transition-all ${
                   active 
@@ -520,6 +584,7 @@ export default function AdminProjectsPage() {
                   onClick={() => {
                     setActiveGraphicCategory(cat.id as any);
                     resetForm("designing", "Graphic Design", cat.id as any);
+                    setIsAdding(false);
                   }}
                   className={`flex items-center gap-2 px-5 py-2 rounded-full text-[11px] font-extrabold uppercase tracking-widest transition-all ${
                     active 
@@ -594,7 +659,7 @@ export default function AdminProjectsPage() {
                         }} />
                         <Field label="Behance Iframe Link" value={embed.src} onChange={(v) => {
                           const next = [...behanceEmbeds];
-                          next[idx] = { ...next[idx], src: v };
+                          next[idx] = { ...next[idx], src: formatBehanceLink(v) };
                           setBehanceEmbeds(next);
                         }} icon={Code} placeholder="https://www.behance.net/embed/project/..." />
                       </div>
@@ -617,28 +682,39 @@ export default function AdminProjectsPage() {
                   )}
                 />
               </SectionPanel>
-            ) : activeMainTab === "designing" && activeSubTab === "web" && !selectedId && !isAdding ? (
+            ) : !selectedId && !isAdding ? (
               <SectionPanel className="bg-white shadow-xl shadow-black/5">
                 <div className="flex items-center justify-between mb-10">
-                  <SectionTitle title="Web Design Portfolio" copy="Manage your high-fidelity UI/UX concepts and prototypes." icon={Monitor} />
-                  <ActionButton onClick={() => resetForm("designing", "Web Design", "FIGMA")}>
-                    <Plus size={14} /> Add Web Design
+                  <SectionTitle 
+                    title={`${activeMainTab === 'coding' ? 'Coding' : (designingSubTabs.find(t => t.id === activeSubTab)?.label || 'Project')} Portfolio`} 
+                    copy="Manage your professional works and high-fidelity concepts." 
+                    icon={(activeMainTab === 'coding' ? Code : (designingSubTabs.find(t => t.id === activeSubTab)?.icon || Palette)) as any} 
+                  />
+                  <ActionButton onClick={() => {
+                    const subTab = activeMainTab === "coding" ? codingSubTabs.find(t => t.id === activeSubTab) : designingSubTabs.find(t => t.id === activeSubTab);
+                    resetForm(activeMainTab, (subTab as any)?.category || "", activeSubTab === "graphic" ? activeGraphicCategory : (activeMainTab === "coding" ? "CODE" : "FIGMA"));
+                    setIsAdding(true);
+                  }}>
+                    <Plus size={14} /> Add {activeMainTab === "coding" ? "Project" : "Asset"}
                   </ActionButton>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {filteredProjects.map(p => (
                     <div key={p.id} className="flex flex-col rounded-[40px] border-[3px] border-[#e4e4e7] bg-white shadow-sm group hover:shadow-xl hover:border-[#0020d7]/10 transition-all overflow-hidden">
-                      <div className="aspect-video bg-[#f7f4ef] relative overflow-hidden">
+                      <div className={cn(
+                        "bg-[#f7f4ef] relative overflow-hidden",
+                        activeGraphicCategory === "PINTEREST" && activeSubTab === "graphic" ? "aspect-[3/4]" : "aspect-video"
+                      )}>
                         {p.mediaUrl ? (
                           <img src={p.mediaUrl} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt={p.title} />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center opacity-20">
-                            <Monitor size={48} />
+                            {activeMainTab === 'coding' ? <Code size={48} /> : <Monitor size={48} />}
                           </div>
                         )}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                           <TinyButton onClick={() => selectProject(p)}>Edit Project</TinyButton>
+                           <TinyButton onClick={() => selectProject(p)}>Edit</TinyButton>
                            <TinyButton variant="danger" onClick={() => deleteProject(p.id)}>Delete</TinyButton>
                         </div>
                       </div>
@@ -653,59 +729,22 @@ export default function AdminProjectsPage() {
 
                   {/* Add Card */}
                   <button 
-                    onClick={() => resetForm("designing", "Web Design", "FIGMA")}
-                    className="min-h-[250px] rounded-[40px] border-[4px] border-dashed border-[#e4e4e7] bg-white/50 hover:bg-white hover:border-[#0020d7]/30 hover:shadow-xl transition-all group flex flex-col items-center justify-center gap-4"
+                    onClick={() => {
+                      const subTab = activeMainTab === "coding" ? codingSubTabs.find(t => t.id === activeSubTab) : designingSubTabs.find(t => t.id === activeSubTab);
+                      resetForm(activeMainTab, (subTab as any)?.category || "", activeSubTab === "graphic" ? activeGraphicCategory : (activeMainTab === "coding" ? "CODE" : "FIGMA"));
+                      setIsAdding(true);
+                    }}
+                    className={cn(
+                      "rounded-[40px] border-[4px] border-dashed border-[#e4e4e7] bg-white/50 hover:bg-white hover:border-[#0020d7]/30 hover:shadow-xl transition-all group flex flex-col items-center justify-center gap-4",
+                      activeGraphicCategory === "PINTEREST" && activeSubTab === "graphic" ? "min-h-[400px]" : "min-h-[250px]"
+                    )}
                   >
                      <div className="h-16 w-16 rounded-full bg-[#f7f4ef] flex items-center justify-center text-[#4a4a68] group-hover:bg-[#0020d7] group-hover:text-white transition-all duration-300">
                         <Plus size={32} strokeWidth={3} />
                      </div>
-                     <span className="text-[15px] font-extrabold text-[#4a4a68] uppercase tracking-widest group-hover:text-[#0b0b0c] transition-colors">New Web Design</span>
-                  </button>
-                </div>
-              </SectionPanel>
-            ) : activeMainTab === "designing" && activeSubTab === "graphic" && activeGraphicCategory === "PINTEREST" && !selectedId && !isAdding ? (
-              <SectionPanel className="bg-white shadow-xl shadow-black/5">
-                <div className="flex items-center justify-between mb-10">
-                  <SectionTitle title="Pinterest Inspiration Board" copy="Manage your creative moodboards and pin collections." icon={Palette} />
-                  <ActionButton onClick={() => resetForm("designing", "Graphic Design", "PINTEREST")}>
-                    <Plus size={14} /> Add New Pin
-                  </ActionButton>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {filteredProjects.map(p => (
-                    <div key={p.id} className="flex flex-col rounded-[40px] border-[3px] border-[#e4e4e7] bg-white shadow-sm group hover:shadow-xl hover:border-[#0020d7]/10 transition-all overflow-hidden">
-                      <div className="aspect-[3/4] bg-[#f7f4ef] relative overflow-hidden">
-                        {p.mediaUrl ? (
-                          <img src={p.mediaUrl} className="w-full h-full object-cover transition-transform group-hover:scale-110" alt={p.title} />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center opacity-20">
-                            <Palette size={48} />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                           <TinyButton onClick={() => selectProject(p)}>Edit Pin</TinyButton>
-                           <TinyButton variant="danger" onClick={() => deleteProject(p.id)}>Delete</TinyButton>
-                        </div>
-                      </div>
-                      <div className="p-6 border-t-2 border-[#f7f4ef]">
-                         <h5 className="text-[14px] font-extrabold text-[#0b0b0c] truncate">{p.title}</h5>
-                         <p className="text-[10px] font-bold text-[#0020d7] uppercase tracking-widest mt-1.5 truncate">
-                           {p.externalUrl ? p.externalUrl.replace(/https?:\/\/(www\.)?/, "") : "No Link Provided"}
-                         </p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Add Card */}
-                  <button 
-                    onClick={() => resetForm("designing", "Graphic Design", "PINTEREST")}
-                    className="min-h-[400px] rounded-[40px] border-[4px] border-dashed border-[#e4e4e7] bg-white/50 hover:bg-white hover:border-[#0020d7]/30 hover:shadow-xl transition-all group flex flex-col items-center justify-center gap-4"
-                  >
-                     <div className="h-16 w-16 rounded-full bg-[#f7f4ef] flex items-center justify-center text-[#4a4a68] group-hover:bg-[#0020d7] group-hover:text-white transition-all duration-300">
-                        <Plus size={32} strokeWidth={3} />
-                     </div>
-                     <span className="text-[15px] font-extrabold text-[#4a4a68] uppercase tracking-widest group-hover:text-[#0b0b0c] transition-colors">Add Pinterest Pin</span>
+                     <span className="text-[15px] font-extrabold text-[#4a4a68] uppercase tracking-widest group-hover:text-[#0b0b0c] transition-colors">
+                       New {activeMainTab === "coding" ? "Project" : "Asset"}
+                     </span>
                   </button>
                 </div>
               </SectionPanel>
@@ -717,7 +756,7 @@ export default function AdminProjectsPage() {
                     <SectionTitle 
                       title={form.type === "PINTEREST" ? (selectedId ? "Edit Pinterest Pin" : "Add New Pin") : (selectedId ? "Refine Entry" : "Draft New Entity")} 
                       copy={form.type === "PINTEREST" ? "Sync your inspiration directly with your board." : "Establish the technical parameters and visual identity."} 
-                      icon={form.type === "PINTEREST" ? Palette : (selectedId ? Pencil : Sparkles)} 
+                      icon={form.type === "PINTEREST" ? Palette : form.type === "BEHANCE" ? IconBrandBehance : (selectedId ? Pencil : Sparkles)} 
                     />
                     <div className="flex items-center gap-3">
                       {selectedId && (
@@ -736,25 +775,31 @@ export default function AdminProjectsPage() {
                     <div className="space-y-12">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <Field 
-                          label={form.type === "PINTEREST" ? "Pin Title" : form.type === "BEHANCE" ? "Showcase Title" : "Project Name"} 
+                          label={form.type === "PINTEREST" ? "Pin Title" : form.type === "BEHANCE" ? "Showcase Title" : (form.category === "Motion Graphics" || form.category === "VFX & 3D") ? "Video Title" : "Project Name"} 
                           value={form.title} 
                           onChange={(v) => setForm({ ...form, title: v })} 
                           icon={Type} 
-                          placeholder={form.type === "PINTEREST" ? "e.g. Minimalist Branding Inspiration" : form.type === "BEHANCE" ? "e.g. 2024 Motion Showreel" : "e.g. ECO HIVE - Sustainable App"} 
+                          placeholder={form.type === "PINTEREST" ? "e.g. Minimalist Branding Inspiration" : form.type === "BEHANCE" ? "e.g. 2024 Motion Showreel" : (form.category === "Motion Graphics" || form.category === "VFX & 3D") ? "e.g. Brand Identity Motion Reel" : "e.g. ECO HIVE - Sustainable App"} 
                         />
                         {form.type === "PINTEREST" ? (
                           <Field label="Pinterest Link" value={form.externalUrl} onChange={(v) => setForm({ ...form, externalUrl: v })} icon={Link2} placeholder="https://pinterest.com/pin/..." />
                         ) : form.type === "BEHANCE" ? (
-                          <Field label="Behance Iframe Link" value={form.iframeUrl} onChange={(v) => setForm({ ...form, iframeUrl: v })} icon={Code} placeholder="https://www.behance.net/embed/project/..." />
+                          <Field label="Behance Iframe Link" value={form.iframeUrl} onChange={(v) => setForm({ ...form, iframeUrl: formatBehanceLink(v) })} icon={Code} placeholder="https://www.behance.net/embed/project/..." />
                         ) : (
-                          <Field label="Project Link (Figma/Live)" value={form.externalUrl} onChange={(v) => setForm({ ...form, externalUrl: v })} icon={Globe} placeholder="https://www.figma.com/file/..." />
+                          <Field 
+                            label={form.category === "Motion Graphics" || form.category === "VFX & 3D" ? "Video Link (YouTube/Vimeo)" : "Project Link (Figma/Live)"} 
+                            value={form.externalUrl} 
+                            onChange={(v) => setForm({ ...form, externalUrl: v })} 
+                            icon={form.category === "Motion Graphics" || form.category === "VFX & 3D" ? PlayCircle : Globe} 
+                            placeholder={form.category === "Motion Graphics" || form.category === "VFX & 3D" ? "https://www.youtube.com/watch?v=..." : "https://www.figma.com/file/..."} 
+                          />
                         )}
                       </div>
 
                       <div className="pt-8 border-t-2 border-[#f7f4ef]">
                         <SectionTitle 
-                          title={form.type === "PINTEREST" ? "Visual Preview" : "Mockup / Cover Asset"} 
-                          copy={form.type === "PINTEREST" ? "Live synchronization of the pin asset." : "High-fidelity thumbnail for the portfolio grid."} 
+                          title={form.type === "PINTEREST" ? "Visual Preview" : (form.category === "Motion Graphics" || form.category === "VFX & 3D") ? "Auto-Generated Thumbnail" : "Mockup / Cover Asset"} 
+                          copy={form.type === "PINTEREST" ? "Live synchronization of the pin asset." : (form.category === "Motion Graphics" || form.category === "VFX & 3D") ? "Thumbnail is automatically fetched from the video link above." : "High-fidelity thumbnail for the portfolio grid."} 
                           icon={UploadIcon} 
                         />
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -763,7 +808,7 @@ export default function AdminProjectsPage() {
                             <input type="file" className="hidden" id="asset-upload" onChange={handleUpload} />
                             <ActionButton onClick={() => document.getElementById("asset-upload")?.click()} disabled={isUploading} variant="secondary" className="w-full">
                                {isUploading ? <Loader2 size={14} className="animate-spin" /> : <UploadIcon size={14} />}
-                               Upload {form.type === "PINTEREST" ? "Pin Image" : "Mockup Asset"}
+                               Upload {form.type === "PINTEREST" ? "Pin Image" : (form.category === "Motion Graphics" || form.category === "VFX & 3D") ? "Video / Reel" : "Mockup Asset"}
                             </ActionButton>
                           </div>
                           <div className={cn(
@@ -802,7 +847,13 @@ export default function AdminProjectsPage() {
                         ]}
                       />
                       <TextareaField label="Brief Summary" value={form.description} onChange={(v) => setForm({ ...form, description: v })} className="md:col-span-2" rows={2} icon={AlignLeft} />
-                      <Field label="Project Link" value={form.externalUrl} onChange={(v) => setForm({ ...form, externalUrl: v })} icon={ExternalLink} placeholder="https://..." />
+                      <Field 
+                        label={form.category === "Motion Graphics" || form.category === "VFX & 3D" ? "Video Link (YouTube/Vimeo)" : "Project Link"} 
+                        value={form.externalUrl} 
+                        onChange={(v) => setForm({ ...form, externalUrl: v })} 
+                        icon={form.category === "Motion Graphics" || form.category === "VFX & 3D" ? PlayCircle : ExternalLink} 
+                        placeholder="https://..." 
+                      />
                       <Field label="Interactive Iframe" value={form.iframeUrl} onChange={(v) => setForm({ ...form, iframeUrl: v })} icon={Code} />
                       
                       <div className="md:col-span-2 pt-6 border-t-2 border-[#f7f4ef] space-y-8">
@@ -871,8 +922,8 @@ export default function AdminProjectsPage() {
                     <SectionTitle title="Quick Selector" copy="Manage your project stack." icon={FolderKanban} />
                     <div className="pt-6 border-t-2 border-[#f7f4ef] space-y-4">
                       <div className="grid grid-cols-2 gap-3 max-h-[700px] overflow-y-auto no-scrollbar pr-1 pb-4">
-                        <button onClick={() => resetForm()} className={`flex flex-col items-center justify-center gap-3 p-4 rounded-[24px] border-2 border-dashed transition-all aspect-square ${!selectedId ? "bg-[#0020d7]/5 border-[#0020d7] text-[#0020d7]" : "bg-white/50 border-[#e4e4e7] text-[#4a4a68] hover:border-[#0020d7]/30"}`}>
-                          <div className={`h-10 w-10 rounded-full flex items-center justify-center ${!selectedId ? "bg-[#0020d7] text-white" : "bg-[#f7f4ef]"}`}><Plus size={20} strokeWidth={3} /></div>
+                        <button onClick={() => { resetForm(); setIsAdding(true); }} className={`flex flex-col items-center justify-center gap-3 p-4 rounded-[24px] border-2 border-dashed transition-all aspect-square ${!selectedId && isAdding ? "bg-[#0020d7]/5 border-[#0020d7] text-[#0020d7]" : "bg-white/50 border-[#e4e4e7] text-[#4a4a68] hover:border-[#0020d7]/30"}`}>
+                          <div className={`h-10 w-10 rounded-full flex items-center justify-center ${!selectedId && isAdding ? "bg-[#0020d7] text-white" : "bg-[#f7f4ef]"}`}><Plus size={20} strokeWidth={3} /></div>
                           <span className="text-[11px] font-extrabold uppercase tracking-widest">Add New</span>
                         </button>
                         {filteredProjects.map(p => (

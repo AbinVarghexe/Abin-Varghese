@@ -2,9 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 interface ScrollingBannerProps {
   items?: string[];
@@ -108,7 +105,6 @@ export const ScrollingBanner = ({
     return () => {
       cancelAnimationFrame(rafId);
       cleanupFn?.();
-      ScrollTrigger.getAll().forEach(t => t.kill());
     };
   }, [items, speed]);
 

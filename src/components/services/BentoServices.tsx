@@ -125,6 +125,9 @@ interface ServiceCardCopy {
   description: string;
   href: string;
   accentColor: string;
+  mediaUrl?: string;
+  iframeUrl?: string;
+  isVideo?: boolean;
 }
 
 function resolveServiceCopy(
@@ -137,11 +140,17 @@ function resolveServiceCopy(
     return fallback;
   }
 
+  // Get the first project's media if available
+  const firstProject = service.contents?.find(c => c.type === 'project');
+
   return {
     title: service.title,
     description: service.description,
     href: `/services/${service.id}`,
     accentColor: service.accentColor,
+    mediaUrl: firstProject?.mockupImage || firstProject?.url,
+    iframeUrl: firstProject?.iframeUrl,
+    isVideo: !!firstProject?.videoUrl
   };
 }
 
@@ -256,7 +265,7 @@ export default function BentoServices({ services }: BentoServicesProps) {
             delay={0.3}
             className="col-span-1 md:row-span-2"
           >
-            <GraphicDesign />
+            <GraphicDesign imageUrl={graphicsDesign.mediaUrl} iframeUrl={graphicsDesign.iframeUrl} />
           </BentoCard>
 
           {/* Card 4: 3D & VFX (Wide - col span 2, horizontal) */}

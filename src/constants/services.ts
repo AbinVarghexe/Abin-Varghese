@@ -17,8 +17,11 @@ export interface ServiceContent {
   mockupImage?: string; // Device mockup URL
   threeDModel?: string; // Path to .glb file
   videoUrl?: string; // Path to .mp4 or similar
+  iframeUrl?: string; // Interactive embed URL
   projectLinks?: ProjectLink[]; // Contextual links (Figma, GitHub, etc.)
   techStack?: string[]; // Technology tags
+  projectId?: string; // New field to link to an existing project
+  projectSlug?: string; // New field for internal project routing
   bgColor?: string; // Suggestion for right-side card background
 }
 

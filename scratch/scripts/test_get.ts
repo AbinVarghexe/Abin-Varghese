@@ -1,4 +1,4 @@
-import { getAchievements } from "../lib/achievements";
+import { getAchievements } from "../../src/lib/achievements";
 import * as dotenv from "dotenv";
 import * as path from "path";
 

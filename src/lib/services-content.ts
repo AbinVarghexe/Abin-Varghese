@@ -52,41 +52,133 @@ export async function getServicesContent(): Promise<Service[]> {
     .eq("key", SERVICES_CONTENT_KEY)
     .single();
 
-  if (error || !record?.value) {
-    if (error && error.code !== "PGRST116") {
-      console.error("Error fetching services content:", error);
+  let baseServices: Service[] = servicesDefaults;
+
+  if (!error && record?.value) {
+    try {
+      const parsed = JSON.parse(record.value);
+      if (Array.isArray(parsed)) {
+        const defaultsById = new Map(servicesDefaults.map((service) => [service.id, service]));
+        baseServices = parsed
+          .map((item) => {
+            if (!isRecord(item) || typeof item.id !== "string") return null;
+            const fallback = defaultsById.get(item.id);
+            if (!fallback) return null;
+            return normalizeService(item, fallback);
+          })
+          .filter((service): service is Service => Boolean(service));
+        
+        if (baseServices.length === 0) baseServices = servicesDefaults;
+      }
+    } catch {
+      baseServices = servicesDefaults;
     }
-    return servicesDefaults;
   }
 
-  try {
-    const parsed = JSON.parse(record.value);
+  // ─── Dynamic Project Population ───
+  // Collect all unique project IDs mentioned in service contents
+  const projectIds = new Set<string>();
+  baseServices.forEach(service => {
+    service.contents?.forEach(content => {
+      if (content.type === 'project' && content.projectId) {
+        projectIds.add(content.projectId);
+      }
+    });
+  });
 
-    if (!Array.isArray(parsed)) {
-      return servicesDefaults;
+  if (projectIds.size > 0) {
+    // 1. Fetch from standard projects table
+    const { data: projects } = await supabase
+      .from("projects")
+      .select("*")
+      .in("id", Array.from(projectIds));
+
+    const projectsMap = new Map<string, any>(projects?.map(p => [p.id, p]) || []);
+
+    // 2. Fetch from site_content table for showcase items (if any projectIds remain missing)
+    const missingIds = Array.from(projectIds).filter(id => !projectsMap.has(id));
+    
+    if (missingIds.length > 0) {
+      const { data: contentRecord } = await supabase
+        .from("site_content")
+        .select("value")
+        .in("key", ["behance_showcase_v1", "pinterest_showcase_v1"]);
+
+      if (contentRecord) {
+        contentRecord.forEach(record => {
+          try {
+            const items = JSON.parse(record.value);
+            if (Array.isArray(items)) {
+              items.forEach((item: any) => {
+                if (missingIds.includes(item.id)) {
+                  projectsMap.set(item.id, {
+                    id: item.id,
+                    title: item.title,
+                    external_url: item.src,
+                    media_url: item.src, // Fallback
+                    tags: ["Behance", "Showcase"],
+                    isShowcase: true
+                  });
+                }
+              });
+            }
+          } catch (e) {
+            console.error("Error parsing showcase content:", e);
+          }
+        });
+      }
     }
 
-    const defaultsById = new Map(servicesDefaults.map((service) => [service.id, service]));
+    if (projectsMap.size > 0) {
+      // Merge project data into service contents
+      baseServices = baseServices.map(service => ({
+        ...service,
+        contents: service.contents?.map(content => {
+          if (content.type === 'project' && content.projectId) {
+            const project = projectsMap.get(content.projectId);
+            if (project) {
+              const isVideo = project.category?.toLowerCase().includes("motion") || 
+                            project.category?.toLowerCase().includes("vfx") || 
+                            project.mediaType === "VIDEO" ||
+                            project.media_type === "VIDEO";
+              
+              const links = [];
+              const externalUrl = project.external_url || project.externalUrl;
+              const isBehanceShowcase = project.isShowcase && externalUrl?.includes("behance.net");
 
-    const normalized = parsed
-      .map((item) => {
-        if (!isRecord(item) || typeof item.id !== "string") {
-          return null;
-        }
+              if (externalUrl) {
+                let icon: any = "ExternalLink";
+                if (externalUrl.includes("github.com")) icon = "Github";
+                else if (externalUrl.includes("figma.com")) icon = "Figma";
+                else if (externalUrl.includes("behance.net")) icon = "ExternalLink";
+                
+                links.push({ 
+                  label: isVideo ? "Watch Reel" : externalUrl.includes("behance.net") ? "View on Behance" : "View Project", 
+                  url: externalUrl, 
+                  icon 
+                });
+              }
 
-        const fallback = defaultsById.get(item.id);
-        if (!fallback) {
-          return null;
-        }
-
-        return normalizeService(item, fallback);
-      })
-      .filter((service): service is Service => Boolean(service));
-
-    return normalized.length > 0 ? normalized : servicesDefaults;
-  } catch {
-    return servicesDefaults;
+              return {
+                ...content,
+                title: project.title || content.title,
+                description: project.description || content.description,
+                mockupImage: isBehanceShowcase ? "" : (project.media_url || project.mediaUrl || content.mockupImage),
+                videoUrl: isVideo ? externalUrl : content.videoUrl,
+                iframeUrl: isBehanceShowcase ? externalUrl : content.iframeUrl,
+                techStack: project.tags || project.tags || content.techStack,
+                projectSlug: project.slug || project.slug || content.projectSlug,
+                projectLinks: links.length > 0 ? links : content.projectLinks
+              };
+            }
+          }
+          return content;
+        })
+      }));
+    }
   }
+
+  return baseServices;
 }
 
 export async function upsertServicesContent(services: Service[]) {

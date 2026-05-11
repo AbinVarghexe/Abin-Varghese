@@ -43,7 +43,7 @@ export default function RecentProjects({
   const cursorY = useSpring(-100, { stiffness: 400, damping: 28 });
 
   const displayCategories = creativeCategories && creativeCategories.length > 0 ? creativeCategories : siteCopyDefaults.homeCreativeCategories;
-  const activeCategory = displayCategories[activeCreativeIndex];
+  const activeCategory = displayCategories[activeCreativeIndex] || displayCategories[0];
 
   const headingParts = splitAccentHeading(heading);
   const webTitleParts = splitAccentHeading(webTitle);
