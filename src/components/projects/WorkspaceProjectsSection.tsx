@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowUpRight,
@@ -387,7 +387,7 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
   }
 
   const bentoTileClasses = [
-    'col-span-12 sm:col-span-12 md:col-span-8 row-span-2',
+    'col-span-12 sm:col-span-12 md:col-span-8 row-span-1 md:row-span-2',
     'col-span-12 sm:col-span-6 md:col-span-4 row-span-1',
     'col-span-12 sm:col-span-6 md:col-span-4 row-span-1',
     'col-span-12 sm:col-span-6 md:col-span-4 row-span-1',
@@ -412,26 +412,163 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
   return (
     <div className="flex flex-col gap-12">
       {/* Bento Grid */}
-      <div className="px-4 md:px-8 mx-auto max-w-7xl w-full">
-        <div className="mb-12 text-center">
+      <div className="px-2 md:px-8 mx-auto max-w-7xl w-full">
+        <div className="mb-6 md:mb-12 text-center">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 text-zinc-600 text-[10px] font-bold uppercase tracking-widest border border-black/10">
             <LayoutGrid size={14} /> Full Gallery
           </span>
-          <h3 className="mt-4 text-3xl md:text-4xl font-bold text-zinc-900">
+          <h3 className="mt-3 md:mt-4 text-2xl md:text-4xl font-bold text-zinc-900">
             Project Directory
           </h3>
-          <p className="mt-2 text-zinc-500 max-w-lg mx-auto">
+          <p className="mt-1.5 md:mt-2 text-sm md:text-base text-zinc-500 max-w-lg mx-auto">
             A comprehensive library of my development journey, including experiments, 
             tooling, and production-ready frontend components.
           </p>
         </div>
-        <div className="grid grid-cols-12 gap-4 auto-rows-[210px] md:auto-rows-[220px] xl:auto-rows-[240px]">
+        <div className="grid grid-cols-12 gap-3 md:gap-4 auto-rows-[200px] sm:auto-rows-[210px] md:auto-rows-[220px] xl:auto-rows-[240px]">
           {projects.map((project, index) => (
             <div key={project.id} className={`${getTileClass(index)} h-full overflow-hidden`}>
               <WorkspaceProjectCard project={project} index={index} />
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+const ITEM_WIDTH = 144; // px per filter button
+const ITEM_GAP = 8; // mx-1 = 4px each side = 8px total gap
+
+function MobileFilterCarousel({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: DesignCategory;
+  onTabChange: (cat: DesignCategory) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isResetting = useRef(false);
+  const count = DESIGN_CATEGORIES.length;
+  const itemTotal = ITEM_WIDTH + ITEM_GAP;
+
+  // Triple the array: [clone] [real] [clone]
+  const tripled = useMemo(
+    () => [...DESIGN_CATEGORIES, ...DESIGN_CATEGORIES, ...DESIGN_CATEGORIES],
+    []
+  );
+
+  // Initialize scroll to the middle (real) set on mount
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const realStartOffset =
+      count * itemTotal; // first item of middle set
+    el.scrollLeft = realStartOffset;
+  }, [count, itemTotal]);
+
+  // When activeTab changes programmatically, scroll to it in the middle set
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || isResetting.current) return;
+    const realIdx = DESIGN_CATEGORIES.indexOf(activeTab);
+    if (realIdx === -1) return;
+    const middleIdx = count + realIdx;
+    const child = el.children[middleIdx] as HTMLElement | undefined;
+    if (!child) return;
+    isResetting.current = true;
+    el.scrollTo({
+      left: child.offsetLeft - el.offsetWidth / 2 + child.offsetWidth / 2,
+      behavior: 'smooth',
+    });
+    setTimeout(() => {
+      isResetting.current = false;
+    }, 450);
+  }, [activeTab, count]);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || isResetting.current) return;
+
+    const centerX = el.scrollLeft + el.offsetWidth / 2;
+
+    // Find closest child
+    const children = Array.from(el.children) as HTMLElement[];
+    let closestIdx = 0;
+    let closestDist = Infinity;
+    children.forEach((child, idx) => {
+      const childCenter = child.offsetLeft + child.offsetWidth / 2;
+      const dist = Math.abs(childCenter - centerX);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestIdx = idx;
+      }
+    });
+
+    // Map to real category
+    const realIdx = closestIdx % count;
+    const cat = DESIGN_CATEGORIES[realIdx];
+    if (cat && cat !== activeTab) {
+      onTabChange(cat);
+    }
+
+    // If scrolled into clone regions, silently jump to the real set
+    const realStart = count * itemTotal;
+    const realEnd = realStart + count * itemTotal;
+    if (el.scrollLeft < realStart - itemTotal * 0.5) {
+      isResetting.current = true;
+      el.scrollLeft = el.scrollLeft + count * itemTotal;
+      requestAnimationFrame(() => {
+        isResetting.current = false;
+      });
+    } else if (el.scrollLeft > realEnd - itemTotal * 0.5) {
+      isResetting.current = true;
+      el.scrollLeft = el.scrollLeft - count * itemTotal;
+      requestAnimationFrame(() => {
+        isResetting.current = false;
+      });
+    }
+  }, [activeTab, count, itemTotal, onTabChange]);
+
+  return (
+    <div className="mt-6 mb-8 md:hidden">
+      <div
+        ref={scrollRef}
+        className="design-filter-carousel flex overflow-x-auto snap-x snap-mandatory"
+        style={{ paddingLeft: `calc(50vw - ${ITEM_WIDTH / 2}px)`, paddingRight: `calc(50vw - ${ITEM_WIDTH / 2}px)` }}
+        onScroll={handleScroll}
+      >
+        {tripled.map((category, idx) => {
+          const realIdx = idx % count;
+          const isActive = activeTab === category;
+          return (
+            <button
+              key={`filter-${idx}`}
+              onClick={() => onTabChange(DESIGN_CATEGORIES[realIdx])}
+              className={`snap-center shrink-0 py-2.5 text-[13px] font-semibold rounded-full transition-all duration-300 ease-out mx-1 ${
+                isActive
+                  ? 'bg-gradient-to-br from-zinc-900 to-zinc-600 text-white shadow-lg scale-105'
+                  : 'bg-white/80 text-zinc-400 border border-zinc-200'
+              }`}
+              style={{ width: `${ITEM_WIDTH}px` }}
+            >
+              {category === 'All' ? 'All Boards' : category}
+            </button>
+          );
+        })}
+      </div>
+      {/* Dot indicators */}
+      <div className="flex justify-center gap-1.5 mt-3">
+        {DESIGN_CATEGORIES.map((category) => (
+          <span
+            key={category}
+            className={`block rounded-full transition-all duration-300 ${
+              activeTab === category
+                ? 'w-5 h-1.5 bg-zinc-800'
+                : 'w-1.5 h-1.5 bg-zinc-300'
+            }`}
+          />
+        ))}
       </div>
     </div>
   );
@@ -604,26 +741,35 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
           <p className="mb-3 inline-flex rounded-xl border border-black/10 bg-black/3 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-black/60">
             Design Session
           </p>
-          <h2 className="text-5xl font-extrabold tracking-tight text-[#0b1034] md:text-7xl">
+          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#0b1034] md:text-7xl">
             Curated <span className="font-serif italic font-medium text-[#1f5fff]">Designs</span>
           </h2>
-          <p className="mx-auto mt-3 max-w-3xl text-base text-zinc-600 md:text-lg">
+          <p className="mx-auto mt-2 md:mt-3 max-w-3xl text-sm md:text-base text-zinc-600 lg:text-lg">
             Browse only the design projects you have uploaded from the admin panel, grouped by category.
           </p>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="mt-12 mb-16 flex justify-center">
+      <style dangerouslySetInnerHTML={{ __html: `
+        .design-filter-carousel::-webkit-scrollbar { display: none; }
+        .design-filter-carousel { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
+
+      {/* ── Mobile: Infinite snap-scroll carousel ── */}
+      <MobileFilterCarousel activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* ── Desktop: Wrapped pill bar (unchanged) ── */}
+      <div className="mt-12 mb-16 hidden md:flex justify-center">
         <div className="flex flex-wrap items-center justify-center gap-1.5 bg-zinc-100/80 p-1.5 rounded-full border border-zinc-200">
           {DESIGN_CATEGORIES.map((category) => (
             <button
               key={category}
               onClick={() => setActiveTab(category)}
               className={`px-7 py-2.5 text-[15px] font-medium rounded-full transition-all duration-300 ease-out ${
-                activeTab === category 
-                  ? "bg-gradient-to-br from-zinc-900 to-zinc-600 text-white shadow-lg" 
-                  : "text-zinc-500 hover:text-zinc-900"
+                activeTab === category
+                  ? 'bg-gradient-to-br from-zinc-900 to-zinc-600 text-white shadow-lg'
+                  : 'text-zinc-500 hover:text-zinc-900'
               }`}
             >
               {category === 'All' ? 'All Boards' : category}
@@ -811,8 +957,8 @@ export default function WorkspaceProjectsSection({
 
   const sectionClass =
     workspace === 'coding'
-      ? 'w-full py-14 md:py-20'
-      : 'w-full py-8 sm:py-12 md:py-16';
+      ? 'w-full py-8 md:py-20'
+      : 'w-full py-6 sm:py-12 md:py-16';
 
   const contentContainerClass =
     workspace === 'coding'
@@ -847,15 +993,15 @@ export default function WorkspaceProjectsSection({
 
       <div className={`relative z-10 ${contentContainerClass}`}>
         {workspace === 'coding' ? (
-          <div className="mb-7 flex flex-col items-center gap-5 text-center">
-            <div className="space-y-2">
-              <p className="inline-flex rounded-xl border border-black/10 bg-black/3 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-black/60">
+          <div className="mb-4 md:mb-7 flex flex-col items-center gap-3 md:gap-5 text-center">
+            <div className="space-y-1.5 md:space-y-2">
+              <p className="inline-flex rounded-xl border border-black/10 bg-black/3 px-3 py-1 text-[10px] md:text-xs font-semibold uppercase tracking-[0.16em] text-black/60">
                 Co Project
               </p>
-              <h2 className="text-5xl font-extrabold tracking-tight text-[#0b1034] md:text-7xl">
+              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#0b1034] md:text-7xl">
                 Curated <span className="font-serif italic font-medium text-[#1f5fff]">Projects</span>
               </h2>
-              <p className="mx-auto max-w-2xl text-base text-zinc-600 md:text-lg">
+              <p className="mx-auto max-w-2xl text-sm md:text-base text-zinc-600 lg:text-lg">
                 Explore projects by workspace. Hover each card to quickly open the live site or repository, and click the card to view full project details.
               </p>
             </div>
@@ -864,7 +1010,7 @@ export default function WorkspaceProjectsSection({
 
 
 
-        <div className="flex flex-col gap-8 md:gap-14">
+        <div className="flex flex-col gap-5 md:gap-14">
           {workspace === 'coding' && (
             <div className="flex flex-col gap-6 md:gap-10">
               <CodingMarqueeShowcase projects={filteredProjects} />
@@ -878,13 +1024,11 @@ export default function WorkspaceProjectsSection({
                     href={githubProfileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center no-underline"
+                    className="inline-flex items-center no-underline px-4 py-2 md:px-5 md:py-2.5 gap-2 md:gap-2.5"
                     style={{
-                      gap: '10px',
                       background: 'var(--gradient-gray)',
                       border: '1.5px solid var(--color-border-light)',
                       borderRadius: 'var(--radius-full)',
-                      padding: '10px 20px',
                       fontFamily: 'var(--font-sans)',
                       fontWeight: 500,
                       fontSize: '14px',
@@ -904,7 +1048,8 @@ export default function WorkspaceProjectsSection({
                     }}
                   >
                     <Github className="h-4 w-4" />
-                    <span>View GitHub Profile</span>
+                    <span className="hidden md:inline">View GitHub Profile</span>
+                    <span className="md:hidden">GitHub</span>
                   </a>
                 </div>
               </div>

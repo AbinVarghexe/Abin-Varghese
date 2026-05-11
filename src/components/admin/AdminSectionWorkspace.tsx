@@ -29,8 +29,8 @@ export default function AdminSectionWorkspace({
   children,
 }: AdminSectionWorkspaceProps) {
   return (
-    <div className="min-h-full overflow-hidden rounded-[33px] border-[5px] border-[#e4e4e7] bg-white shadow-2xl shadow-black/5">
-      <div className="bg-[#f7f4ef]/30">
+    <div className="flex flex-col flex-1 min-h-full overflow-hidden rounded-[33px] border-[5px] border-[#e4e4e7] bg-white shadow-2xl shadow-black/5">
+      <div className="flex flex-col flex-1 bg-[#f7f4ef]/30">
         {/* Header */}
         <header className="sticky top-0 z-30 border-b border-[#e4e4e7] bg-white/90 px-8 py-8 backdrop-blur-2xl">
           <div className="flex items-start gap-6">
@@ -57,7 +57,7 @@ export default function AdminSectionWorkspace({
         </header>
 
         {/* Content Container */}
-        <div className="space-y-12 p-8 lg:p-12 pb-32 bg-[#f7f4ef]">
+        <div className="flex-1 space-y-12 p-8 lg:p-12 pb-32 bg-[#f7f4ef]">
           {children}
         </div>
       </div>

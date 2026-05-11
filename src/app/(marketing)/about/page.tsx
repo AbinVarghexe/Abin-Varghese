@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import ScrapbookHero from "@/components/about/ScrapbookHero";
 import DeskBookSection from "@/components/about/DeskBookSection";
-import TypewriterSection from "@/components/about/TypewriterSection";
+import TelevisionSection from "@/components/about/TypewriterSection";
 import { getAboutContent } from "@/lib/site-content";
 import { getSiteCopyContent } from "@/lib/site-copy-content";
 import { createPageMetadata } from "@/seo/page-metadata";
@@ -52,7 +52,7 @@ export default async function AboutPage() {
         }}
       />
       <div className="relative z-20 -mt-28">
-        <TypewriterSection quote={siteCopy.aboutTypewriterQuote} />
+        <TelevisionSection quote={siteCopy.aboutTypewriterQuote} />
       </div>
     </main>
   );

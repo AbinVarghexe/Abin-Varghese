@@ -661,7 +661,7 @@ The easiest way to start is with a simple message about what you are working on 
 
 ### Footer Brand Statement
 
-Design-led digital work by Abin Varghese.
+ABIN VARGHESE
 
 ### Footer Support Copy
 

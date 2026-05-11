@@ -359,7 +359,7 @@ const Herosection = ({
             {/* headline */}
             <motion.h1
               variants={fadeUp}
-              className="pointer-events-auto max-w-4xl text-[48px] font-semibold leading-[0.9] tracking-tighter text-[#0f1020] md:text-5xl lg:text-7xl"
+              className="pointer-events-auto max-w-4xl text-[40px] md:text-5xl lg:text-7xl font-semibold leading-[0.9] tracking-tighter text-[#0f1020]"
             >
             {data.heroGreeting.includes('👋') ? (
               data.heroGreeting.split('👋').map((part: string, i: number, arr: string[]) => (
@@ -401,7 +401,7 @@ const Herosection = ({
               </>
             )}
             <br />
-            <span className="mt-2 flex justify-center cursor-default text-[48px] leading-[0.9] tracking-[-0.08em] md:mt-3 md:text-6xl lg:text-7xl">
+            <span className="mt-2 flex justify-center cursor-default text-[40px] md:text-6xl lg:text-7xl leading-[0.9] tracking-[-0.08em]">
               {data.heroName.split('').map((char: string, index: number) => (
                 <motion.span
                   key={index}

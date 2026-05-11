@@ -4,8 +4,20 @@ import Image from "next/image";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Dialog } from "@headlessui/react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SiteCopyContent, SiteCopyTimelineEntry } from "@/types/site-copy";
+import { resumeOptions } from "@/lib/resume-data";
+
+const PDFViewer = dynamic(() => import("@/components/ui/PDFViewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-[#fdfaf5]/30">
+      <div className="w-12 h-12 border-4 border-[#8b5a2b]/20 border-t-[#8b5a2b] rounded-full animate-spin" />
+      <p className="text-[#8b5a2b] font-serif italic animate-pulse">Summoning the scroll...</p>
+    </div>
+  ),
+});
 
 type DeskBookSectionProps = {
   copy: Pick<
@@ -611,8 +623,8 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
                   
                   <div className="flex items-center gap-2 sm:gap-3">
                     <a 
-                      href={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume/Abin_Varghese_Resume.pdf"} 
-                      download 
+                      href={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume-designer.pdf"} 
+                      download={activePdfModal === "resume" ? "Abin_Varghese_Resume.pdf" : "Abin_Varghese_Designer_Portfolio.pdf"}
                       className="group flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:h-auto sm:px-5 sm:py-2 bg-[#8b5a2b] border border-[#8b5a2b] text-[#fdfaf5] font-serif text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#5a3b1c] hover:shadow-lg hover:shadow-[#8b5a2b]/20 rounded-full"
                     >
                       <span className="hidden sm:inline">Download</span>
@@ -630,20 +642,13 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
                 </div>
                 
                 {/* PDF Viewer Area */}
-                <div className="flex-1 w-full bg-[#f4e8d1]/30 relative overflow-hidden">
-                  {/* Fallback pattern behind PDF */}
-                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(135deg, #8b5a2b 0px, #8b5a2b 1px, transparent 1px, transparent 15px)" }}></div>
-                  
-                  {/* Using iframe instead of embed — embed creates a native OS-level plugin window
-                      that sits above ALL HTML elements including the custom cursor div.
-                      iframe is a standard HTML element that respects CSS stacking context. */}
-                  <iframe 
-                    src={`${activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume/Abin_Varghese_Resume.pdf"}#toolbar=1&navpanes=0`}
-                    title={activePdfModal === "resume" ? "Resume Preview" : "Design Resume Preview"}
-                    className="w-full h-full relative border-0" 
-                    style={{ colorScheme: "light" }}
-                  />
-                </div>
+                  {/* Dynamic PDF Viewer using react-pdf for robust mobile support */}
+                  <div className="w-full h-full relative">
+                    <PDFViewer 
+                      url={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume-designer.pdf"} 
+                      title={activePdfModal === "resume" ? "Resume Preview" : "Design Resume Preview"}
+                    />
+                  </div>
               </Dialog.Panel>
               </motion.div>
             </div>

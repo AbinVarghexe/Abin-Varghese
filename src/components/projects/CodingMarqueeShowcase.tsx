@@ -35,10 +35,10 @@ export default function CodingMarqueeShowcase({ projects }: CodingMarqueeShowcas
     return (
       <div 
         key={key}
-        className="group flex-shrink-0 w-[420px] md:w-[680px] overflow-hidden rounded-[32px] bg-white p-2 md:p-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/10 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)]"
+        className="group flex-shrink-0 w-[340px] sm:w-[480px] md:w-[680px] overflow-hidden rounded-[20px] md:rounded-[32px] bg-white p-1.5 md:p-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/10 transition-all hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)]"
       >
         {/* Media Container - Balanced 16/8 Aspect Ratio with Asymmetrical Corners */}
-        <div className="relative aspect-[16/8] w-full rounded-[26px] rounded-bl-none overflow-hidden bg-zinc-50 border border-black/5">
+        <div className="relative aspect-[16/8] w-full rounded-[16px] md:rounded-[26px] rounded-bl-none overflow-hidden bg-zinc-50 border border-black/5">
           <ProjectPreviewImage
             src={project.imageUrl}
             fallbackSrc={`https://opengraph.githubassets.com/portfolio/${project.owner}/${project.repo}`}
@@ -48,9 +48,9 @@ export default function CodingMarqueeShowcase({ projects }: CodingMarqueeShowcas
         </div>
 
         {/* Info & Actions Container - Micro Typography */}
-        <div className="mt-4 flex items-end justify-between gap-4 px-3 pb-2">
+        <div className="mt-2 md:mt-4 flex items-end justify-between gap-2 md:gap-4 px-2 md:px-3 pb-1.5 md:pb-2">
           <div className="flex flex-col gap-0.5 max-w-[55%]">
-            <h3 className="text-base md:text-lg font-extrabold tracking-tight text-[#0b1034] truncate">
+            <h3 className="text-sm md:text-lg font-extrabold tracking-tight text-[#0b1034] truncate">
               {project.title}
             </h3>
             <p className="text-[12px] md:text-[13px] text-zinc-500 line-clamp-1 font-medium">
@@ -102,7 +102,7 @@ export default function CodingMarqueeShowcase({ projects }: CodingMarqueeShowcas
 
   return (
     <div 
-      className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden py-10 md:py-16"
+      className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden py-6 md:py-16"
       style={{ clipPath: 'inset(0 0 0 0)' }}
     >
       <style jsx global>{`
@@ -130,15 +130,15 @@ export default function CodingMarqueeShowcase({ projects }: CodingMarqueeShowcas
 
 
 
-      <div className="relative w-full flex flex-col gap-8 md:gap-12 overflow-hidden">
+      <div className="relative w-full flex flex-col gap-4 md:gap-12 overflow-hidden">
         {/* Row 1: Normal Direction */}
-        <div className="flex w-fit animate-marquee-scroll gap-6 md:gap-12 px-6 md:px-12">
+        <div className="flex w-fit animate-marquee-scroll gap-3 md:gap-12 px-3 md:px-12">
           {row1.map((project, idx) => renderProjectCard(project, idx, 1))}
           {row1.map((project, idx) => renderProjectCard(project, idx + row1.length, 1))}
         </div>
         
         {/* Row 2: Reverse Direction */}
-        <div className="flex w-fit animate-marquee-scroll-reverse gap-6 md:gap-12 px-6 md:px-12">
+        <div className="flex w-fit animate-marquee-scroll-reverse gap-3 md:gap-12 px-3 md:px-12">
           {row2.map((project, idx) => renderProjectCard(project, idx, 2))}
           {row2.map((project, idx) => renderProjectCard(project, idx + row2.length, 2))}
         </div>

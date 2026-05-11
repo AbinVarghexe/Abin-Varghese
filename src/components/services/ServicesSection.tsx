@@ -153,14 +153,14 @@ export default function ServicesSection({
             transition={{ duration: 0.6 }}
             className="flex flex-col items-center lg:items-start text-center lg:text-left w-full mb-12 relative z-10"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-black mb-6 tracking-tight">
+            <h2 className="text-3xl md:text-5xl font-bold text-black mb-4 md:mb-6 tracking-tight">
               {headingParts.before}
               {headingParts.accent ? (
                 <span className="text-blue-600 font-serif italic font-medium">{headingParts.accent}</span>
               ) : null}
               {headingParts.after}
             </h2>
-            <p className="text-black/70 text-base md:text-lg leading-relaxed max-w-3xl px-6 lg:px-0 text-justify lg:text-left [text-align-last:center] lg:[text-align-last:auto]">
+            <p className="text-black/70 text-sm md:text-lg leading-relaxed max-w-3xl px-4 md:px-6 lg:px-0 text-center lg:text-left">
               {intro}
             </p>
           </motion.div>
@@ -259,8 +259,8 @@ function CardShell({ service, children, className = '', onMouseEnter, onMouseLea
       </div>
 
       {/* Text block — transparent bg, sits on high-z */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 bg-transparent px-7 pb-7 pt-0 text-center md:text-left">
-        <h3 className={`font-bold text-zinc-900 leading-tight ${(service as LottieService).isWide || (service as LottieService).isTall ? 'text-2xl' : 'text-xl'}`}>
+      <div className="absolute bottom-0 left-0 right-0 z-30 bg-transparent px-5 md:px-7 pb-5 md:pb-7 pt-0 text-center md:text-left">
+        <h3 className={`font-bold text-zinc-900 leading-tight ${(service as LottieService).isWide || (service as LottieService).isTall ? 'text-xl md:text-2xl' : 'text-lg md:text-xl'}`}>
           {service.title}
         </h3>
         <p className="text-zinc-500 text-xs leading-tight line-clamp-2 mt-0.5 mx-auto md:mx-0">{service.description}</p>
@@ -284,7 +284,7 @@ function UIUXCard({ service }: { service: BaseService }) {
   return (
     <CardShell service={service}>
       <motion.div
-        className="w-full h-full flex items-center justify-center pb-12"
+        className="w-full h-full flex items-center justify-center pb-16 md:pb-12 scale-[0.8] md:scale-100"
         animate={{
           y: isOpen ? 45 : 0, // Stays down when open, goes back to 0 when closed
           rotateZ: isOpen ? -1 : 0,
@@ -311,33 +311,35 @@ function UIUXCard({ service }: { service: BaseService }) {
 function MotionGraphicsCard({ service }: { service: BaseService }) {
   return (
     <CardShell service={service}>
-      <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-transparent pb-16">
-        <span className="pointer-events-none whitespace-pre-wrap bg-linear-to-b from-zinc-900 to-zinc-400 bg-clip-text text-center text-7xl font-semibold leading-none text-transparent opacity-10 uppercase tracking-tighter">
+      <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-transparent pb-16 md:pb-16">
+        <span className="pointer-events-none whitespace-pre-wrap bg-linear-to-b from-zinc-900 to-zinc-400 bg-clip-text text-center text-5xl md:text-7xl font-semibold leading-none text-transparent opacity-10 uppercase tracking-tighter">
           MOTION
         </span>
 
-        {/* Inner Circles — Design Tools */}
-        <OrbitingCircles iconSize={40} radius={65} duration={18} speed={1.2}>
-          <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110">
-            <img src="https://skillicons.dev/icons?i=figma" alt="Figma" className="w-full h-full object-contain" />
-          </div>
-          <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110">
-            <img src="https://skillicons.dev/icons?i=blender" alt="Blender" className="w-full h-full object-contain" />
-          </div>
-        </OrbitingCircles>
+        <div className="absolute inset-0 flex items-center justify-center pb-16 scale-[0.7] md:scale-100 pointer-events-none">
+          {/* Inner Circles — Design Tools */}
+          <OrbitingCircles iconSize={40} radius={65} duration={18} speed={1.2}>
+            <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110 pointer-events-auto">
+              <img src="https://skillicons.dev/icons?i=figma" alt="Figma" className="w-full h-full object-contain" />
+            </div>
+            <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110 pointer-events-auto">
+              <img src="https://skillicons.dev/icons?i=blender" alt="Blender" className="w-full h-full object-contain" />
+            </div>
+          </OrbitingCircles>
 
-        {/* Outer Circles — Motion & Publishing */}
-        <OrbitingCircles iconSize={52} radius={125} duration={25} reverse speed={0.8}>
-          <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110">
-            <img src="https://skillicons.dev/icons?i=ae" alt="After Effects" className="w-full h-full object-contain" />
-          </div>
-          <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110">
-            <img src="https://skillicons.dev/icons?i=pr" alt="Premiere Pro" className="w-full h-full object-contain" />
-          </div>
-          <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110">
-            <img src="https://cdn.simpleicons.org/davinciresolve" alt="DaVinci Resolve" className="w-full h-full object-contain" />
-          </div>
-        </OrbitingCircles>
+          {/* Outer Circles — Motion & Publishing */}
+          <OrbitingCircles iconSize={52} radius={125} duration={25} reverse speed={0.8}>
+            <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110 pointer-events-auto">
+              <img src="https://skillicons.dev/icons?i=ae" alt="After Effects" className="w-full h-full object-contain" />
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110 pointer-events-auto">
+              <img src="https://skillicons.dev/icons?i=pr" alt="Premiere Pro" className="w-full h-full object-contain" />
+            </div>
+            <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110 pointer-events-auto">
+              <img src="https://cdn.simpleicons.org/davinciresolve" alt="DaVinci Resolve" className="w-full h-full object-contain" />
+            </div>
+          </OrbitingCircles>
+        </div>
       </div>
     </CardShell>
   );
@@ -347,10 +349,10 @@ function MotionGraphicsCard({ service }: { service: BaseService }) {
 function VideoEditingCard({ service }: { service: BaseService }) {
   return (
     <CardShell service={service}>
-      <div className="relative w-full h-full flex flex-col items-center justify-center pt-8 pb-32 px-6 overflow-hidden bg-transparent">
+      <div className="relative w-full h-full flex flex-col items-center justify-center pt-4 md:pt-8 pb-24 md:pb-32 px-4 md:px-6 overflow-hidden bg-transparent">
         {/* Simplified Video Preview "Screen" */}
         <motion.div 
-          className="w-48 h-32 rounded-xl bg-zinc-900 border-4 border-zinc-800 shadow-2xl relative overflow-hidden mb-6 flex items-center justify-center p-4"
+          className="w-40 h-24 md:w-48 md:h-32 rounded-xl bg-zinc-900 border-4 border-zinc-800 shadow-2xl relative overflow-hidden mb-4 md:mb-6 flex items-center justify-center p-3 md:p-4"
           animate={{ y: [0, -4, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         >
@@ -359,25 +361,25 @@ function VideoEditingCard({ service }: { service: BaseService }) {
             className="w-full h-full rounded-md bg-linear-to-tr from-amber-500/20 to-orange-500/20 relative overflow-hidden"
           >
             <motion.div 
-              className="absolute top-2 left-2 right-2 h-1.5 rounded-full bg-white/20"
+              className="absolute top-2 left-2 right-2 h-1 md:h-1.5 rounded-full bg-white/20"
               animate={{ width: ["10%", "80%", "30%"] }}
               transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
             />
             <motion.div 
-              className="absolute bottom-2 left-2 w-12 h-12 rounded-lg bg-orange-500/30 flex items-center justify-center"
+              className="absolute bottom-2 left-2 w-8 h-8 md:w-12 md:h-12 rounded-lg bg-orange-500/30 flex items-center justify-center"
               animate={{ scale: [1, 1.1, 1], rotate: [0, 5, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             >
-              <Sparkles className="w-6 h-6 text-orange-400" />
+              <Sparkles className="w-4 h-4 md:w-6 md:h-6 text-orange-400" />
             </motion.div>
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-orange-500/10 to-transparent" />
           </motion.div>
         </motion.div>
 
         {/* Editing Timeline Animation */}
-        <div className="w-full flex flex-col gap-2 relative">
+        <div className="w-[90%] md:w-full flex flex-col gap-1.5 md:gap-2 relative">
           {/* Timeline Ruler */}
-          <div className="w-full h-4 border-b border-zinc-200 mb-1 flex justify-between px-1">
+          <div className="w-full h-3 md:h-4 border-b border-zinc-200 mb-1 flex justify-between px-1">
             {[...Array(8)].map((_, i) => (
               <div key={i} className={`w-px ${i % 2 === 0 ? 'h-full bg-zinc-300' : 'h-1/2 bg-zinc-200 mt-auto'}`} />
             ))}
@@ -388,7 +390,7 @@ function VideoEditingCard({ service }: { service: BaseService }) {
             { color: '#f97316', width: '30%', x: '55%', delay: 0.2 },
             { color: '#ef4444', width: '25%', x: '20%', delay: 0.4 },
           ].map((track, i) => (
-            <div key={i} className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden relative border border-zinc-200/50 shadow-inner">
+            <div key={i} className="w-full h-2 md:h-3 bg-zinc-100 rounded-full overflow-hidden relative border border-zinc-200/50 shadow-inner">
               <motion.div 
                 className="absolute h-full rounded-full shadow-sm"
                 style={{ backgroundColor: track.color, left: track.x, width: track.width }}
@@ -404,7 +406,7 @@ function VideoEditingCard({ service }: { service: BaseService }) {
             animate={{ left: ["0%", "100%", "0%"] }}
             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
           >
-            <div className="absolute -top-1 -left-1 w-2.5 h-2.5 rotate-45 bg-red-500 shadow-sm" />
+            <div className="absolute -top-1 -left-1 w-2 md:w-2.5 h-2 md:h-2.5 rotate-45 bg-red-500 shadow-sm" />
           </motion.div>
         </div>
 
@@ -446,17 +448,17 @@ function LottieCard({ service }: { service: LottieService }) {
     <CardShell
       service={service}
     >
-      <div className={`w-full h-full flex items-center justify-center p-6 ${service.isTall ? 'pb-32' : 'pb-24'}`}>
+      <div className={`w-full h-full flex items-center justify-center p-4 md:p-6 pb-20 md:${service.isTall ? 'pb-32' : 'pb-24'}`}>
         {animationData ? (
           <Lottie
             lottieRef={lottieRef}
             animationData={animationData}
             autoplay={true}
             loop
-            className={`w-full h-full object-contain ${service.isTall ? 'scale-125' : 'scale-110'}`}
+            className={`w-full h-full object-contain scale-[0.85] md:${service.isTall ? 'scale-125' : 'scale-110'}`}
           />
         ) : (
-          <div className="w-32 h-32 rounded-2xl bg-zinc-100 animate-pulse" />
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-zinc-100 animate-pulse" />
         )}
       </div>
     </CardShell>

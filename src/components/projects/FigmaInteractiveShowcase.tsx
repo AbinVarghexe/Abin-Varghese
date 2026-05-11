@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
@@ -27,6 +27,14 @@ interface FigmaInteractiveShowcaseProps {
 export function FigmaInteractiveShowcase({ projects }: FigmaInteractiveShowcaseProps) {
   const [loadedIds, setLoadedIds] = useState<Set<string>>(new Set());
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const featuredProject = projects[0];
   const gridProjects = projects.slice(1);
@@ -99,7 +107,7 @@ export function FigmaInteractiveShowcase({ projects }: FigmaInteractiveShowcaseP
   );
 
   return (
-    <div className="flex flex-col gap-12 md:gap-20 text-left">
+    <div className="flex flex-col gap-6 md:gap-20 text-left">
       {/* Featured Main Card */}
       {featuredProject && (
         <div className="flex flex-col items-center">
@@ -108,11 +116,33 @@ export function FigmaInteractiveShowcase({ projects }: FigmaInteractiveShowcaseP
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="group relative w-full max-w-7xl overflow-hidden rounded-[40px] border border-black/10 bg-white p-4 shadow-3xl transition-all hover:bg-zinc-50/50"
+            className="group relative w-full max-w-7xl overflow-hidden rounded-[20px] md:rounded-[40px] border border-black/10 bg-white p-2 md:p-4 shadow-3xl transition-all hover:bg-zinc-50/50"
           >
-            <div className="relative aspect-[16/7] w-full overflow-hidden rounded-[32px] border border-black/5 bg-zinc-100 shadow-inner">
+            <div className="relative aspect-[16/10] md:aspect-[16/7] w-full overflow-hidden rounded-[14px] md:rounded-[32px] border border-black/5 bg-zinc-100 shadow-inner">
               <AnimatePresence mode="wait">
-                {!loadedIds.has(featuredProject.id) ? (
+                {isMobile ? (
+                  /* Mobile: Static cover image with direct link, no iframe */
+                  <motion.a
+                    key="mobile-cover"
+                    href={featuredProject.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 group/facade"
+                  >
+                    <img 
+                      src={featuredProject.coverImage} 
+                      className="h-full w-full object-cover"
+                      alt={featuredProject.title}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                    <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                      <Monitor size={14} className="text-blue-600" />
+                      <span className="text-[11px] font-bold text-zinc-800">View Live Preview</span>
+                    </div>
+                  </motion.a>
+                ) : !loadedIds.has(featuredProject.id) ? (
                   <motion.div
                     key="cover"
                     initial={{ opacity: 0 }}
@@ -153,38 +183,41 @@ export function FigmaInteractiveShowcase({ projects }: FigmaInteractiveShowcaseP
               </AnimatePresence>
             </div>
             
-            <div className="mt-8 px-6 pb-6">
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-600/10 text-blue-600 text-[9px] font-bold uppercase tracking-widest border border-blue-100">
-                  <Sparkles size={12} className="animate-pulse" /> Featured
+            <div className="mt-4 md:mt-8 px-3 md:px-6 pb-4 md:pb-6">
+              <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
+                <span className="inline-flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1 rounded-full bg-blue-600/10 text-blue-600 text-[8px] md:text-[9px] font-bold uppercase tracking-widest border border-blue-100">
+                  <Sparkles size={10} className="animate-pulse md:hidden" />
+                  <Sparkles size={12} className="animate-pulse hidden md:inline" /> Featured
                 </span>
                 {featuredProject.tags.map(tag => (
-                  <span key={tag} className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-50 rounded-lg border border-zinc-100">
+                  <span key={tag} className="px-2 md:px-2.5 py-0.5 md:py-1 text-[8px] md:text-[9px] font-bold uppercase tracking-wider text-zinc-400 bg-zinc-50 rounded-lg border border-zinc-100">
                     {tag}
                   </span>
                 ))}
               </div>
               
               <div className="max-w-4xl">
-                <h3 className="text-2xl md:text-3xl font-bold text-zinc-900 tracking-tight group-hover:text-[#1f5fff] transition-colors">
+                <h3 className="text-lg md:text-3xl font-bold text-zinc-900 tracking-tight group-hover:text-[#1f5fff] transition-colors">
                   {featuredProject.title}
                 </h3>
-                <p className="mt-2.5 text-sm md:text-base text-zinc-500 leading-relaxed max-w-2xl">
+                <p className="mt-1.5 md:mt-2.5 text-xs md:text-base text-zinc-500 leading-relaxed max-w-2xl line-clamp-2 md:line-clamp-none">
                   {featuredProject.description}
                 </p>
               </div>
               
-              <div className="mt-8 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-[10px] font-semibold text-zinc-400">
-                  <MousePointer2 size={12} className="animate-bounce text-blue-400" />
-                  Interactive Component
-                </div>
+              <div className="mt-4 md:mt-8 flex items-center justify-between">
+                {!isMobile && (
+                  <div className="flex items-center gap-2 text-[10px] font-semibold text-zinc-400">
+                    <MousePointer2 size={12} className="animate-bounce text-blue-400" />
+                    Interactive Component
+                  </div>
+                )}
                 <a 
                   href={featuredProject.url}
                   target="_blank"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#1f5fff] px-7 py-3 text-xs font-bold text-white shadow-xl transition-all hover:scale-105 hover:bg-[#164ecc] active:scale-95"
+                  className={`inline-flex items-center gap-2 rounded-full bg-[#1f5fff] text-xs font-bold text-white shadow-xl transition-all hover:scale-105 hover:bg-[#164ecc] active:scale-95 ${isMobile ? 'px-5 py-2.5 w-full justify-center' : 'px-7 py-3'}`}
                 >
-                  View Design System <IconArrowRight size={16} />
+                  {isMobile ? 'Open in Figma' : 'View Design System'} <IconArrowRight size={14} />
                 </a>
               </div>
             </div>
@@ -202,11 +235,33 @@ export function FigmaInteractiveShowcase({ projects }: FigmaInteractiveShowcaseP
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: idx * 0.1 }}
-              className="group relative overflow-hidden rounded-[32px] border border-black/10 bg-white p-3 shadow-2xl transition-all hover:bg-zinc-50/50"
+              className="group relative overflow-hidden rounded-[16px] md:rounded-[32px] border border-black/10 bg-white p-2 md:p-3 shadow-2xl transition-all hover:bg-zinc-50/50"
             >
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[24px] border border-black/5 bg-zinc-100 shadow-inner">
+              <div className="relative aspect-[16/10] md:aspect-[16/9] w-full overflow-hidden rounded-[12px] md:rounded-[24px] border border-black/5 bg-zinc-100 shadow-inner">
                 <AnimatePresence mode="wait">
-                  {!loadedIds.has(project.id) ? (
+                  {isMobile ? (
+                    /* Mobile: Static cover image with direct link, no iframe */
+                    <motion.a
+                      key="mobile-cover"
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="absolute inset-0 group/facade"
+                    >
+                      <img 
+                        src={project.coverImage} 
+                        className="h-full w-full object-cover"
+                        alt={project.title}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                      <div className="absolute bottom-3 left-3 flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+                        <Monitor size={12} className="text-blue-600" />
+                        <span className="text-[10px] font-bold text-zinc-800">View Preview</span>
+                      </div>
+                    </motion.a>
+                  ) : !loadedIds.has(project.id) ? (
                     <motion.div
                       key="cover"
                       initial={{ opacity: 0 }}
@@ -247,32 +302,45 @@ export function FigmaInteractiveShowcase({ projects }: FigmaInteractiveShowcaseP
                 </AnimatePresence>
               </div>
               
-              <div className="mt-6 px-4 pb-6 text-left">
-                <div className="flex flex-wrap gap-2 mb-3">
+              <div className="mt-3 md:mt-6 px-2.5 md:px-4 pb-3 md:pb-6 text-left">
+                <div className="flex flex-wrap gap-1.5 md:gap-2 mb-2 md:mb-3">
                   {project.tags.slice(0, 2).map(tag => (
-                    <span key={tag} className="px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 rounded border border-blue-100">
+                    <span key={tag} className="px-1.5 md:px-2 py-0.5 text-[8px] md:text-[9px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 rounded border border-blue-100">
                       {tag}
                     </span>
                   ))}
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-zinc-900 group-hover:text-[#1f5fff] transition-colors line-clamp-1">
+                <h3 className="text-base md:text-2xl font-bold text-zinc-900 group-hover:text-[#1f5fff] transition-colors line-clamp-1">
                   {project.title}
                 </h3>
-                <p className="mt-2 text-sm text-zinc-500 line-clamp-2 leading-relaxed">
+                <p className="mt-1 md:mt-2 text-xs md:text-sm text-zinc-500 line-clamp-2 leading-relaxed">
                   {project.description}
                 </p>
                 
-                <div className="mt-6 flex items-center justify-between">
-                  <span 
-                    className="inline-flex items-center gap-2 rounded-full bg-[#1f5fff] px-6 py-2.5 text-xs font-bold text-white shadow-lg transition-all hover:bg-[#164ecc] hover:shadow-xl active:scale-95 cursor-pointer"
-                    onClick={() => handleLoad(project.id)}
-                  >
-                    {loadedIds.has(project.id) ? 'Interact Now' : 'Load Project'} <IconArrowRight size={14} />
-                  </span>
-                  <div className="flex items-center gap-2 text-[10px] font-semibold text-zinc-400">
-                    <MousePointer2 size={12} className="animate-bounce text-blue-400" />
-                    Interactive
-                  </div>
+                <div className="mt-3 md:mt-6 flex items-center justify-between">
+                  {isMobile ? (
+                    <a
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full bg-[#1f5fff] px-5 py-2 text-[11px] font-bold text-white shadow-lg transition-all active:scale-95 w-full justify-center"
+                    >
+                      Open in Figma <IconArrowRight size={13} />
+                    </a>
+                  ) : (
+                    <>
+                      <span 
+                        className="inline-flex items-center gap-2 rounded-full bg-[#1f5fff] px-6 py-2.5 text-xs font-bold text-white shadow-lg transition-all hover:bg-[#164ecc] hover:shadow-xl active:scale-95 cursor-pointer"
+                        onClick={() => handleLoad(project.id)}
+                      >
+                        {loadedIds.has(project.id) ? 'Interact Now' : 'Load Project'} <IconArrowRight size={14} />
+                      </span>
+                      <div className="flex items-center gap-2 text-[10px] font-semibold text-zinc-400">
+                        <MousePointer2 size={12} className="animate-bounce text-blue-400" />
+                        Interactive
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>

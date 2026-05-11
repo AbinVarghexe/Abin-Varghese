@@ -76,8 +76,6 @@
 
 ## Overview
 
-> **Design-led digital work by Abin Varghese.**
->
 > A full-stack developer and UI/UX designer from Idukki, Kerala, building modern websites, product interfaces, and creative digital experiences. This portfolio is built with Next.js 16, React 19, TypeScript, and Tailwind CSS — and it ships with a complete design system derived from a custom Figma file.
 
 This is a production-grade portfolio website featuring dynamic content management, an AI-powered assistant, real-time project showcases, and a fully custom visual identity.

@@ -17,6 +17,7 @@ import {
   Clock,
   LayoutDashboard,
 } from "lucide-react";
+import AdminSectionWorkspace, { SectionPanel, SectionTitle } from "@/components/admin/AdminSectionWorkspace";
 
 const sections = [
   {
@@ -119,94 +120,76 @@ const metrics = [
 
 export default function AdminOverviewPage() {
   return (
-    <div className="space-y-12 pb-20">
-      {/* Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
-        <div>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#0020d7]/10 text-[#0020d7] shadow-sm">
-              <LayoutDashboard size={16} strokeWidth={2.5} />
-            </div>
-            <span className="text-[11px] font-extrabold uppercase tracking-[0.25em] text-[#4a4a68]">Command Deck Architecture</span>
-          </div>
-          <h1 className="text-5xl font-extrabold tracking-tighter text-[#0b0b0c] sm:text-6xl">System Hub.</h1>
-          <p className="mt-4 text-[16px] text-[#4a4a68] max-w-xl font-medium leading-relaxed opacity-80">
-            Welcome to your digital orchestration station. Manage your personal brand, 
-            knowledge base, and global presence with absolute precision.
-          </p>
-        </div>
-
+    <AdminSectionWorkspace
+      sectionLabel="Overview"
+      sectionTitle="System Hub"
+      sectionDescription="Welcome to your digital orchestration station. Manage your personal brand, knowledge base, and global presence with absolute precision."
+      icon={LayoutDashboard}
+      iconColor="#007aff"
+    >
+      <div className="space-y-12">
         {/* Intelligence Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white/40 backdrop-blur-2xl p-2 rounded-[32px] border-2 border-[#e4e4e7] shadow-xl">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {metrics.map((metric) => (
-            <div key={metric.label} className="flex items-center gap-4 px-6 py-3 bg-white rounded-[24px] border-2 border-transparent hover:border-[#0020d7]/10 transition-all shadow-sm">
-              <metric.icon className={`h-5 w-5 ${metric.color} drop-shadow-sm`} strokeWidth={2.5} />
-              <div className="flex flex-col">
-                <span className="text-[14px] font-extrabold text-[#0b0b0c] leading-none tracking-tight">{metric.value}</span>
-                <span className="text-[10px] text-[#4a4a68] font-extrabold uppercase tracking-widest mt-1 opacity-60">{metric.label}</span>
+            <SectionPanel key={metric.label} className="!p-6 flex items-center gap-5 hover:-translate-y-1 transition-transform">
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white border-2 border-[#e4e4e7] shadow-sm`}>
+                <metric.icon className={`h-6 w-6 ${metric.color}`} strokeWidth={2.5} />
               </div>
-            </div>
+              <div className="flex flex-col">
+                <span className="text-[20px] font-bold text-[#0b0b0c] leading-none tracking-tight">{metric.value}</span>
+                <span className="text-[12px] text-[#4a4a68] font-bold uppercase tracking-widest mt-1.5">{metric.label}</span>
+              </div>
+            </SectionPanel>
           ))}
         </div>
-      </div>
 
-      {/* Workspace Modules Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {sections.map((section) => (
-          <Link
-            key={section.href}
-            href={section.href}
-            className="group relative flex flex-col p-10 rounded-[40px] bg-white border-2 border-[#e4e4e7] shadow-sm hover:shadow-2xl hover:border-[#0020d7]/20 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
-          >
-            {/* Dynamic Brand Glow */}
-            <div 
-              className="absolute -top-32 -right-32 w-64 h-64 rounded-full blur-[80px] opacity-0 group-hover:opacity-[0.08] transition-opacity duration-700" 
-              style={{ backgroundColor: "#0020d7" }}
-            />
-            
-            <div className="relative flex-1">
-              <div className="flex items-start justify-between mb-10">
-                <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-[#f7f4ef] border-2 border-[#e4e4e7] group-hover:bg-[#0020d7] group-hover:border-[#0020d7] transition-all duration-500 shadow-sm group-hover:shadow-xl group-hover:shadow-[#0020d7]/30">
-                  <section.icon className="h-8 w-8 text-[#0b0b0c] group-hover:text-white transition-colors duration-500" strokeWidth={1.5} />
+        {/* Workspace Modules Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sections.map((section) => (
+            <Link
+              key={section.href}
+              href={section.href}
+              className="group flex flex-col bg-white rounded-[28px] border-[3px] border-[#e4e4e7] p-8 shadow-sm transition-all hover:shadow-lg hover:border-[#0020d7]/30 hover:-translate-y-1 relative overflow-hidden"
+            >
+              <div 
+                className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[60px] opacity-0 group-hover:opacity-[0.06] transition-opacity duration-700 pointer-events-none" 
+                style={{ backgroundColor: section.color }}
+              />
+              <div className="flex items-start justify-between mb-8">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] bg-[#f7f4ef] border-2 border-[#e4e4e7] group-hover:bg-white group-hover:border-current group-hover:shadow-md transition-all duration-300 relative z-10"
+                  style={{ color: section.color }}
+                >
+                  <section.icon className="h-6 w-6" strokeWidth={2} />
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f7f4ef] border-2 border-[#e4e4e7] text-[#4a4a68] transition-all duration-500 group-hover:bg-[#0b0b0c] group-hover:text-white group-hover:border-[#0b0b0c]">
-                  <ArrowRight size={18} strokeWidth={3} />
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f7f4ef] border-2 border-[#e4e4e7] text-[#4a4a68] transition-all duration-300 group-hover:bg-[#0b0b0c] group-hover:text-white group-hover:border-[#0b0b0c] relative z-10">
+                  <ArrowRight size={16} strokeWidth={2.5} />
                 </div>
               </div>
 
-              <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#0020d7] opacity-60 group-hover:opacity-100 transition-opacity">
+              <div className="relative z-10 flex-1">
+                <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] opacity-80 transition-opacity" style={{ color: section.color }}>
                   {section.label}
                 </span>
-                <h3 className="text-2xl font-extrabold text-[#0b0b0c] mt-2 tracking-tight">
+                <h3 className="text-[18px] font-bold text-[#0b0b0c] mt-2 tracking-tight">
                   {section.title}
                 </h3>
-                <p className="mt-4 text-[15px] text-[#4a4a68] leading-relaxed font-medium opacity-80 group-hover:opacity-100 transition-opacity">
+                <p className="mt-3 text-[14px] text-[#4a4a68] leading-relaxed font-medium">
                   {section.description}
                 </p>
               </div>
-            </div>
+            </Link>
+          ))}
+        </div>
 
-            <div className="mt-10 pt-8 border-t-2 border-[#f7f4ef] flex items-center justify-between">
-              <span className="text-[12px] font-extrabold text-[#4a4a68] uppercase tracking-widest opacity-40 group-hover:opacity-100 group-hover:text-[#0b0b0c] transition-all">Enter Workspace</span>
-              <div className="flex -space-x-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-8 w-8 rounded-full border-4 border-white bg-[#f7f4ef] shadow-sm" />
-                ))}
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* Terminal Pulse */}
-      <div className="flex items-center justify-center py-20">
-        <div className="flex items-center gap-4 px-8 py-3 rounded-full bg-[#f7f4ef] border-2 border-[#e4e4e7] opacity-40">
-          <div className="w-2 h-2 rounded-full bg-[#0020d7] animate-pulse" />
-          <span className="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#0b0b0c]">End of Intelligence Layer</span>
-          <div className="w-2 h-2 rounded-full bg-[#0020d7] animate-pulse" />
+        {/* Terminal Pulse */}
+        <div className="flex items-center justify-center pt-8">
+          <div className="flex items-center gap-4 px-6 py-2.5 rounded-full bg-white border-2 border-[#e4e4e7] shadow-sm">
+            <div className="w-2 h-2 rounded-full bg-[#34c759] animate-pulse" />
+            <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#4a4a68]">System Online & Ready</span>
+            <div className="w-2 h-2 rounded-full bg-[#34c759] animate-pulse" />
+          </div>
         </div>
       </div>
-    </div>
+    </AdminSectionWorkspace>
   );
 }

@@ -25,6 +25,12 @@ const milesStickerImageThree =
   "https://i.pinimg.com/736x/b6/8f/7a/b68f7aee5bff5b4bd250a31e20dd516f.jpg";
 const milesStickerImageFour =
   "https://i.pinimg.com/736x/fd/ea/9c/fdea9c7a13cb46ee05064c8683fc37dd.jpg";
+const milesStickerImageFive =
+  "https://i.pinimg.com/736x/41/e4/3e/41e43eebccd8a2d4bf3163cf46ffb058.jpg";
+const milesStickerImageSix =
+  "https://i.pinimg.com/736x/8e/fb/38/8efb38014ed204d65fb0f3d49ba43fbe.jpg";
+const milesStickerImageSeven =
+  "https://i.pinimg.com/736x/4f/36/86/4f3686b75e1146d37ce692ce2bf58cb5.jpg";
 
 const stickers: Sticker[] = [
   {
@@ -83,47 +89,91 @@ const stickers: Sticker[] = [
     pin: "#ef233c",
     shadow: "rgba(32,32,32,0.2)",
   },
+  {
+    id: "into-the-spiderverse",
+    imageUrl: milesStickerImageFive,
+    alt: "Spiderman action sticker",
+    width: 160,
+    height: 180,
+    rotation: -12,
+    left: "4%",
+    top: "35%",
+    objectPosition: "center center",
+    frameTint: "#e8d5c4",
+    pin: "#ff9900",
+    shadow: "rgba(0,0,0,0.15)",
+  },
+  {
+    id: "spider-punk",
+    imageUrl: milesStickerImageSix,
+    alt: "Miles figure sticker",
+    width: 170,
+    height: 190,
+    rotation: 15,
+    left: "85%",
+    top: "38%",
+    objectPosition: "center center",
+    frameTint: "#d4e0e8",
+    pin: "#111111",
+    shadow: "rgba(0,0,0,0.2)",
+  },
+  {
+    id: "spider-logo",
+    imageUrl: milesStickerImageSeven,
+    alt: "Spider logo sticker",
+    width: 180,
+    height: 180,
+    rotation: -5,
+    left: "42%",
+    top: "5%",
+    objectPosition: "center center",
+    frameTint: "#f1e5d1",
+    pin: "#e63946",
+    shadow: "rgba(0,0,0,0.18)",
+  },
 ];
 
 export default function MilesStickerBoard() {
   return (
-    <div className="pointer-events-none absolute inset-0 z-10 overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 z-10 hidden overflow-hidden md:block">
       {stickers.map((sticker) => (
         <motion.div
           key={sticker.id}
-          drag
-          dragMomentum={false}
-          dragElastic={0.12}
           initial={{ y: 0, scale: 1, rotate: sticker.rotation }}
           animate={{
-            y: [0, -5, 0, 3, 0],
-            scale: [1, 1.01, 1, 0.995, 1],
+            y: [0, -2, 0, 1, 0],
+            x: [0, 1, 0, -1, 0],
+            scale: [1, 1.02, 1, 0.98, 1],
             rotate: [
               sticker.rotation,
-              sticker.rotation + 1,
-              sticker.rotation,
-              sticker.rotation - 0.8,
+              sticker.rotation + 1.5,
+              sticker.rotation - 1.5,
+              sticker.rotation + 1.5,
               sticker.rotation,
             ],
           }}
           transition={{
-            duration: 5.5 + (sticker.width % 4) * 0.35,
+            duration: 3.5 + (sticker.width % 4) * 0.2,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: (sticker.height % 5) * 0.2,
-          }}
-          whileTap={{
-            scale: 1.05,
-            zIndex: 50,
-            rotate: sticker.rotation * 0.35,
-            y: -2,
+            delay: (sticker.height % 5) * 0.1,
           }}
           whileHover={{
-            scale: 1.04,
-            rotate: sticker.rotation + (sticker.rotation > 0 ? 2 : -2),
-            y: -7,
+            scale: 1.05,
+            rotate: [
+              sticker.rotation,
+              sticker.rotation - 4,
+              sticker.rotation + 4,
+              sticker.rotation - 4,
+              sticker.rotation + 4,
+              sticker.rotation
+            ],
+            transition: {
+              duration: 0.4,
+              repeat: Infinity,
+            }
           }}
-          className="pointer-events-auto absolute cursor-grab active:cursor-grabbing touch-none"
+          className="pointer-events-auto absolute hover:z-50"
           style={{
             left: sticker.left,
             top: sticker.top,

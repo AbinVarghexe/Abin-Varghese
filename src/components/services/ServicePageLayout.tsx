@@ -161,7 +161,7 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1 }}
-              className="text-4xl md:text-7xl lg:text-[8rem] font-bold tracking-tight text-zinc-900 leading-[0.8] md:whitespace-nowrap"
+              className="text-5xl md:text-7xl lg:text-[8rem] font-bold tracking-tight text-zinc-900 leading-none lg:leading-[0.8] md:whitespace-nowrap"
               style={{ fontFamily: 'var(--font-display), "Kangki", serif' }}
             >
               {service.title.split(' ').map((word, i) => (
@@ -175,7 +175,7 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="text-lg md:text-xl text-zinc-500 max-w-3xl leading-relaxed mt-4"
+              className="text-base md:text-xl text-zinc-500 max-w-3xl leading-relaxed mt-4"
             >
               {service.description}
             </motion.p>
@@ -207,18 +207,18 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                 viewport={{ once: true }}
                 className="max-w-4xl mx-auto text-center"
               >
-                <h2 className="text-3xl md:text-4xl font-bold mb-10 text-zinc-900 tracking-tight">The Creative Process</h2>
-                <p className="text-lg md:text-xl text-zinc-600 leading-relaxed font-medium balance">
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 md:mb-10 text-zinc-900 tracking-tight">The Creative Process</h2>
+                <p className="text-base md:text-xl text-zinc-600 leading-relaxed font-medium balance">
                   {service.detailedDescription}
                 </p>
-                <div className="w-px h-24 bg-linear-to-b from-zinc-200 to-transparent mx-auto mt-12 mb-0" />
+                <div className="w-px h-16 md:h-24 bg-linear-to-b from-zinc-200 to-transparent mx-auto mt-8 md:mt-12 mb-0" />
               </motion.div>
 
               {/* What's Included Section: Serpentine Path Layout */}
               <div className="w-full relative pt-0 pb-4 px-4 overflow-visible">
-                <div className="text-center mb-16 relative z-10">
+                <div className="text-center mb-10 md:mb-16 relative z-10">
                   <span className="px-4 py-1.5 rounded-full bg-zinc-100 text-zinc-500 text-[10px] font-bold tracking-widest uppercase mb-6 inline-block">Strategy & Deliverables</span>
-                  <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight leading-tight">Let us show you how we drive <br /> your brand to new heights</h2>
+                  <h2 className="text-3xl md:text-5xl font-bold text-zinc-900 tracking-tight leading-tight">Let us show you how we drive <br className="hidden md:block" /> your brand to new heights</h2>
                 </div>
 
                 <div className="relative max-w-[1200px] mx-auto min-h-[600px]">
@@ -260,7 +260,7 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                   </div>
 
                   {/* Horizontal Grid (3 per row) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-24 lg:gap-y-32 gap-x-10 relative z-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 md:gap-y-24 lg:gap-y-32 gap-x-10 relative z-10">
                     {service.providedServices.map((subService, i) => (
                       <motion.div
                         key={i}
@@ -269,7 +269,7 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                         viewport={{ once: true }}
                         transition={{ duration: 0.7, delay: i * 0.1 }}
                         whileHover={{ y: -15, rotate: 0, transition: { duration: 0.4 } }}
-                        className="relative group bg-white p-8 pt-14 rounded-[32px] shadow-[0_30px_70px_rgba(0,0,0,0.06)] border border-zinc-100 flex flex-col items-center text-center gap-6"
+                        className="relative group bg-white p-6 pt-12 md:p-8 md:pt-14 rounded-[32px] shadow-[0_30px_70px_rgba(0,0,0,0.06)] border border-zinc-100 flex flex-col items-center text-center gap-6"
                       >
                         {/* Number Indicator & Punched Hole Aesthetics */}
                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col items-center">
@@ -307,8 +307,8 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
         <section className="pt-24 pb-32 border-t border-zinc-100 overflow-hidden bg-white">
           <div className="max-w-[1200px] mx-auto px-6 md:px-12 lg:px-24 mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-8">
             <div className="max-w-xl">
-              <h2 className="text-4xl md:text-5xl font-bold text-zinc-900 tracking-tight">Featured Projects</h2>
-              <p className="text-zinc-500 mt-4 text-lg leading-relaxed font-medium">Deep dive into recent successful deliveries and project processes.</p>
+              <h2 className="text-3xl md:text-5xl font-bold text-zinc-900 tracking-tight">Featured Projects</h2>
+              <p className="text-zinc-500 mt-4 text-base md:text-lg leading-relaxed font-medium">Deep dive into recent successful deliveries and project processes.</p>
             </div>
             
             {/* Stack Controls */}
@@ -420,9 +420,9 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                       className={`absolute w-full max-w-[1000px] h-[580px] lg:h-[480px] group ${diff === 0 ? 'cursor-none lg:cursor-pointer' : 'pointer-events-none'}`}
                     >
                       <div className="block h-full w-full outline-none">
-                        <div className="relative h-full w-full rounded-[40px] bg-zinc-50 border-[5px] border-zinc-200 overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.12)] flex flex-col lg:flex-row transition-all group-hover:border-zinc-300">
+                        <div className="relative h-full w-full rounded-[32px] md:rounded-[40px] bg-zinc-50 border-[5px] border-zinc-200 overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.12)] flex flex-col lg:flex-row transition-all group-hover:border-zinc-300">
                           {/* Card Content (Preserving existing layout) */}
-                          <div className="flex-1 p-8 md:p-12 flex flex-col justify-center relative z-20 pointer-events-auto">
+                          <div className="flex-1 p-6 md:p-12 flex flex-col justify-center relative z-20 pointer-events-auto">
                             <div className="flex items-start justify-between mb-8">
                               <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-2xl bg-zinc-900 flex items-center justify-center text-white shadow-xl">
@@ -463,7 +463,7 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                               </a>
                             </div>
 
-                            <p className="text-base md:text-lg text-zinc-600 font-medium leading-relaxed max-w-lg balance mb-8">
+                            <p className="text-sm md:text-lg text-zinc-600 font-medium leading-relaxed max-w-lg balance mb-8">
                               {item.description}
                             </p>
 

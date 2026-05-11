@@ -202,9 +202,9 @@ export default function AdminShell({
           </div>
         </header>
 
-        <div className="relative flex-1 p-8 lg:p-10">
+        <div className="relative flex-1 flex flex-col p-8 lg:p-10">
           <div className="pointer-events-none absolute -top-40 left-1/2 h-[30rem] w-[50rem] -translate-x-1/2 rounded-full bg-[#007aff]/5 blur-[120px]" />
-          <div className="relative">{children}</div>
+          <div className="relative flex-1 flex flex-col">{children}</div>
         </div>
       </main>
     </div>

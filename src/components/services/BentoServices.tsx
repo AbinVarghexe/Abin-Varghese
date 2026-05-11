@@ -49,7 +49,7 @@ const BentoCard = ({
       whileInView="visible"
       transition={{ duration: 0.5, delay }}
       whileHover="hover"
-      className={`group relative h-full rounded-xl border-[5px] border-zinc-200 bg-white overflow-hidden transition-all hover:shadow-2xl hover:border-zinc-300 cursor-pointer flex ${mode === 'horizontal' ? 'flex-col md:flex-row' : 'flex-col'}`}
+      className={`group relative h-full rounded-[28px] border-[4px] md:border-[5px] border-zinc-200 bg-white overflow-hidden transition-all hover:shadow-2xl hover:border-zinc-300 cursor-pointer flex ${mode === 'horizontal' ? 'flex-col md:flex-row' : 'flex-col'}`}
     >
       {/* Technical Stripe Background ... */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.05] z-0" xmlns="http://www.w3.org/2000/svg">
@@ -62,16 +62,16 @@ const BentoCard = ({
       </svg>
 
       {/* Top Right Arrow Button */}
-      <div className="absolute top-6 right-6 z-50 pointer-events-none">
+      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-50 pointer-events-none">
         <motion.div
-          className="w-10 h-10 rounded-full border border-zinc-200 flex items-center justify-center bg-white/80 backdrop-blur-sm group-hover:bg-zinc-900 group-hover:border-zinc-900 transition-all duration-300 pointer-events-auto shadow-sm"
+          className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-zinc-200 flex items-center justify-center bg-white/80 backdrop-blur-sm group-hover:bg-zinc-900 group-hover:border-zinc-900 transition-all duration-300 pointer-events-auto shadow-sm"
           variants={{ 
             initial: { opacity: 0, x: 10, y: -10 }, 
             visible: { opacity: 1, x: 0, y: 0 }, 
             hover: { scale: 1.1, rotate: 45, transition: { duration: 0.2 } } 
           }}
         >
-          <ArrowUpRight className="w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
+          <ArrowUpRight className="w-4 h-4 md:w-5 h-5 text-zinc-400 group-hover:text-white transition-colors" />
         </motion.div>
       </div>
 
@@ -87,7 +87,7 @@ const BentoCard = ({
       />
 
       {/* Core Illustration Layer */}
-      <div className={`relative flex-1 z-10 flex items-center justify-center overflow-hidden ${mode === 'horizontal' ? 'md:order-2 h-64 md:h-full' : ''}`}>
+      <div className={`z-10 flex items-center justify-center overflow-hidden ${mode === 'horizontal' ? 'absolute inset-0 md:relative md:flex-1 md:order-2 md:h-full' : 'absolute inset-0'}`}>
         {children}
         
         {/* Horizontal separation gradient - Only on horizontal mode dekstop */}
@@ -96,19 +96,18 @@ const BentoCard = ({
         )}
       </div>
 
+      {/* Bottom text overlay with fade */}
+      <div className={`absolute bottom-0 left-0 right-0 z-20 pointer-events-none ${mode === 'horizontal' ? 'block md:hidden' : 'block'}`}>
+        <div className="w-full h-44" style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.7) 40%, rgba(255,255,255,1) 100%)' }} />
+      </div>
+
       {/* Text block */}
-      <div className={`relative z-30 flex flex-col p-7 ${mode === 'horizontal' ? 'md:w-1/2 md:order-1 bg-white md:bg-transparent justify-end' : 'justify-end h-32'}`}>
-        {/* Bottom text overlay with fade - Only for vertical cards */}
-        {mode === 'vertical' && (
-          <div className="absolute inset-0 -top-24 z-20 pointer-events-none" 
-               style={{ background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.7) 40%, rgba(255,255,255,1) 100%)' }} />
-        )}
-        
-        <div className="relative z-30">
-          <h3 className={`font-bold text-zinc-900 leading-tight mb-2 ${mode === 'horizontal' ? 'text-2xl md:text-3xl' : isLarge ? 'text-2xl' : 'text-xl'}`}>
+      <div className={`z-30 flex flex-col ${mode === 'horizontal' ? 'absolute bottom-0 left-0 right-0 md:relative md:w-1/2 md:order-1 px-5 md:px-7 pb-5 md:pb-7 pt-0 md:pt-7 bg-transparent md:justify-center' : 'absolute bottom-0 left-0 right-0 px-5 md:px-7 pb-5 md:pb-7 pt-0 bg-transparent'}`}>
+        <div className="relative z-30 text-left">
+          <h3 className={`font-bold text-zinc-900 leading-tight mb-1 md:mb-2 ${mode === 'horizontal' ? 'text-xl md:text-3xl' : isLarge ? 'text-xl md:text-2xl' : 'text-lg md:text-xl'}`}>
             {title}
           </h3>
-          <p className="text-zinc-500 text-sm leading-relaxed line-clamp-2 md:line-clamp-none">
+          <p className="text-zinc-500 text-xs md:text-sm leading-tight line-clamp-2 md:line-clamp-none mx-0 mt-0.5">
             {description}
           </p>
         </div>
@@ -176,7 +175,7 @@ export default function BentoServices({ services }: BentoServicesProps) {
   });
 
   return (
-    <section className="relative w-full pt-32 pb-16 px-4 md:px-8 lg:px-20 bg-transparent overflow-hidden">
+    <section className="relative w-full pt-20 md:pt-32 pb-12 md:pb-16 px-4 md:px-8 lg:px-20 bg-transparent overflow-hidden">
       {/* Grid Overlay */}
       <div 
         className="absolute inset-0 z-0 pointer-events-none"
@@ -189,12 +188,12 @@ export default function BentoServices({ services }: BentoServicesProps) {
       
       <div className="max-w-[1200px] mx-auto relative z-10">
         {/* --- Header --- */}
-        <div className="flex flex-col items-center text-center mb-16">
+        <div className="flex flex-col items-start lg:items-center text-left lg:text-center mb-12 md:mb-16 px-4 md:px-0">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="px-4 py-1.5 rounded-full border border-zinc-100 bg-white/50 backdrop-blur-sm text-sm font-bold text-blue-500 uppercase tracking-widest mb-6"
+            className="self-center px-4 py-1.5 rounded-full border border-zinc-100 bg-white/50 backdrop-blur-sm text-sm font-semibold text-blue-500 uppercase tracking-widest mb-6"
           >
             Services
           </motion.div>
@@ -203,7 +202,7 @@ export default function BentoServices({ services }: BentoServicesProps) {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl md:text-6xl font-bold pb-2 text-black tracking-tight"
+            className="text-4xl md:text-6xl font-bold pb-2 text-black tracking-tight w-full"
           >
             Built to Help You <br className="md:hidden" />
             <span className="text-blue-600 font-serif italic font-medium">Grow</span> 
@@ -214,7 +213,7 @@ export default function BentoServices({ services }: BentoServicesProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="mt-6 text-zinc-500 text-lg max-w-xl leading-relaxed"
+            className="mt-6 text-black/70 text-base md:text-lg max-w-xl leading-relaxed"
           >
             We handle the technical complexity so you can focus on scaling your vision. 
             High-performance systems built for the modern web.
@@ -222,7 +221,7 @@ export default function BentoServices({ services }: BentoServicesProps) {
         </div>
 
         {/* --- Bento Grid (Custom 2x2 Layout) --- */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[380px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 auto-rows-[320px] md:auto-rows-[380px]">
           
           {/* Card 1: Web Design */}
           <BentoCard

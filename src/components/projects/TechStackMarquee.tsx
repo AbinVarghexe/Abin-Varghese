@@ -41,7 +41,7 @@ export default function TechStackMarquee() {
   const fullStack = [...TECH_STACK, ...TECH_STACK, ...TECH_STACK]; // Multiply for seamless loop
 
   return (
-    <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden py-6">
+    <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden py-3 md:py-6">
       <style jsx global>{`
         @keyframes tech-marquee {
           0% { transform: translateX(0); }
@@ -55,7 +55,7 @@ export default function TechStackMarquee() {
         }
       `}</style>
 
-      <div className="flex w-fit animate-tech-marquee gap-16 px-16 items-center">
+      <div className="flex w-fit animate-tech-marquee gap-8 md:gap-16 px-8 md:px-16 items-center">
         {fullStack.map((tech, idx) => {
           const Icon = tech.icon;
           return (
@@ -63,8 +63,9 @@ export default function TechStackMarquee() {
               key={`${tech.name}-${idx}`} 
               className="group flex items-center gap-3 transition-colors duration-300"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm border border-black/5 transition-all duration-300 group-hover:scale-110 group-hover:border-blue-200 group-hover:shadow-md">
-                <Icon size={22} className="text-zinc-400 transition-colors duration-300 group-hover:text-blue-600" />
+              <div className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-lg md:rounded-xl bg-white shadow-sm border border-black/5 transition-all duration-300 group-hover:scale-110 group-hover:border-blue-200 group-hover:shadow-md">
+                <Icon size={18} className="text-zinc-400 transition-colors duration-300 group-hover:text-blue-600 md:hidden" />
+                <Icon size={22} className="text-zinc-400 transition-colors duration-300 group-hover:text-blue-600 hidden md:block" />
               </div>
               <span className="text-xs font-bold uppercase tracking-widest text-zinc-300 transition-colors duration-300 group-hover:text-zinc-900">
                 {tech.name}
