@@ -286,3 +286,62 @@ export async function upsertBehanceShowcaseEmbeds(embeds: BehanceShowcaseEmbed[]
 
   if (error) throw error;
 }
+
+/* ─── Pinterest Showcase Logic ─── */
+
+export type PinterestShowcaseItem = {
+  id: string;
+  src: string;
+  title: string;
+};
+
+const PINTEREST_SHOWCASE_KEY = "pinterest_showcase_links";
+
+export async function getPinterestShowcaseItems(): Promise<PinterestShowcaseItem[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("site_content")
+    .select("value")
+    .eq("key", PINTEREST_SHOWCASE_KEY)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching Pinterest showcase items:", error);
+    return [];
+  }
+
+  if (!data?.value) return [];
+
+  try {
+    const parsed = JSON.parse(data.value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (item: any) =>
+          typeof item?.id === "string" &&
+          typeof item?.src === "string" &&
+          typeof item?.title === "string"
+      )
+      .map((item: any) => ({
+        id: item.id,
+        src: item.src,
+        title: item.title,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export async function upsertPinterestShowcaseItems(items: PinterestShowcaseItem[]) {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(
+      { key: PINTEREST_SHOWCASE_KEY, value: JSON.stringify(items) },
+      { onConflict: "key" }
+    );
+
+  if (error) throw error;
+}

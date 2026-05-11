@@ -22,7 +22,7 @@ const PDFViewer = dynamic(() => import("@/components/ui/PDFViewer"), {
 type DeskBookSectionProps = {
   copy: Pick<
     SiteCopyContent,
-    "aboutIntroTitle" | "aboutIntroBody" | "aboutBookImage" | "aboutTimelineTitle" | "aboutTimelineEntries" | "homeReviewsItems"
+    "aboutIntroTitle" | "aboutIntroBody" | "aboutBookImage" | "aboutTimelineTitle" | "aboutTimelineEntries" | "homeReviewsItems" | "aboutResumeUrl" | "aboutDesignResumeUrl"
   >;
 };
 
@@ -623,7 +623,7 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
                   
                   <div className="flex items-center gap-2 sm:gap-3">
                     <a 
-                      href={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume-designer.pdf"} 
+                      href={activePdfModal === "resume" ? copy.aboutResumeUrl : copy.aboutDesignResumeUrl} 
                       download={activePdfModal === "resume" ? "Abin_Varghese_Resume.pdf" : "Abin_Varghese_Designer_Portfolio.pdf"}
                       className="group flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:h-auto sm:px-5 sm:py-2 bg-[#8b5a2b] border border-[#8b5a2b] text-[#fdfaf5] font-serif text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#5a3b1c] hover:shadow-lg hover:shadow-[#8b5a2b]/20 rounded-full"
                     >
@@ -645,7 +645,7 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
                   {/* Dynamic PDF Viewer using react-pdf for robust mobile support */}
                   <div className="w-full h-full relative">
                     <PDFViewer 
-                      url={activePdfModal === "resume" ? "/resume/Abin_Varghese_Resume.pdf" : "/resume-designer.pdf"} 
+                      url={activePdfModal === "resume" ? copy.aboutResumeUrl : copy.aboutDesignResumeUrl} 
                       title={activePdfModal === "resume" ? "Resume Preview" : "Design Resume Preview"}
                     />
                   </div>

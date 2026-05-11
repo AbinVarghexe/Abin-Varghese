@@ -106,6 +106,8 @@ export interface SiteCopyContent {
   footerCtaCopy: string;
   footerCopyright: string;
   footerCredit: string;
+  aboutResumeUrl: string;
+  aboutDesignResumeUrl: string;
 }
 
 export const siteCopyDefaults: SiteCopyContent = {
@@ -343,6 +345,8 @@ export const siteCopyDefaults: SiteCopyContent = {
   footerCtaCopy: "Let's talk.",
   footerCopyright: "ABIN VARGHESE 2026 ©",
   footerCredit: "",
+  aboutResumeUrl: "/resume/Abin_Varghese_Resume.pdf",
+  aboutDesignResumeUrl: "/resume-designer.pdf",
 };
 
 export interface PublicSiteShellContent {

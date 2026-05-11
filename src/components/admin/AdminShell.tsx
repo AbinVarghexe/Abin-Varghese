@@ -16,12 +16,11 @@ import {
   LogOut,
   Mail,
   User,
-  Settings,
-  Bell,
-  Search,
+  Save,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import { AdminProvider, useAdmin } from "./AdminContext";
 
 const navItems = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, color: "text-[#007aff]", bg: "bg-[#007aff]/5" },
@@ -40,10 +39,25 @@ export default function AdminShell({
   children: React.ReactNode;
   user?: SupabaseUser;
 }) {
+  return (
+    <AdminProvider>
+      <AdminShellContent user={user}>{children}</AdminShellContent>
+    </AdminProvider>
+  );
+}
+
+function AdminShellContent({ 
+  children,
+  user
+}: { 
+  children: React.ReactNode;
+  user?: SupabaseUser;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true); // Default expanded for better productivity
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { saveAction, isSaving, statusText } = useAdmin();
 
   const activeHref = useMemo(() => {
     if (pathname === "/admin") {
@@ -159,27 +173,33 @@ export default function AdminShell({
       {/* Main Content */}
       <main className="relative min-w-0 flex-1 h-screen overflow-y-auto overflow-x-hidden flex flex-col">
         {/* Top Header */}
-        <header className="h-16 shrink-0 border-b border-black/[0.05] bg-white/60 backdrop-blur-xl flex items-center justify-between px-8 z-10 sticky top-0">
+        <header className="h-20 shrink-0 border-b border-black/[0.05] bg-white/60 backdrop-blur-xl flex items-center justify-between px-12 z-10 sticky top-0">
           <div className="flex items-center gap-4 flex-1">
-            <div className="relative max-w-md w-full hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#86868b]" />
-              <input 
-                type="text" 
-                placeholder="Search resources..." 
-                className="w-full bg-black/[0.03] border-none rounded-full py-1.5 pl-10 pr-4 text-[13px] outline-none focus:ring-1 focus:ring-[#007aff]/30 transition-all placeholder:text-[#86868b]"
-              />
-            </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-[#86868b] hover:text-[#1d1d1f] transition-colors relative">
-              <Bell className="w-5 h-5" strokeWidth={1.5} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-[#ff3b30] rounded-full border-2 border-white" />
-            </button>
-            <button className="p-2 text-[#86868b] hover:text-[#1d1d1f] transition-colors">
-              <Settings className="w-5 h-5" strokeWidth={1.5} />
-            </button>
+          <div className="flex items-center gap-6">
+            {saveAction && (
+              <div className="flex items-center gap-4 bg-white/50 border border-black/[0.05] rounded-full px-4 py-1.5 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className={`h-2 w-2 rounded-full ${isSaving ? "bg-[#007aff] animate-pulse shadow-[0_0_8px_rgba(0,122,255,0.4)]" : "bg-[#34c759] shadow-[0_0_8px_rgba(52,199,89,0.4)]"}`} />
+                  <p className="text-[11px] font-bold text-[#1d1d1f] uppercase tracking-widest opacity-80">
+                    {statusText}
+                  </p>
+                </div>
+                <div className="h-4 w-[1px] bg-black/[0.1] mx-1" />
+                <button 
+                  onClick={() => saveAction()}
+                  disabled={isSaving}
+                  className="flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-[#007aff] text-white text-[13px] font-bold uppercase tracking-widest hover:bg-[#0051d7] transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-[#007aff]/20"
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
+                  <Save size={16} strokeWidth={2.5} />
+                </button>
+              </div>
+            )}
+
             <div className="h-6 w-[1px] bg-black/[0.05] mx-1" />
+
             <div className="flex items-center gap-3">
               <div className="flex flex-col items-end hidden sm:flex">
                 <span className="text-[12px] font-semibold text-[#1d1d1f]">
@@ -210,4 +230,3 @@ export default function AdminShell({
     </div>
   );
 }
-

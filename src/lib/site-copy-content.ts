@@ -273,6 +273,8 @@ export function normalizeSiteCopyContent(value: unknown): SiteCopyContent {
     footerCtaCopy: normalizeString(target.footerCtaCopy, siteCopyDefaults.footerCtaCopy),
     footerCopyright: normalizeString(target.footerCopyright, siteCopyDefaults.footerCopyright),
     footerCredit: normalizeString(target.footerCredit, siteCopyDefaults.footerCredit),
+    aboutResumeUrl: normalizeString(target.aboutResumeUrl, siteCopyDefaults.aboutResumeUrl),
+    aboutDesignResumeUrl: normalizeString(target.aboutDesignResumeUrl, siteCopyDefaults.aboutDesignResumeUrl),
   };
 }
 

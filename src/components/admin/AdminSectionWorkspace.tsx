@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   AlertCircle,
   Check,
+  Plus,
   type LucideIcon,
 } from "lucide-react";
 
@@ -288,6 +289,7 @@ export function ListEditor<T>({
   onMove,
   icon: TitleIcon,
   renderItem,
+  columns = 2,
 }: {
   title: string;
   addLabel: string;
@@ -297,7 +299,13 @@ export function ListEditor<T>({
   onMove?: (index: number, direction: -1 | 1) => void;
   icon?: LucideIcon;
   renderItem: (item: T, index: number) => React.ReactNode;
+  columns?: 2 | 3;
 }) {
+  const gridClasses = {
+    2: "md:grid-cols-2",
+    3: "md:grid-cols-2 lg:grid-cols-3",
+  };
+
   return (
     <div className="mt-10 rounded-[33px] border-[3px] border-[#e4e4e7] bg-[#f7f4ef]/50 p-8">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
@@ -311,14 +319,17 @@ export function ListEditor<T>({
         </div>
         <TinyButton variant="primary" onClick={onAdd}>{addLabel}</TinyButton>
       </div>
-      <div className="space-y-6">
+      <div className={cn("grid grid-cols-1 gap-8", gridClasses[columns])}>
         {items.map((item, index) => (
           <div
             key={index}
-            className="rounded-[24px] border-[2px] border-[#e4e4e7] bg-white p-8 shadow-sm group hover:shadow-lg transition-all"
+            className="flex flex-col rounded-[40px] border-[3px] border-[#e4e4e7] bg-white shadow-sm group hover:shadow-xl hover:border-[#0020d7]/10 transition-all overflow-hidden"
           >
-            {renderItem(item, index)}
-            <div className="mt-6 flex flex-wrap justify-end gap-3 pt-6 border-t-2 border-[#f7f4ef]">
+            <div className="flex-1 p-8">
+               {renderItem(item, index)}
+            </div>
+            
+            <div className="p-6 bg-[#f7f4ef]/30 border-t-2 border-[#f7f4ef] flex flex-wrap justify-end gap-3">
               {onMove ? (
                 <>
                   <TinyButton onClick={() => onMove(index, -1)}>Move Up</TinyButton>
@@ -326,16 +337,22 @@ export function ListEditor<T>({
                 </>
               ) : null}
               <TinyButton variant="danger" onClick={() => onRemove(index)}>
-                Remove
+                Remove Entry
               </TinyButton>
             </div>
           </div>
         ))}
-        {items.length === 0 ? (
-          <div className="py-12 text-center bg-white/50 rounded-[20px] border-2 border-dashed border-[#e4e4e7]">
-            <p className="text-[13px] text-[#4a4a68] font-bold italic opacity-60">No entries detected in the current stack.</p>
-          </div>
-        ) : null}
+        
+        {/* Visual Add Card */}
+        <button 
+          onClick={onAdd}
+          className="min-h-[300px] py-10 rounded-[40px] border-[3px] border-dashed border-[#e4e4e7] bg-white/50 hover:bg-white hover:border-[#0020d7]/30 hover:shadow-xl transition-all group flex flex-col items-center justify-center gap-4"
+        >
+           <div className="h-14 w-14 rounded-full bg-[#f7f4ef] flex items-center justify-center text-[#4a4a68] group-hover:bg-[#0020d7] group-hover:text-white transition-all duration-300">
+              <Plus size={28} strokeWidth={3} />
+           </div>
+           <span className="text-[14px] font-extrabold text-[#4a4a68] uppercase tracking-widest group-hover:text-[#0b0b0c] transition-colors">{addLabel}</span>
+        </button>
       </div>
     </div>
   );
@@ -365,3 +382,13 @@ export function StatusBadge({
   );
 }
 
+// Attach sub-components for dot-notation access
+AdminSectionWorkspace.ListEditor = ListEditor;
+AdminSectionWorkspace.SectionPanel = SectionPanel;
+AdminSectionWorkspace.SectionTitle = SectionTitle;
+AdminSectionWorkspace.Field = Field;
+AdminSectionWorkspace.TextareaField = TextareaField;
+AdminSectionWorkspace.SelectField = SelectField;
+AdminSectionWorkspace.ActionButton = ActionButton;
+AdminSectionWorkspace.TinyButton = TinyButton;
+AdminSectionWorkspace.StatusBadge = StatusBadge;

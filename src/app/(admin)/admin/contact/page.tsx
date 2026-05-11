@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAdmin } from "@/components/admin/AdminContext";
 
 type ContactSettings = {
   introText: string;
@@ -64,6 +65,17 @@ export default function AdminContactPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "unread" | "read" | "replied">("all");
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
+  const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
+
+  useEffect(() => {
+    setSaveAction(() => saveSettings);
+    setStatusText(savingSettings ? "Synchronizing..." : "System Standby");
+    setIsSaving(savingSettings);
+    
+    return () => {
+      setSaveAction(null);
+    };
+  }, [saveSettings, savingSettings, setSaveAction, setIsSaving, setStatusText]);
 
   const filteredSubmissions = useMemo(() => {
     if (activeFilter === "all") return submissions;
@@ -210,11 +222,6 @@ export default function AdminContactPage() {
               </div>
             </div>
 
-            <div className="pt-6 border-t-2 border-[#f7f4ef]">
-              <ActionButton onClick={saveSettings} disabled={savingSettings} className="w-full">
-                {savingSettings ? "Synchronizing..." : "Sync Protocols"}
-              </ActionButton>
-            </div>
           </SectionPanel>
 
           <SectionPanel className="p-8 bg-[#0020d7]/[0.02] border-2 border-dashed border-[#0020d7]/20 rounded-[33px]">

@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAdmin } from "@/components/admin/AdminContext";
 import type { Service, ServiceContent } from "@/constants/services";
 
 const defaultProjectContent: ServiceContent = {
@@ -48,6 +49,17 @@ export default function AdminServicesPage() {
   const [selectedProjectIndex, setSelectedProjectIndex] = useState<number>(0);
   const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
+
+  useEffect(() => {
+    setSaveAction(() => saveServices);
+    setStatusText(saving ? "Syncing..." : "System Standby");
+    setIsSaving(saving);
+    
+    return () => {
+      setSaveAction(null);
+    };
+  }, [saveServices, saving, setSaveAction, setIsSaving, setStatusText]);
 
   useEffect(() => {
     async function loadServices() {
@@ -257,26 +269,17 @@ export default function AdminServicesPage() {
 
           {/* Showcase Projects Panel */}
           <SectionPanel className="flex flex-col gap-10 bg-white/50 backdrop-blur-sm">
-            <div className="flex items-center justify-between">
-              <SectionTitle title="Project Showcases" copy="Curate high-fidelity deep-dive cards." icon={Package} />
-              <button 
-                onClick={addProjectShowcase}
-                className="flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-[#0020d7]/10 text-[#0020d7] text-[11px] font-extrabold uppercase tracking-widest hover:bg-[#0020d7]/15 transition-all active:scale-95 border-2 border-[#0020d7]/10"
-              >
-                <Plus size={14} strokeWidth={3} />
-                Add showcase
-              </button>
-            </div>
+            <SectionTitle title="Project Showcases" copy="Curate high-fidelity deep-dive cards." icon={Package} />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               {/* Project Tab List */}
-              <div className="lg:col-span-4 space-y-3">
+              <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 content-start">
                 <AnimatePresence mode="popLayout">
                   {projectItems.map(({ item }, idx) => (
                     <motion.div key={idx} layout className="group relative">
                       <button
                         onClick={() => setSelectedProjectIndex(idx)}
-                        className={`w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-[12px] font-extrabold transition-all border-2 active:scale-[0.98] ${
+                        className={`w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-[12px] font-extrabold transition-all border-2 active:scale-[0.98] h-full ${
                           selectedProjectIndex === idx 
                             ? "bg-[#0020d7]/5 border-[#0020d7]/30 text-[#0020d7] shadow-sm" 
                             : "bg-white border-[#e4e4e7] text-[#4a4a68] hover:border-[#0020d7]/20 hover:text-[#0b0b0c]"
@@ -294,8 +297,20 @@ export default function AdminServicesPage() {
                     </motion.div>
                   ))}
                 </AnimatePresence>
+                
+                {/* Visual Add Card */}
+                <button 
+                  onClick={addProjectShowcase}
+                  className="flex flex-col items-center justify-center p-6 rounded-[20px] border-[3px] border-dashed border-[#e4e4e7] bg-white/50 hover:bg-white hover:border-[#0020d7]/30 transition-all gap-3 group min-h-[68px]"
+                >
+                  <div className="h-7 w-7 rounded-full bg-[#f7f4ef] flex items-center justify-center text-[#4a4a68] group-hover:bg-[#0020d7] group-hover:text-white transition-all">
+                    <Plus size={16} strokeWidth={3} />
+                  </div>
+                  <span className="text-[10px] font-extrabold text-[#4a4a68] uppercase tracking-widest group-hover:text-[#0b0b0c]">Add Showcase</span>
+                </button>
+
                 {projectItems.length === 0 && (
-                  <div className="p-10 rounded-[28px] border-4 border-dashed border-[#e4e4e7] text-center bg-white/50">
+                  <div className="p-10 rounded-[28px] border-4 border-dashed border-[#e4e4e7] text-center bg-white/50 hidden">
                     <p className="text-[12px] font-extrabold text-[#4a4a68] uppercase tracking-widest opacity-40 italic">Empty Showcase Repository</p>
                   </div>
                 )}
@@ -362,23 +377,6 @@ export default function AdminServicesPage() {
             </div>
           </SectionPanel>
 
-          {/* Persistent Action Bar */}
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-8">
-            <div className="flex items-center justify-between gap-4 p-2.5 rounded-[24px] bg-white/95 border-2 border-[#e4e4e7] shadow-2xl backdrop-blur-md">
-              <div className="flex-1 px-4">
-                <div className="flex items-center gap-3">
-                  <div className={`h-2 w-2 rounded-full ${saving ? "bg-[#0020d7] animate-pulse shadow-[0_0_8px_rgba(0,32,215,0.4)]" : "bg-[#34c759] shadow-[0_0_8px_rgba(52,199,89,0.4)]"}`} />
-                  <p className="text-[11px] font-extrabold text-[#0b0b0c] uppercase tracking-widest opacity-80">
-                    {saving ? "Syncing..." : "System Standby"}
-                  </p>
-                </div>
-              </div>
-              <ActionButton onClick={saveServices} disabled={saving}>
-                {saving ? "Syncing..." : "Sync Portfolio"}
-                <Save size={14} strokeWidth={2.5} />
-              </ActionButton>
-            </div>
-          </div>
         </main>
       </div>
     </AdminSectionWorkspace>

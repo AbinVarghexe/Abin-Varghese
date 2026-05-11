@@ -49,6 +49,8 @@ export default async function AboutPage() {
           aboutTimelineTitle: siteCopy.aboutTimelineTitle,
           aboutTimelineEntries: siteCopy.aboutTimelineEntries,
           homeReviewsItems: siteCopy.homeReviewsItems,
+          aboutResumeUrl: siteCopy.aboutResumeUrl,
+          aboutDesignResumeUrl: siteCopy.aboutDesignResumeUrl,
         }}
       />
       <div className="relative z-20 -mt-28">

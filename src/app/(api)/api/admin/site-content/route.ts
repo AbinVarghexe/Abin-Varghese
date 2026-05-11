@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminSession } from "@/lib/admin-auth";
 import { getInstagramMediaUrl, isInstagramUrl, resolveInstagramPreview } from "@/lib/instagram";
-import { getAboutContent, upsertAboutContent, getHeroContent, upsertHeroContent, getHomeContent, upsertHomeContent, getBehanceShowcaseEmbeds, upsertBehanceShowcaseEmbeds } from "@/lib/site-content";
-import type { BehanceShowcaseEmbed } from "@/lib/site-content";
+import { getAboutContent, upsertAboutContent, getHeroContent, upsertHeroContent, getHomeContent, upsertHomeContent, getBehanceShowcaseEmbeds, upsertBehanceShowcaseEmbeds, getPinterestShowcaseItems, upsertPinterestShowcaseItems } from "@/lib/site-content";
+import type { BehanceShowcaseEmbed, PinterestShowcaseItem } from "@/lib/site-content";
 
 const aboutContentSchema = z.object({
   aboutImage: z.string(),
@@ -68,7 +68,8 @@ export async function GET() {
   const hero = await getHeroContent();
   const home = await getHomeContent();
   const behanceShowcase = await getBehanceShowcaseEmbeds();
-  return NextResponse.json({ about, hero, home, behanceShowcase });
+  const pinterestShowcase = await getPinterestShowcaseItems();
+  return NextResponse.json({ about, hero, home, behanceShowcase, pinterestShowcase });
 }
 
 export async function PUT(request: NextRequest) {
@@ -140,6 +141,17 @@ export async function PUT(request: NextRequest) {
       const embeds = parsed.filter((e) => e.src.trim().length > 0);
       await upsertBehanceShowcaseEmbeds(embeds as BehanceShowcaseEmbed[]);
       return NextResponse.json({ behanceShowcase: embeds });
+    }
+
+    if (type === 'pinterestShowcase') {
+      const parsed = z.array(z.object({
+        id: z.string(),
+        src: z.string(),
+        title: z.string(),
+      })).parse(data);
+      const items = parsed.filter((e) => e.src.trim().length > 0);
+      await upsertPinterestShowcaseItems(items as PinterestShowcaseItem[]);
+      return NextResponse.json({ pinterestShowcase: items });
     }
 
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });

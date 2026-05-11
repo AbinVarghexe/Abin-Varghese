@@ -44,6 +44,7 @@ import AdminSectionWorkspace, {
 } from "@/components/admin/AdminSectionWorkspace";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAdmin } from "@/components/admin/AdminContext";
 
 import { aboutContentDefaults, type AboutContent } from "@/lib/about-content-defaults";
 import { heroContentDefaults, type HeroContent } from "@/lib/hero-content-defaults";
@@ -121,6 +122,18 @@ export default function AdminHomePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<HomeAdminTab>("hero");
+
+  const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
+
+  useEffect(() => {
+    setSaveAction(() => saveHome);
+    setStatusText(saving ? "Deploying..." : "System Standby");
+    setIsSaving(saving);
+    
+    return () => {
+      setSaveAction(null);
+    };
+  }, [saveHome, saving, setSaveAction, setIsSaving, setStatusText]);
 
   useEffect(() => {
     async function load() {
@@ -436,9 +449,15 @@ export default function AdminHomePage() {
                         </div>
                       </div>
                     ))}
-                    <button type="button" onClick={() => updateSiteCopy("homeToolCategories", [...siteCopy.homeToolCategories, { id: uid("cat"), name: "New Domain", description: "" }])}
-                      className="flex items-center justify-center p-4 rounded-[28px] bg-[#f7f4ef] border-2 border-[#e4e4e7] hover:bg-[#e4e4e7]">
-                      Add Domain
+                    <button 
+                      type="button" 
+                      onClick={() => updateSiteCopy("homeToolCategories", [...siteCopy.homeToolCategories, { id: uid("cat"), name: "New Domain", description: "" }])}
+                      className="flex flex-col items-center justify-center p-8 rounded-[28px] border-[3px] border-dashed border-[#e4e4e7] bg-white/50 hover:bg-white hover:border-[#0020d7]/30 transition-all gap-4 group"
+                    >
+                      <div className="h-10 w-10 rounded-full bg-[#f7f4ef] flex items-center justify-center text-[#4a4a68] group-hover:bg-[#0020d7] group-hover:text-white transition-all">
+                        <Plus size={20} strokeWidth={3} />
+                      </div>
+                      <span className="text-[11px] font-extrabold text-[#4a4a68] uppercase tracking-widest group-hover:text-[#0b0b0c]">Add Domain</span>
                     </button>
                   </div>
 
@@ -707,23 +726,6 @@ export default function AdminHomePage() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Persistent Action Bar */}
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-lg px-8">
-            <div className="flex items-center justify-between gap-4 p-2.5 rounded-[24px] bg-white/95 border-2 border-[#e4e4e7] shadow-2xl backdrop-blur-md">
-              <div className="flex-1 px-4">
-                <div className="flex items-center gap-3">
-                  <div className={`h-2 w-2 rounded-full ${saving ? "bg-[#0020d7] animate-pulse shadow-[0_0_8px_rgba(0,32,215,0.4)]" : "bg-[#34c759] shadow-[0_0_8px_rgba(52,199,89,0.4)]"}`} />
-                  <p className="text-[11px] font-extrabold text-[#0b0b0c] uppercase tracking-widest opacity-80">
-                    {saving ? "Deploying..." : "System Standby"}
-                  </p>
-                </div>
-              </div>
-              <ActionButton onClick={saveHome} disabled={saving}>
-                {saving ? "Syncing..." : "Sync Changes"}
-                <Save size={14} strokeWidth={2.5} />
-              </ActionButton>
-            </div>
-          </div>
         </main>
 
     </AdminSectionWorkspace>
