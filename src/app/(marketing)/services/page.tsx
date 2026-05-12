@@ -6,11 +6,12 @@ import FAQ from '@/components/services/FAQ';
 import { getServicesContent } from '@/lib/services-content';
 import { getSiteCopyContent } from '@/lib/site-copy-content';
 import { createPageMetadata } from '@/seo/page-metadata';
+import { FAQPageSchema } from '@/seo/schema';
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Services | Abin Varghese",
+  title: "Services",
   description:
-    "Hire Abin Varghese for web development, UI/UX design, React & Next.js development, and mobile-first consulting. Premium digital services for startups and agencies.",
+    "Web development, UI/UX design, React & Next.js builds, and mobile-first consulting. Premium digital services for startups and agencies.",
   path: "/services",
   keywords: [
     "Hire web developer India",
@@ -30,6 +31,7 @@ export default async function ServicesPage() {
 
   return (
     <main className="min-h-screen bg-white relative">
+      <FAQPageSchema items={siteCopy.servicesFaqItems} />
       <ServicesHero title={siteCopy.servicesHeroTitle} />
       <div className="relative z-30">
         <BentoServices services={services} />

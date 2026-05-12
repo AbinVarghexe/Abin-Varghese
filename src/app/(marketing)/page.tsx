@@ -20,9 +20,9 @@ import { homePageContentClass, homePageShellClass } from "@/lib/home-page-design
 import { createPageMetadata } from "@/seo/page-metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Abin Varghese | Front-End Developer & UI/UX Designer",
+  title: "Front-End Developer & UI/UX Designer",
   description:
-    "Abin Varghese is a front-end developer and UI/UX designer from Kerala, India, building high-performance Next.js apps, modern interfaces, and digital products. Available for freelance.",
+    "Front-end developer & UI/UX designer from Kerala, India. Builds high-performance Next.js apps, modern interfaces, and digital products. Available for freelance.",
   path: "/",
   keywords: [
     "Abin Varghese",

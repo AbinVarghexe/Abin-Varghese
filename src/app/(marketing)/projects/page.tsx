@@ -13,9 +13,9 @@ interface ProjectsPageProps {
 }
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Projects | Abin Varghese",
+  title: "Projects",
   description:
-    "Explore web apps, AI integrations, and UI/UX designs built by Abin Varghese using React, Next.js, and Figma. Browse open-source projects and live demos.",
+    "Explore web apps, AI integrations, and UI/UX work built with React, Next.js, and Figma. Browse open-source projects and live demos.",
   path: "/projects",
   keywords: [
     "Abin Varghese projects",

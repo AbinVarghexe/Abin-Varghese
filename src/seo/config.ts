@@ -3,7 +3,7 @@ export const siteConfig = {
   siteName: "Abin Varghese Portfolio",
   defaultTitle: "Abin Varghese | Front-End Developer & UI/UX Designer",
   description:
-    "Portfolio of Abin Varghese, a front-end developer and UI/UX designer building performant Next.js experiences, modern interfaces, and conversion-focused digital products.",
+    "Front-end developer & UI/UX designer in Kerala, India. Builds high-performance Next.js apps, modern interfaces, and conversion-focused digital products.",
   locale: "en_IN",
   creator: "Abin Varghese",
   twitterHandle: "@abin_varghese",
