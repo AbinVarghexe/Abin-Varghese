@@ -161,7 +161,7 @@ Full-Stack Developer · UI/UX Designer · Idukki, Kerala
 
 ### Hero Status Line
 
-Available for freelance projects, collaborations, and internship opportunities.
+Available for freelance projects and collaborations.
 
 ### Scrolling Banner Items
 

@@ -212,6 +212,19 @@ export default function AdminContentPage() {
               onChange={(value) => patch("heroStatusLine", value)}
               icon={Zap}
             />
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Sliding roles strip (comma-separated)"
+                value={siteCopy.homeSlidingRoles}
+                onChange={(value) => patch("homeSlidingRoles", value)}
+                rows={2}
+                icon={Sparkles}
+                placeholder="Creative Director, UI Designer, Frontend Engineer"
+              />
+              <p className="mt-2 text-[12px] text-[#6e6e73] ml-1">
+                Shown on the home page between brands and about. The diagonal scrolling banner phrases are edited under Admin → Home → Hero → Landing marquees.
+              </p>
+            </div>
             <Field
               label="Home About Heading"
               value={siteCopy.homeAboutHeading}

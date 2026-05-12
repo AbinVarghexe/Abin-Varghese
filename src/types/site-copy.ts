@@ -111,7 +111,7 @@ export interface SiteCopyContent {
 }
 
 export const siteCopyDefaults: SiteCopyContent = {
-  heroStatusLine: "Available for freelance projects, collaborations, and internship opportunities.",
+  heroStatusLine: "Available for freelance projects, collaborations.",
   homeAboutHeading: "About [Me]",
   homeAboutBody:
     "I started out being drawn to visuals, layout systems, and design tools. Over time that pulled me deeper into frontend development and product building, and now I enjoy working on projects where I can shape both the interface and the implementation.",

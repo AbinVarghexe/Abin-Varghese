@@ -376,7 +376,56 @@ export default function AdminHomePage() {
                     <Field label="Primary Designation (Name)" value={hero.heroName} onChange={(v) => setHero({ ...hero, heroName: v })} icon={User} />
                     <TextareaField label="Core Narrative / Role" value={hero.heroSubcopy} onChange={(v) => setHero({ ...hero, heroSubcopy: v })} className="md:col-span-2" rows={3} icon={AlignLeft} />
                     <Field label="Location Metadata" value={hero.heroAvailabilityText} onChange={(v) => setHero({ ...hero, heroAvailabilityText: v })} icon={Globe} />
+                    <Field label="Audience tags (comma-separated)" value={hero.heroAudienceTags} onChange={(v) => setHero({ ...hero, heroAudienceTags: v })} icon={Sparkles} placeholder="AV, UI, UX" />
                     <Field label="System Status Line" value={siteCopy.heroStatusLine} onChange={(v) => updateSiteCopy("heroStatusLine", v)} icon={Zap} />
+                  </div>
+
+                  <div className="pt-10 border-t-2 border-[#f7f4ef]">
+                    <SectionTitle
+                      title="Landing marquees"
+                      copy="Diagonal scrolling ribbons under the hero—comma-separated phrases. Saves with Home (banner) or Site Copy (roles strip)."
+                      icon={Sparkles}
+                    />
+                    <div className="mt-10 grid grid-cols-1 gap-6 md:gap-8">
+                      <TextareaField
+                        label="Scrolling banner phrases"
+                        placeholder="Web Developer, Graphic Designer, Motion Designer"
+                        rows={3}
+                        value={home.scrollingBannerItems}
+                        onChange={(v) => setHome({ ...home, scrollingBannerItems: v })}
+                        icon={AlignLeft}
+                      />
+                      <TextareaField
+                        label="Sliding roles strip"
+                        placeholder="Creative Director, UI Designer, Frontend Engineer"
+                        rows={3}
+                        value={siteCopy.homeSlidingRoles}
+                        onChange={(v) => updateSiteCopy("homeSlidingRoles", v)}
+                        icon={AlignLeft}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-10 border-t-2 border-[#f7f4ef]">
+                    <SectionTitle title="Internal route targets" copy="Hero and UI links use these paths (e.g. primary CTA can fall back to Projects)." icon={Globe} />
+                    <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {(Object.entries(home.pageLinks) as Array<[keyof HomeContent["pageLinks"], string]>).map(
+                        ([key, pathVal]) => (
+                          <Field
+                            key={key}
+                            label={`${key.charAt(0).toUpperCase() + key.slice(1)} path`}
+                            value={pathVal}
+                            onChange={(v) =>
+                              setHome({
+                                ...home,
+                                pageLinks: { ...home.pageLinks, [key]: v },
+                              })
+                            }
+                            placeholder={`/${key}`}
+                          />
+                        )
+                      )}
+                    </div>
                   </div>
 
                   <div className="pt-10 border-t-2 border-[#f7f4ef]">

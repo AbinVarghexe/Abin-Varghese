@@ -113,7 +113,7 @@ export default function SlidingRoleBanner({
       cancelAnimationFrame(rafId);
       cleanupFn?.();
     };
-  }, [direction, rotation, speed]);
+  }, [direction, rotation, speed, roles.join("|")]);
 
   // Exactly 2 copies — unit = scrollWidth / 2 — seam is invisible
   const items = [...roles, ...roles];

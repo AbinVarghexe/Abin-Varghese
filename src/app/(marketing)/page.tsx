@@ -16,8 +16,14 @@ import { getSiteCopyContent } from "@/lib/site-copy-content";
 import { getServicesContent } from "@/lib/services-content";
 import { getAllProjects } from "@/lib/github-projects";
 import { getAchievements } from "@/lib/achievements";
+import { homeContentDefaults } from "@/lib/home-content-defaults";
+import { siteCopyDefaults } from "@/types/site-copy";
 import { homePageContentClass, homePageShellClass } from "@/lib/home-page-design-system";
 import { createPageMetadata } from "@/seo/page-metadata";
+
+function parseCommaPhrases(raw: string) {
+  return raw.split(",").map((item) => item.trim()).filter(Boolean);
+}
 
 export const metadata: Metadata = createPageMetadata({
   title: "Abin Varghese | Front-End Developer & UI/UX Designer",
@@ -80,15 +86,21 @@ export default async function Home() {
     }));
   }
 
-  const scrollingItems = homeData.scrollingBannerItems
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
+  const scrollingItems = (() => {
+    const parsed = parseCommaPhrases(homeData.scrollingBannerItems);
+    if (parsed.length > 0) {
+      return parsed;
+    }
+    return parseCommaPhrases(homeContentDefaults.scrollingBannerItems);
+  })();
 
-  const slidingRoles = siteCopy.homeSlidingRoles
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
+  const slidingRoles = (() => {
+    const parsed = parseCommaPhrases(siteCopy.homeSlidingRoles);
+    if (parsed.length > 0) {
+      return parsed;
+    }
+    return parseCommaPhrases(siteCopyDefaults.homeSlidingRoles);
+  })();
 
   return (
     <main className={homePageShellClass("relative")}>
