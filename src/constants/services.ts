@@ -6,6 +6,8 @@ export interface ProjectLink {
 
 export interface ServiceContent {
   type: 'image' | 'video' | 'text' | 'project';
+  /** When set, this showcase row was filled from Admin → Projects (portfolio). */
+  linkedProjectId?: string;
   url?: string;
   title: string;
   description: string;
@@ -15,6 +17,8 @@ export interface ServiceContent {
   role?: string;
   projectIcon?: string; // Icon identifier or URL
   mockupImage?: string; // Device mockup URL
+  /** Behance project embed widget URL (sanitized `src`) — use iframe on the service page, not as an image. */
+  embedIframeSrc?: string;
   threeDModel?: string; // Path to .glb file
   videoUrl?: string; // Path to .mp4 or similar
   projectLinks?: ProjectLink[]; // Contextual links (Figma, GitHub, etc.)
@@ -59,13 +63,21 @@ export const services: Service[] = [
   },
   {
     id: "motion-video-editing",
-    title: "Motion Graphics and Video Editing",
-    description: "Breathe life into your brand with dynamic animations and professional storytelling through seamless cuts.",
-    detailedDescription: "Motion graphics and professional video editing are powerful ways to communicate complex ideas and engage your audience through visual storytelling.",
+    title: "Motion Graphics",
+    description:
+      "Breathe life into your brand with kinetic animation, motion systems, and on-brand visual storytelling.",
+    detailedDescription:
+      "Motion graphics clarify complex ideas, strengthen brand recall, and keep audiences engaged across campaigns, launches, and digital platforms.",
     accentColor: "#7048e8",
     projectsUrl: "/projects#motion-video",
     projectsLabel: "View More",
-    providedServices: ["Logo Animation", "Explainer Videos", "Commercial Editing", "YouTube Content", "Color Grading"],
+    providedServices: [
+      "Logo Animation",
+      "Explainer Motion",
+      "Social & Ads Motion",
+      "UI / Product Motion",
+      "Kinetic Typography",
+    ],
     contents: [
       {
         type: "project",

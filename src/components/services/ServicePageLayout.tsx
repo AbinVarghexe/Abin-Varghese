@@ -1,10 +1,18 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Environment, Float, OrbitControls, useGLTF } from '@react-three/drei';
 import { motion, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Sparkles, CheckCircle2, Zap, Film, Palette, Globe, Cpu, Eye, Box, ExternalLink, ArrowUpRight, Figma, Github, Code2, Instagram, Youtube, Dribbble, Calendar, Clock, User } from 'lucide-react';
 import Link from 'next/link';
-import { Service, ProjectLink } from '@/constants/services';
+import type { ServiceContent, Service } from '@/constants/services';
+import {
+  parseBehanceShowcaseLinkId,
+  SERVICE_LINK_BEHANCE_PREFIX,
+} from '@/lib/map-portfolio-project-to-service-showcase';
+import type { BehanceShowcaseEmbed } from '@/lib/site-content';
+import { extractUrlFromEmbed, toBehanceIframeSrc } from '@/lib/utils';
 
 const iconMap = {
   Zap,
@@ -32,23 +40,74 @@ const iconMap = {
 function VideoPreview({ videoUrl, poster }: { videoUrl: string; poster?: string }) {
   return (
     <video
+      src={videoUrl}
       autoPlay
       loop
       muted
       playsInline
       poster={poster}
-      className="w-full h-full object-cover"
-    >
-      <source src={videoUrl} type="video/mp4" />
-    </video>
+      className="absolute inset-0 h-full w-full object-cover"
+    />
+  );
+}
+
+/** Full-panel GLB preview for portfolio-linked MODEL rows (admin uses Supabase / public URLs). */
+function ShowcaseGlbScene({ url }: { url: string }) {
+  const { scene } = useGLTF(url);
+  return (
+    <>
+      <ambientLight intensity={1.2} />
+      <directionalLight position={[8, 10, 6]} intensity={1.85} />
+      <Environment preset="city" />
+      <Float speed={1.6} rotationIntensity={0.35} floatIntensity={0.42}>
+        <primitive object={scene} scale={1} position={[0, 0, 0]} rotation={[0.15, 0.45, 0]} />
+      </Float>
+      <OrbitControls enableZoom autoRotate autoRotateSpeed={0.75} />
+    </>
+  );
+}
+
+function ShowcaseGlbPreview({ url }: { url: string }) {
+  return (
+    <div className="absolute inset-0 min-h-[240px] w-full bg-zinc-950">
+      <Canvas camera={{ position: [0, 0, 4], fov: 42 }} className="h-full w-full touch-none">
+        <Suspense fallback={null}>
+          <ShowcaseGlbScene url={url} />
+        </Suspense>
+      </Canvas>
+    </div>
   );
 }
 
 interface ServicePageLayoutProps {
   service: Service;
+  /** Server-fetched; used to repair iframe URLs for Behance showcase links when `embedIframeSrc` is missing in CMS. */
+  behanceShowcaseEmbeds?: BehanceShowcaseEmbed[];
 }
 
-export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
+/** Behance iframe previews run only on `/services/graphics-design` — other services keep video / GLB / image. */
+const GRAPHICS_DESIGN_SERVICE_ID = "graphics-design";
+
+/** Resolves embed `src` from saved service JSON or live Behance showcase list (older CMS rows often omit `embedIframeSrc`). */
+function resolveBehanceServiceIframeSrc(
+  serviceId: string,
+  item: ServiceContent,
+  behanceShowcaseEmbeds: BehanceShowcaseEmbed[] | undefined
+): string {
+  if (serviceId !== GRAPHICS_DESIGN_SERVICE_ID) return "";
+  const direct = item.embedIframeSrc?.trim()
+    ? (toBehanceIframeSrc(item.embedIframeSrc) ?? item.embedIframeSrc).trim()
+    : "";
+  if (direct) return direct;
+  const bid = parseBehanceShowcaseLinkId(item.linkedProjectId);
+  if (!bid || !behanceShowcaseEmbeds?.length) return "";
+  const row = behanceShowcaseEmbeds.find((e) => e.id === bid);
+  if (!row?.src) return "";
+  const extracted = extractUrlFromEmbed(row.src).trim();
+  return (toBehanceIframeSrc(extracted) ?? extracted).trim();
+}
+
+export default function ServicePageLayout({ service, behanceShowcaseEmbeds }: ServicePageLayoutProps) {
   const { scrollYProgress } = useScroll();
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.8]);
@@ -75,6 +134,18 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
 
   // Projects count for the stack
   const projectItems = (service.contents || []).filter(item => item.type === 'project');
+
+  /**
+   * Behance embeds render blank inside ancestors with CSS 3D/perspective (Chrome/WebKit).
+   * Projects → Graphic Design lays embeds flat; this stack used rotateX/perspective — flatten when Behance is present.
+   */
+  const graphicsDesignFlatBehanceStack = useMemo(() => {
+    if (service.id !== GRAPHICS_DESIGN_SERVICE_ID) return false;
+    return projectItems.some((p) => {
+      if (p.linkedProjectId?.startsWith(SERVICE_LINK_BEHANCE_PREFIX)) return true;
+      return Boolean(resolveBehanceServiceIframeSrc(service.id, p, behanceShowcaseEmbeds));
+    });
+  }, [service.id, projectItems, behanceShowcaseEmbeds]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     cursorX.set(e.clientX);
@@ -344,11 +415,22 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
             </div>
           </div>
 
-          {/* 3D Stack Container */}
-          <div className="relative h-[650px] lg:h-[520px] max-w-[1100px] mx-auto px-6" style={{ perspective: '1200px' }}>
+          {/* 3D Stack Container — no perspective when Behance iframes present (iframe paint bug under 3D transforms) */}
+          <div
+            className="relative h-[650px] lg:h-[520px] max-w-[1100px] mx-auto px-6"
+            style={{ perspective: graphicsDesignFlatBehanceStack ? 'none' : '1200px' }}
+          >
             <div className="relative w-full h-full flex items-center justify-center">
               <AnimatePresence mode="popLayout">
                 {projectItems.map((item, idx) => {
+                  const resolvedBehanceIframeSrc = resolveBehanceServiceIframeSrc(
+                    service.id,
+                    item,
+                    behanceShowcaseEmbeds
+                  );
+                  const useBehanceIframePreview =
+                    service.id === GRAPHICS_DESIGN_SERVICE_ID &&
+                    Boolean(resolvedBehanceIframeSrc);
                   const diff = idx - activeIndex;
                   const isVisible = Math.abs(diff) <= 2;
                   
@@ -356,23 +438,23 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
 
                   return (
                     <motion.div
-                      key={item.title}
+                      key={`${item.linkedProjectId ?? item.title}-${idx}`}
                       initial={{ 
                         opacity: 0, 
                         scale: 0.8,
                         y: diff > 0 ? -200 : 800, // Come from stack (top) or below if returning
-                        rotateX: 10,
+                        rotateX: graphicsDesignFlatBehanceStack ? 0 : 10,
                         rotateY: 0,
-                        z: -100
+                        z: graphicsDesignFlatBehanceStack ? 0 : -100
                       }}
                       animate={{ 
                         opacity: diff === 0 ? 1 : diff > 0 ? 1 - (diff * 0.15) : 0, // High opacity for back cards
-                        scale: 1 - Math.abs(diff) * 0.05,
-                        y: diff * -55, // Stack spacing increased to see back cards properly
+                        scale: 1 - Math.abs(diff) * (graphicsDesignFlatBehanceStack ? 0.03 : 0.05),
+                        y: graphicsDesignFlatBehanceStack ? diff * -28 : diff * -55, // Stack spacing increased to see back cards properly
                         zIndex: projectItems.length - Math.abs(diff),
-                        rotateX: 12 + (diff * -2), 
+                        rotateX: graphicsDesignFlatBehanceStack ? 0 : (12 + (diff * -2)), 
                         rotateY: 0,
-                        z: diff * -80,
+                        z: graphicsDesignFlatBehanceStack ? 0 : (diff * -80),
                         filter: 'none', // Removed blur so back cards is clearly visible
                         boxShadow: diff > 0 ? '0px -10px 40px rgba(0,0,0,0.1)' : 'none'
                       }}
@@ -481,24 +563,77 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                             </div>
                           </div>
 
-                          <div className="lg:w-[45%] h-[300px] lg:h-full relative overflow-hidden bg-white/40 flex items-start justify-center">
-                            <div className="absolute inset-0 z-0 opacity-[0.05]" style={{ backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, backgroundSize: '24px 24px' }} />
-                            <div className="relative w-full h-full flex items-center justify-center">
-                              <img src="/mockups/hand_held_phone.png" alt="Mockup" className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none scale-100 lg:scale-[1.1] " />
-                              <div 
-                                className="relative w-[124px] h-[268px] lg:w-[145px] lg:h-[312px] bg-zinc-200 rounded-[28px] overflow-hidden z-10 shadow-inner"
-                                style={{ transform: 'perspective(1200px) rotateY(-11deg) rotateX(4deg) translate(-5px, -26px)' }}
-                              >
-                                {item.videoUrl ? (
-                                  <VideoPreview videoUrl={item.videoUrl} poster={item.mockupImage} />
-                                ) : item.mockupImage ? (
-                                  <img src={item.mockupImage} alt={item.title} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full bg-zinc-900 flex items-center justify-center">
-                                    <Sparkles className="w-8 h-8 text-white/20" />
+                          <div
+                            className="relative flex h-[300px] min-h-[260px] shrink-0 overflow-hidden bg-zinc-100/90 lg:h-full lg:min-h-0 lg:w-[45%]"
+                            style={
+                              item.bgColor
+                                ? { background: `linear-gradient(145deg, ${item.bgColor} 0%, rgba(255,255,255,0.92) 100%)` }
+                                : undefined
+                            }
+                          >
+                            <div
+                              className="pointer-events-none absolute inset-0 z-0 opacity-[0.06]"
+                              style={{
+                                backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`,
+                                backgroundSize: "24px 24px",
+                              }}
+                            />
+                            <div
+                              className={`relative z-10 h-full w-full ${
+                                item.threeDModel || useBehanceIframePreview
+                                  ? "pointer-events-auto touch-auto"
+                                  : ""
+                              }`}
+                              onPointerDown={
+                                item.threeDModel || useBehanceIframePreview
+                                  ? (e) => e.stopPropagation()
+                                  : undefined
+                              }
+                              onClick={
+                                item.threeDModel || useBehanceIframePreview
+                                  ? (e) => e.stopPropagation()
+                                  : undefined
+                              }
+                            >
+                              {useBehanceIframePreview ? (
+                                idx === activeIndex ? (
+                                  <div className="absolute inset-0 min-h-0 overflow-hidden rounded-[18px] bg-white">
+                                    <iframe
+                                      key={`behance-${resolvedBehanceIframeSrc}`}
+                                      title={item.title}
+                                      src={resolvedBehanceIframeSrc}
+                                      className="absolute inset-0 box-border h-full w-full border-0"
+                                      style={{ border: 'none' }}
+                                      allow="clipboard-write"
+                                      loading="eager"
+                                      allowFullScreen
+                                      referrerPolicy="strict-origin-when-cross-origin"
+                                    />
                                   </div>
-                                )}
-                              </div>
+                                ) : (
+                                  <div
+                                    className="absolute inset-0 flex min-h-[240px] items-center justify-center bg-zinc-100 lg:min-h-0"
+                                    aria-hidden
+                                  >
+                                    <Sparkles className="h-8 w-8 text-zinc-300" />
+                                  </div>
+                                )
+                              ) : item.videoUrl ? (
+                                <VideoPreview videoUrl={item.videoUrl} poster={item.mockupImage} />
+                              ) : item.threeDModel ? (
+                                <ShowcaseGlbPreview url={item.threeDModel} />
+                              ) : item.mockupImage ? (
+                                // eslint-disable-next-line @next/next/no-img-element -- CMS URLs may be remote Supabase/S3 without Next image config
+                                <img
+                                  src={item.mockupImage}
+                                  alt={item.title}
+                                  className="absolute inset-0 h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
+                                  <Sparkles className="h-10 w-10 text-white/25" />
+                                </div>
+                              )}
                             </div>
                           </div>
 

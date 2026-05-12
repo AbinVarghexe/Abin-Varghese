@@ -69,6 +69,36 @@ function extractEmbedHref(value: string | null | undefined): string | null {
   return match?.[1] ?? null;
 }
 
+function absoluteUrl(url: string): string {
+  const t = url.trim();
+  if (!t) return t;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+}
+
+/** Pinterest marketing / error hubs — never open these from a portfolio card. */
+function isGarbagePinterestOutbound(url: string): boolean {
+  const lower = url.trim().toLowerCase();
+  if (!/pinterest\.com/i.test(lower)) {
+    return false;
+  }
+  if (lower.includes('/business/')) {
+    return true;
+  }
+  if (lower.includes('show_error=true')) {
+    return true;
+  }
+  return false;
+}
+
+function isPinterestHost(url: string): boolean {
+  try {
+    const host = new URL(absoluteUrl(url)).hostname.toLowerCase();
+    return host === 'pinterest.com' || host.endsWith('.pinterest.com');
+  } catch {
+    return /pinterest\.com/i.test(url);
+  }
+}
+
 /**
  * Prefer real video/embed hosts for clicks + previews. Pinterest often lives in "Project link"
  * while Vimeo/YouTube/Behance is in the iframe field — `liveUrl ?? githubUrl` alone favored Pinterest.
@@ -79,7 +109,8 @@ function prioritizeDesignProjectLinks(
 ): string[] {
   const raw = [liveUrl, githubUrl]
     .map((u) => (typeof u === 'string' ? u.trim() : ''))
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((u) => !isGarbagePinterestOutbound(u));
 
   const seen = new Set<string>();
   const unique = raw.filter((u) => (seen.has(u) ? false : !!seen.add(u)));
@@ -105,6 +136,37 @@ function prioritizeDesignProjectLinks(
   };
 
   return [...unique].sort((a, b) => score(b) - score(a));
+}
+
+/** Motion/VFX cards: never send users to Pinterest; prefer Vimeo/YouTube/Behance/etc. */
+function resolvePlayOverlayHref(pin: PinterestPin, internalProjectHref: string): string {
+  const candidates: string[] = [];
+  const push = (v: string | null | undefined) => {
+    const t = typeof v === 'string' ? v.trim() : '';
+    if (!t || isGarbagePinterestOutbound(t)) {
+      return;
+    }
+    candidates.push(t);
+  };
+
+  push(extractEmbedHref(pin.externalUrl));
+  push(pin.externalUrl);
+  for (const u of pin.embedSourceUrls ?? []) {
+    push(extractEmbedHref(u));
+    push(u);
+  }
+
+  for (const raw of candidates) {
+    const resolved = extractEmbedHref(raw) ?? raw;
+    if (isGarbagePinterestOutbound(resolved)) {
+      continue;
+    }
+    if (!isPinterestHost(resolved)) {
+      return resolved;
+    }
+  }
+
+  return internalProjectHref;
 }
 
 type DesignCategory =
@@ -673,7 +735,33 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
   );
 
   const feedItems = useMemo(() => {
-    return uploadedProjects.map((project, index) => {
+    const overlayBoards: DesignCategory[] = ['Motion Graphics', 'VFX & 3D Animation'];
+
+    const visibleProjects = uploadedProjects.filter((project) => {
+      const raw = [project.liveUrl, project.githubUrl]
+        .map((u) => (typeof u === 'string' ? u.trim() : ''))
+        .filter(Boolean);
+      const usableRaw = raw.filter((u) => !isGarbagePinterestOutbound(u));
+      if (raw.length > 0 && usableRaw.length === 0) {
+        return false;
+      }
+
+      const cat = normalizeDesignCategory(
+        project.category,
+        project.type,
+        project.mediaType,
+        project.tags,
+        `${project.title} ${project.description}`
+      );
+
+      if (overlayBoards.includes(cat) && usableRaw.length > 0 && usableRaw.every(isPinterestHost)) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return visibleProjects.map((project, index) => {
       const normalizedCategory = normalizeDesignCategory(
         project.category,
         project.type,
@@ -959,9 +1047,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
                           pin={item.pin}
                           href={
                             usePlayOverlayCards
-                              ? (extractEmbedHref(item.pin.externalUrl) ??
-                                  item.pin.externalUrl ??
-                                  item.href)
+                              ? resolvePlayOverlayHref(item.pin, item.href)
                               : item.href
                           }
                           index={index}

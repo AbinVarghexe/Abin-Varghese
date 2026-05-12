@@ -31,3 +31,30 @@ export function extractUrlFromEmbed(text: string | null | undefined): string {
   
   return trimmed;
 }
+
+/**
+ * Behance **gallery** pages (`/gallery/…`) usually refuse or fail in `<iframe>` — use the **embed** widget URL (`/embed/…`).
+ */
+export function toBehanceIframeSrc(raw: string | null | undefined): string | undefined {
+  const extracted = extractUrlFromEmbed(raw ?? "").trim();
+  if (!extracted) return undefined;
+  if (!/^https?:\/\//i.test(extracted)) return undefined;
+
+  try {
+    const u = new URL(extracted);
+    const host = u.hostname.replace(/^www\./, "");
+    if (!host.endsWith("behance.net")) {
+      return extracted;
+    }
+    if (u.pathname.includes("/embed/")) {
+      return u.toString();
+    }
+    if (u.pathname.includes("/gallery/")) {
+      u.pathname = u.pathname.replace("/gallery/", "/embed/");
+      return u.toString();
+    }
+    return extracted;
+  } catch {
+    return extracted;
+  }
+}

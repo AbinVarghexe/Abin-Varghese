@@ -154,7 +154,7 @@ export default function BentoServices({ services }: BentoServicesProps) {
   });
 
   const motionVideo = resolveServiceCopy(services, 'motion-video-editing', {
-    title: 'Motion Graphics and Video Editing',
+    title: 'Motion Graphics',
     description: 'Breathe life into your brand with dynamic animations and professional storytelling through seamless cuts.',
     href: '/services/motion-video-editing',
     accentColor: '#7048e8',
@@ -235,7 +235,7 @@ export default function BentoServices({ services }: BentoServicesProps) {
             <UIUXDesign />
           </BentoCard>
 
-          {/* Card 2: Motion & Video */}
+          {/* Card 2: Motion Graphics */}
           <BentoCard
             title={motionVideo.title}
             description={motionVideo.description}

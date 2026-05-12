@@ -203,18 +203,30 @@ export default function AdminProjectsPage() {
     }
   }, []);
 
-  const resetForm = useCallback((workspace?: AdminWorkspace, category?: string, type?: Project["type"]) => {
-    setSelectedId(null);
-    setIsAdding(!!workspace || !!category);
-    const defaults = createDefaultForm(
-      workspace || (activeMainTab === "coding" ? "coding" : "designing"),
-      category || (activeMainTab === "designing" ? designingSubTabs.find(t => t.id === activeSubTab)?.category : undefined)
-    );
-    setForm({
-      ...defaults,
-      type: type || (activeSubTab === "graphic" ? activeGraphicCategory : defaults.type),
-    });
-  }, [activeMainTab, activeSubTab, activeGraphicCategory]);
+  /** Tab switches must NOT set `isAdding` — only explicit “Add new” flows should (`draft: true`). Otherwise Graphic/Web grids & Behance embed UI flicker to the editor. */
+  const resetForm = useCallback(
+    (
+      workspace?: AdminWorkspace,
+      category?: string,
+      type?: Project["type"],
+      options?: { draft?: boolean }
+    ) => {
+      setSelectedId(null);
+      setIsAdding(options?.draft ?? false);
+      const defaults = createDefaultForm(
+        workspace || (activeMainTab === "coding" ? "coding" : "designing"),
+        category ||
+          (activeMainTab === "designing"
+            ? designingSubTabs.find((t) => t.id === activeSubTab)?.category
+            : undefined)
+      );
+      setForm({
+        ...defaults,
+        type: type || (activeSubTab === "graphic" ? activeGraphicCategory : defaults.type),
+      });
+    },
+    [activeMainTab, activeSubTab, activeGraphicCategory]
+  );
 
   const saveProject = useCallback(async () => {
     const hasMedia = form.mediaUrl.trim();
@@ -569,12 +581,17 @@ export default function AdminProjectsPage() {
                </SectionPanel>
             ) : activeMainTab === "designing" && activeSubTab === "graphic" && activeGraphicCategory === "BEHANCE" && !selectedId && !isAdding ? (
               <SectionPanel className="bg-white shadow-xl shadow-black/5">
-                <div className="flex items-center justify-between mb-10">
+                <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
                   <SectionTitle title="Behance Visual Showcase" copy="Manage high-fidelity project embeds and showreels." icon={IconBrandBehance} />
-                  <ActionButton onClick={saveBehanceShowcase} disabled={isSavingBehance}>
-                    {isSavingBehance ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                    Sync Behance
-                  </ActionButton>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <TinyButton onClick={() => resetForm("designing", "Graphic Design", "BEHANCE", { draft: true })}>
+                      <Plus size={12} strokeWidth={3} /> Portfolio row
+                    </TinyButton>
+                    <ActionButton onClick={saveBehanceShowcase} disabled={isSavingBehance}>
+                      {isSavingBehance ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                      Sync Behance
+                    </ActionButton>
+                  </div>
                 </div>
                 
                 <AdminSectionWorkspace.ListEditor
@@ -621,7 +638,7 @@ export default function AdminProjectsPage() {
               <SectionPanel className="bg-white shadow-xl shadow-black/5">
                 <div className="flex items-center justify-between mb-10">
                   <SectionTitle title="Web Design Portfolio" copy="Manage your high-fidelity UI/UX concepts and prototypes." icon={Monitor} />
-                  <ActionButton onClick={() => resetForm("designing", "Web Design", "FIGMA")}>
+                  <ActionButton onClick={() => resetForm("designing", "Web Design", "FIGMA", { draft: true })}>
                     <Plus size={14} /> Add Web Design
                   </ActionButton>
                 </div>
@@ -653,7 +670,7 @@ export default function AdminProjectsPage() {
 
                   {/* Add Card */}
                   <button 
-                    onClick={() => resetForm("designing", "Web Design", "FIGMA")}
+                    onClick={() => resetForm("designing", "Web Design", "FIGMA", { draft: true })}
                     className="min-h-[250px] rounded-[40px] border-[4px] border-dashed border-[#e4e4e7] bg-white/50 hover:bg-white hover:border-[#0020d7]/30 hover:shadow-xl transition-all group flex flex-col items-center justify-center gap-4"
                   >
                      <div className="h-16 w-16 rounded-full bg-[#f7f4ef] flex items-center justify-center text-[#4a4a68] group-hover:bg-[#0020d7] group-hover:text-white transition-all duration-300">
@@ -667,7 +684,7 @@ export default function AdminProjectsPage() {
               <SectionPanel className="bg-white shadow-xl shadow-black/5">
                 <div className="flex items-center justify-between mb-10">
                   <SectionTitle title="Pinterest Inspiration Board" copy="Manage your creative moodboards and pin collections." icon={Palette} />
-                  <ActionButton onClick={() => resetForm("designing", "Graphic Design", "PINTEREST")}>
+                  <ActionButton onClick={() => resetForm("designing", "Graphic Design", "PINTEREST", { draft: true })}>
                     <Plus size={14} /> Add New Pin
                   </ActionButton>
                 </div>
@@ -699,7 +716,7 @@ export default function AdminProjectsPage() {
 
                   {/* Add Card */}
                   <button 
-                    onClick={() => resetForm("designing", "Graphic Design", "PINTEREST")}
+                    onClick={() => resetForm("designing", "Graphic Design", "PINTEREST", { draft: true })}
                     className="min-h-[400px] rounded-[40px] border-[4px] border-dashed border-[#e4e4e7] bg-white/50 hover:bg-white hover:border-[#0020d7]/30 hover:shadow-xl transition-all group flex flex-col items-center justify-center gap-4"
                   >
                      <div className="h-16 w-16 rounded-full bg-[#f7f4ef] flex items-center justify-center text-[#4a4a68] group-hover:bg-[#0020d7] group-hover:text-white transition-all duration-300">
@@ -725,10 +742,7 @@ export default function AdminProjectsPage() {
                           <Trash2 size={12} strokeWidth={2.5} />
                         </TinyButton>
                       )}
-                      <TinyButton onClick={() => {
-                        resetForm();
-                        setIsAdding(false);
-                      }}>Cancel</TinyButton>
+                      <TinyButton onClick={() => resetForm()}>Cancel</TinyButton>
                     </div>
                   </div>
 
@@ -871,7 +885,7 @@ export default function AdminProjectsPage() {
                     <SectionTitle title="Quick Selector" copy="Manage your project stack." icon={FolderKanban} />
                     <div className="pt-6 border-t-2 border-[#f7f4ef] space-y-4">
                       <div className="grid grid-cols-2 gap-3 max-h-[700px] overflow-y-auto no-scrollbar pr-1 pb-4">
-                        <button onClick={() => resetForm()} className={`flex flex-col items-center justify-center gap-3 p-4 rounded-[24px] border-2 border-dashed transition-all aspect-square ${!selectedId ? "bg-[#0020d7]/5 border-[#0020d7] text-[#0020d7]" : "bg-white/50 border-[#e4e4e7] text-[#4a4a68] hover:border-[#0020d7]/30"}`}>
+                        <button onClick={() => resetForm(undefined, undefined, undefined, { draft: true })} className={`flex flex-col items-center justify-center gap-3 p-4 rounded-[24px] border-2 border-dashed transition-all aspect-square ${!selectedId ? "bg-[#0020d7]/5 border-[#0020d7] text-[#0020d7]" : "bg-white/50 border-[#e4e4e7] text-[#4a4a68] hover:border-[#0020d7]/30"}`}>
                           <div className={`h-10 w-10 rounded-full flex items-center justify-center ${!selectedId ? "bg-[#0020d7] text-white" : "bg-[#f7f4ef]"}`}><Plus size={20} strokeWidth={3} /></div>
                           <span className="text-[11px] font-extrabold uppercase tracking-widest">Add New</span>
                         </button>

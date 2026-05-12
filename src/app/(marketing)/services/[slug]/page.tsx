@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ServicePageLayout from '@/components/services/ServicePageLayout';
 import { getServiceBySlug, getServicesContent } from '@/lib/services-content';
+import { getBehanceShowcaseEmbeds } from '@/lib/site-content';
 import { createPageMetadata } from '@/seo/page-metadata';
 import { BreadcrumbSchema, ServiceSchema } from '@/seo/schema';
 
@@ -50,6 +51,9 @@ export default async function ServicePage({ params }: PageProps) {
     notFound();
   }
 
+  const behanceShowcaseEmbeds =
+    slug === 'graphics-design' ? await getBehanceShowcaseEmbeds() : undefined;
+
   return (
     <main>
       <BreadcrumbSchema
@@ -65,7 +69,7 @@ export default async function ServicePage({ params }: PageProps) {
         path={`/services/${service.id}`}
         serviceType={service.providedServices}
       />
-      <ServicePageLayout service={service} />
+      <ServicePageLayout service={service} behanceShowcaseEmbeds={behanceShowcaseEmbeds} />
     </main>
   );
 }
