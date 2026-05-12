@@ -86,7 +86,8 @@ export async function PUT(
     if (data.title) updateData.title = data.title;
     if (data.description) updateData.description = data.description;
     if (data.content !== undefined) updateData.content = data.content;
-    if (data.mediaUrl) updateData.media_url = data.mediaUrl;
+    // Allow clearing media / URLs on update (empty string clears Supabase field).
+    if (data.mediaUrl !== undefined) updateData.media_url = data.mediaUrl;
     if (data.externalUrl !== undefined) updateData.external_url = data.externalUrl;
     if (data.iframeUrl !== undefined) updateData.iframe_url = data.iframeUrl;
     if (data.category !== undefined) updateData.category = data.category;

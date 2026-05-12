@@ -6,6 +6,10 @@ export interface PinterestPin {
   description: string;
   mediaType: PinMediaType;
   mediaPath: string;
+  /** First preferred external link (legacy); embed detection also uses `embedSourceUrls`. */
+  externalUrl?: string;
+  /** Extra URLs to scan for Vimeo/YouTube/iframe embeds (e.g. admin iframe + project link). */
+  embedSourceUrls?: string[];
   modelPath?: string;
   board: string;
   author: string;

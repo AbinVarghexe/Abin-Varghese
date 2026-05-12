@@ -39,12 +39,72 @@ const CARD_RATIO = 'h-full w-full';
 const PROJECT_PIN_HEIGHTS = [360, 420, 340, 390, 440, 320];
 const DESIGN_RETURN_QUERY = 'from=projects&workspace=designing';
 
+function hasRenderableDesignMedia(project: WorkspaceProject): boolean {
+  const media = project.imageUrl?.trim();
+  const iframe = project.liveUrl?.trim();
+  const link = project.githubUrl?.trim();
+  return Boolean(media || iframe || link);
+}
+
 /** Extracts the src URL if a full `<iframe>` tag was stored instead of a bare URL. */
 function sanitizeBehanceSrc(src: string): string {
   const trimmed = src.trim();
   if (!trimmed.startsWith('<')) return trimmed;
   const match = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
   return match ? match[1] : trimmed;
+}
+
+function extractEmbedHref(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (!trimmed.startsWith("<")) {
+    return trimmed;
+  }
+  const match = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+  return match?.[1] ?? null;
+}
+
+/**
+ * Prefer real video/embed hosts for clicks + previews. Pinterest often lives in "Project link"
+ * while Vimeo/YouTube/Behance is in the iframe field — `liveUrl ?? githubUrl` alone favored Pinterest.
+ */
+function prioritizeDesignProjectLinks(
+  liveUrl: string | null | undefined,
+  githubUrl: string | null | undefined
+): string[] {
+  const raw = [liveUrl, githubUrl]
+    .map((u) => (typeof u === 'string' ? u.trim() : ''))
+    .filter(Boolean);
+
+  const seen = new Set<string>();
+  const unique = raw.filter((u) => (seen.has(u) ? false : !!seen.add(u)));
+
+  const score = (url: string) => {
+    const h = url.toLowerCase();
+    if (h.includes('pinterest.com')) {
+      return 0;
+    }
+    if (h.includes('player.vimeo.com')) {
+      return 100;
+    }
+    if (h.includes('vimeo.com')) {
+      return 90;
+    }
+    if (h.includes('youtube.com') || h.includes('youtu.be')) {
+      return 88;
+    }
+    if (h.includes('behance.net')) {
+      return 70;
+    }
+    return 40;
+  };
+
+  return [...unique].sort((a, b) => score(b) - score(a));
 }
 
 type DesignCategory =
@@ -83,7 +143,8 @@ function toConcreteDesignCategory(
     return 'Motion Graphics';
   }
 
-  if (normalized === 'vfx & 3d animation') {
+  // Admin panel saves this label as `VFX & 3D` (see projects admin Category select).
+  if (normalized === 'vfx & 3d' || normalized === 'vfx & 3d animation') {
     return 'VFX & 3D Animation';
   }
 
@@ -607,7 +668,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const design = homePageDesignSystem;
   const uploadedProjects = useMemo(
-    () => projects.filter((project) => project.isFromDb && Boolean(project.imageUrl)),
+    () => projects.filter((project) => project.isFromDb && hasRenderableDesignMedia(project)),
     [projects]
   );
 
@@ -621,12 +682,15 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
         `${project.title} ${project.description}`
       );
       const normalizedMediaType = getDesignPinMediaType(project, normalizedCategory);
+      const linkPriority = prioritizeDesignProjectLinks(project.liveUrl, project.githubUrl);
       const pin: PinterestPin = {
         id: `project-${project.id}`,
         title: project.title,
         description: project.description,
         mediaType: normalizedMediaType,
         mediaPath: project.imageUrl,
+        externalUrl: linkPriority[0],
+        embedSourceUrls: linkPriority.length ? linkPriority : undefined,
         board: normalizedCategory,
         author: project.owner,
         tags: project.tags.length ? [...project.tags, normalizedCategory] : ['repository', 'design', normalizedCategory],
@@ -650,6 +714,30 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
     } else {
       items = feedItems.filter((item) => matchesDesignCategory(item.pin, activeTab));
     }
+
+    // Drop admin rows that only reference Pinterest with no poster/media (nothing useful to show or open).
+    const masonryTabs: DesignCategory[] = [
+      'All',
+      'Graphic design',
+      'Motion Graphics',
+      'VFX & 3D Animation',
+    ];
+    if (masonryTabs.includes(activeTab)) {
+      items = items.filter((item) => {
+        const hasPreview = Boolean(item.pin.mediaPath?.trim());
+        const urls = item.pin.embedSourceUrls ?? [];
+        const onlyPinterest =
+          urls.length > 0 && urls.every((u) => /pinterest\.com/i.test(u));
+        if (hasPreview) {
+          return true;
+        }
+        if (urls.length === 0) {
+          return false;
+        }
+        return !onlyPinterest;
+      });
+    }
+
     return items;
   }, [feedItems, activeTab]);
 
@@ -722,6 +810,8 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
     'Motion Graphics', 
     'VFX & 3D Animation'
   ].includes(activeTab);
+  const usePlayOverlayCards =
+    activeTab === 'Motion Graphics' || activeTab === 'VFX & 3D Animation';
   const showInteractiveWebDesign = activeTab === 'Web Design' && interactiveWebProjects.length > 0;
 
   return (
@@ -865,7 +955,18 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
                       transition={{ duration: 0.4, ease: "easeOut" }}
                     >
                       {isPinterestLayout ? (
-                        <PinCard pin={item.pin} href={item.href} index={index} />
+                        <PinCard
+                          pin={item.pin}
+                          href={
+                            usePlayOverlayCards
+                              ? (extractEmbedHref(item.pin.externalUrl) ??
+                                  item.pin.externalUrl ??
+                                  item.href)
+                              : item.href
+                          }
+                          index={index}
+                          showPlayOverlay={usePlayOverlayCards}
+                        />
                       ) : (
                         <ProjectGalleryCard
                           title={item.pin.title}

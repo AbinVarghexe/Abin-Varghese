@@ -44,6 +44,12 @@ const nextConfig: NextConfig = {
         hostname: "cdn.pixabay.com",
         pathname: "/**",
       },
+
+      {
+        protocol: "https",
+        hostname: "i.vimeocdn.com",
+        pathname: "/**",
+      },
       {
         protocol: "https",
         hostname: "instagram.fccu12-1.fna.fbcdn.net",

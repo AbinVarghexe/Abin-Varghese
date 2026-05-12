@@ -1,11 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { Play } from "lucide-react";
 import { homePageDesignSystem } from "@/lib/home-page-design-system";
 import { PinterestPin } from "@/lib/pinterest-content";
+
+/** Admin often stores a Vimeo/YouTube *poster* image while media type is still VIDEO. */
+function isProbableRasterPosterUrl(url: string): boolean {
+  const u = url.trim().toLowerCase();
+  if (!u) return false;
+  if (u.startsWith("data:image/")) return true;
+  if (/\.(png|jpe?g|gif|webp|avif|bmp)(?:\?|#|$)/i.test(u)) return true;
+  if (u.includes("i.vimeocdn.com")) return true;
+  if (u.includes("img.youtube.com")) return true;
+  return false;
+}
 
 interface PinCardProps {
   pin: PinterestPin;
@@ -13,6 +25,7 @@ interface PinCardProps {
   compact?: boolean;
   fixedHeight?: number;
   index?: number;
+  showPlayOverlay?: boolean;
 }
 
 export default function PinCard({
@@ -21,9 +34,15 @@ export default function PinCard({
   compact = false,
   fixedHeight,
   index = 0,
+  showPlayOverlay = false,
 }: PinCardProps) {
   const design = homePageDesignSystem;
   const cardRadius = "14px";
+  const isExternalHref = /^https?:\/\//i.test(href);
+  const videoPosterFromImageUrl =
+    pin.mediaType === "video" &&
+    Boolean(pin.mediaPath) &&
+    isProbableRasterPosterUrl(pin.mediaPath);
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -31,7 +50,7 @@ export default function PinCard({
   const containerRef = useRef<HTMLDivElement>(null);
   
   const [measuredMedia, setMeasuredMedia] = useState<{
-    path: string;
+    pinId: string;
     ratio: number;
   } | null>(null);
 
@@ -55,7 +74,13 @@ export default function PinCard({
   }, []);
 
   const { extractedSrc, iframeRatio } = useMemo(() => {
-    const sources = [pin.mediaPath, pin.externalUrl].filter(Boolean) as string[];
+    const sources = [
+      pin.mediaPath,
+      pin.externalUrl,
+      ...(pin.embedSourceUrls ?? []),
+    ]
+      .map((s) => (typeof s === "string" ? s.trim() : ""))
+      .filter(Boolean) as string[];
     
     let rawSrc = null;
     let ratio = null;
@@ -147,9 +172,21 @@ export default function PinCard({
     } catch {
       return { extractedSrc: rawSrc, iframeRatio: ratio };
     }
-  }, [pin.mediaPath, pin.externalUrl]);
+  }, [pin.mediaPath, pin.externalUrl, pin.embedSourceUrls]);
 
   const isIframeEmbed = extractedSrc !== null;
+
+  // No playable file URL and no iframe — still show card (e.g. play overlay → external page).
+  useEffect(() => {
+    if (
+      pin.mediaType === "video" &&
+      !isIframeEmbed &&
+      !videoPosterFromImageUrl &&
+      !pin.mediaPath?.trim()
+    ) {
+      setIsLoaded(true);
+    }
+  }, [pin.mediaType, pin.mediaPath, videoPosterFromImageUrl, isIframeEmbed]);
 
   useEffect(() => {
     if (!isIframeEmbed || !extractedSrc) return;
@@ -183,7 +220,7 @@ export default function PinCard({
           const data = await res.json();
           if (isMounted && data && data.width && data.height) {
             setMeasuredMedia({
-              path: pin.mediaPath || pin.externalUrl || '',
+              pinId: pin.id,
               ratio: data.width / data.height,
             });
           }
@@ -196,7 +233,7 @@ export default function PinCard({
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [extractedSrc, pin.mediaPath, pin.externalUrl]);
+  }, [extractedSrc, pin.id, pin.mediaPath, pin.externalUrl]);
 
   const fallbackAspectRatio = useMemo(() => {
     const estimatedRatio = 320 / Math.max(pin.previewHeight, 1);
@@ -204,7 +241,7 @@ export default function PinCard({
   }, [pin.previewHeight]);
 
   const activeMeasuredRatio =
-    measuredMedia && measuredMedia.path === pin.mediaPath ? measuredMedia.ratio : null;
+    measuredMedia && measuredMedia.pinId === pin.id ? measuredMedia.ratio : null;
 
   const mediaStyle = fixedHeight
     ? { minHeight: fixedHeight }
@@ -224,6 +261,8 @@ export default function PinCard({
     >
       <Link
         href={href}
+        target={isExternalHref ? "_blank" : undefined}
+        rel={isExternalHref ? "noreferrer" : undefined}
         className="group block shadow-[0_18px_45px_-38px_rgba(0,0,0,0.62)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-36px_rgba(0,0,0,0.68)]"
         style={{
           background: design.colors.surface,
@@ -255,7 +294,7 @@ export default function PinCard({
           )}
 
           <div className={`transition-opacity duration-700 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-            {pin.mediaType === "image" && (
+            {pin.mediaType === "image" && pin.mediaPath && (
               <Image
                 src={pin.mediaPath}
                 alt={pin.title}
@@ -266,7 +305,7 @@ export default function PinCard({
                   setIsLoaded(true);
                   if (!fixedHeight && image.naturalWidth && image.naturalHeight) {
                     setMeasuredMedia({
-                      path: pin.mediaPath,
+                      pinId: pin.id,
                       ratio: image.naturalWidth / image.naturalHeight,
                     });
                   }
@@ -275,37 +314,79 @@ export default function PinCard({
             )}
 
             {pin.mediaType === "video" && !videoFailed && (
-              <video
-                src={pin.mediaPath}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                onLoadedData={() => setIsLoaded(true)}
-                onError={() => {
-                  setVideoFailed(true);
-                  setIsLoaded(true);
-                }}
-                onLoadedMetadata={(event) => {
-                  if (!fixedHeight && event.currentTarget.videoWidth && event.currentTarget.videoHeight) {
-                    setMeasuredMedia({
-                      path: pin.mediaPath,
-                      ratio: event.currentTarget.videoWidth / event.currentTarget.videoHeight,
-                    });
-                  }
-                }}
-              />
+              isIframeEmbed && extractedSrc ? (
+                <iframe
+                  src={extractedSrc}
+                  className="h-full w-full border-0 transition-transform duration-700 ease-out group-hover:scale-105"
+                  allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  title={pin.title}
+                  onLoad={() => setIsLoaded(true)}
+                />
+              ) : videoPosterFromImageUrl && pin.mediaPath ? (
+                <Image
+                  src={pin.mediaPath}
+                  alt={pin.title}
+                  fill
+                  sizes={compact ? "(max-width: 1280px) 100vw, 20vw" : "(max-width: 1280px) 100vw, 30vw"}
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  onLoadingComplete={(image) => {
+                    setIsLoaded(true);
+                    if (!fixedHeight && image.naturalWidth && image.naturalHeight) {
+                      setMeasuredMedia({
+                        pinId: pin.id,
+                        ratio: image.naturalWidth / image.naturalHeight,
+                      });
+                    }
+                  }}
+                />
+              ) : pin.mediaPath ? (
+                <video
+                  src={pin.mediaPath}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  onLoadedData={() => setIsLoaded(true)}
+                  onError={() => {
+                    setVideoFailed(true);
+                    setIsLoaded(true);
+                  }}
+                  onLoadedMetadata={(event) => {
+                    if (!fixedHeight && event.currentTarget.videoWidth && event.currentTarget.videoHeight) {
+                      setMeasuredMedia({
+                        pinId: pin.id,
+                        ratio: event.currentTarget.videoWidth / event.currentTarget.videoHeight,
+                      });
+                    }
+                  }}
+                />
+              ) : (
+                <div
+                  className="h-full min-h-[180px] w-full bg-gradient-to-br from-zinc-200 to-zinc-300"
+                  aria-hidden
+                />
+              )
             )}
 
-            {pin.mediaType === "video" && videoFailed && (
+            {pin.mediaType === "video" && videoFailed && !showPlayOverlay && (
               <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-center text-xs font-medium text-zinc-500">
                 Preview unavailable
               </div>
             )}
 
-            {pin.mediaType === "model" && (
+            {pin.mediaType === "video" && videoFailed && showPlayOverlay && (
+              <div
+                className="absolute inset-0 bg-gradient-to-br from-zinc-200 to-zinc-300"
+                aria-hidden
+              />
+            )}
+
+            {pin.mediaType === "model" && pin.mediaPath && (
               <>
                 <Image
                   src={pin.mediaPath}
@@ -317,7 +398,7 @@ export default function PinCard({
                     setIsLoaded(true);
                     if (!fixedHeight && image.naturalWidth && image.naturalHeight) {
                       setMeasuredMedia({
-                        path: pin.mediaPath,
+                        pinId: pin.id,
                         ratio: image.naturalWidth / image.naturalHeight,
                       });
                     }
@@ -325,9 +406,14 @@ export default function PinCard({
                 />
               </>
             )}
-              </>
-            )}
           </div>
+          {showPlayOverlay ? (
+            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/20">
+              <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/60 bg-black/55 text-white shadow-[0_12px_30px_rgba(0,0,0,0.45)]">
+                <Play className="h-6 w-6 fill-current" />
+              </span>
+            </div>
+          ) : null}
 
         </div>
       </Link>
