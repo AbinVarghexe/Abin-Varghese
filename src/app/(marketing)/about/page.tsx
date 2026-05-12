@@ -7,7 +7,7 @@ import { getSiteCopyContent } from "@/lib/site-copy-content";
 import { createPageMetadata } from "@/seo/page-metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "About",
+  title: "About Abin Varghese | Front-End Developer & UI/UX Designer",
   description:
     "Discover the story of Abin Varghese — a self-driven front-end developer and UI/UX designer from Kerala, India, studying at Amal Jyothi College of Engineering. Expert in React, Next.js, Figma, and Tailwind CSS.",
   path: "/about",
