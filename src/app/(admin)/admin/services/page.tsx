@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AdminSectionWorkspace, { 
   SectionTitle, 
   Field, 
   TextareaField, 
   SectionPanel, 
   TinyButton, 
-  ActionButton,
-  SelectField
+  ActionButton 
 } from "@/components/admin/AdminSectionWorkspace";
 import { 
   Save, 
@@ -29,9 +28,7 @@ import {
   ChevronRight,
   Layout,
   ExternalLink,
-  Loader2,
-  RefreshCw,
-  Globe
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,49 +47,19 @@ export default function AdminServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [selectedProjectIndex, setSelectedProjectIndex] = useState<number>(0);
-  const [allProjects, setAllProjects] = useState<any[]>([]);
   const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
-  const saveActionRef = useRef<(() => Promise<void>) | null>(null);
-
-  const saveServices = useCallback(async () => {
-    setSaving(true);
-    const toastId = toast.loading("Synchronizing service portfolio...");
-    try {
-      const response = await fetch("/api/admin/services", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ services }),
-      });
-      if (!response.ok) throw new Error("Save failed");
-      toast.success("Portfolio synchronized successfully.", { id: toastId });
-    } catch {
-      toast.error("Portfolio synchronization failed.", { id: toastId });
-    } finally {
-      setSaving(false);
-    }
-  }, [services]);
 
   useEffect(() => {
-    saveActionRef.current = saveServices;
-  }, [saveServices]);
-
-  useEffect(() => {
-    const stableSave = async () => {
-      if (saveActionRef.current) {
-        await saveActionRef.current();
-      }
-    };
-    
-    setSaveAction(() => stableSave);
+    setSaveAction(() => saveServices);
     setStatusText(saving ? "Syncing..." : "System Standby");
     setIsSaving(saving);
     
     return () => {
       setSaveAction(null);
     };
-  }, [saving, setSaveAction, setIsSaving, setStatusText]);
+  }, [saveServices, saving, setSaveAction, setIsSaving, setStatusText]);
 
   useEffect(() => {
     async function loadServices() {
@@ -105,65 +72,6 @@ export default function AdminServicesPage() {
     }
     void loadServices();
   }, []);
-
-  const [refreshingProjects, setRefreshingProjects] = useState(false);
-
-  const loadAllProjects = useCallback(async () => {
-    setRefreshingProjects(true);
-    try {
-      // 1. Fetch standard projects
-      const projResponse = await fetch("/api/admin/projects", { cache: "no-store" });
-      let projectsList = [];
-      if (projResponse.ok) {
-        const data = await projResponse.json();
-        projectsList = data.projects || [];
-      }
-
-      // 2. Fetch showcase items (Behance/Pinterest)
-      const contentResponse = await fetch("/api/admin/site-content", { cache: "no-store" });
-      if (contentResponse.ok) {
-        const data = await contentResponse.json();
-        
-        // Convert Behance embeds to Project shape
-        const behanceProjects = (data.behanceShowcase || []).map((item: any) => ({
-          id: item.id,
-          title: item.title || "Untitled Behance Project",
-          type: "BEHANCE",
-          mediaType: "IMAGE",
-          mediaUrl: "", // Showcases usually have iframeUrls
-          externalUrl: item.src, // Use the src as the link
-          tags: ["Behance", "Showcase"],
-          workspace: "designing",
-          isShowcaseItem: true
-        }));
-
-        // Convert Pinterest items to Project shape
-        const pinterestProjects = (data.pinterestShowcase || []).map((item: any) => ({
-          id: item.id,
-          title: item.title || "Untitled Pinterest Project",
-          type: "PINTEREST",
-          mediaType: "IMAGE",
-          mediaUrl: item.src,
-          externalUrl: item.src,
-          tags: ["Pinterest", "Showcase"],
-          workspace: "designing",
-          isShowcaseItem: true
-        }));
-
-        setAllProjects([...projectsList, ...behanceProjects, ...pinterestProjects]);
-      } else {
-        setAllProjects(projectsList);
-      }
-    } catch (error) {
-      console.error("Failed to load projects:", error);
-    } finally {
-      setRefreshingProjects(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadAllProjects();
-  }, [loadAllProjects]);
 
   const selectedService = useMemo(
     () => services.find((service) => service.id === selectedServiceId) || null,
@@ -220,6 +128,23 @@ export default function AdminServicesPage() {
     setSelectedProjectIndex(0);
   }
 
+  async function saveServices() {
+    setSaving(true);
+    const toastId = toast.loading("Synchronizing service portfolio...");
+    try {
+      const response = await fetch("/api/admin/services", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ services }),
+      });
+      if (!response.ok) throw new Error("Save failed");
+      toast.success("Portfolio synchronized successfully.", { id: toastId });
+    } catch {
+      toast.error("Portfolio synchronization failed.", { id: toastId });
+    } finally {
+      setSaving(false);
+    }
+  }
 
   if (!selectedService) {
     return (
@@ -308,22 +233,6 @@ export default function AdminServicesPage() {
                   value={selectedService.accentColor}
                   onChange={(v) => updateSelectedService({ accentColor: v })}
                   icon={Palette}
-                />
-              </div>
-              <div className="lg:col-span-6">
-                <Field
-                  label="Projects Redirect URL (e.g., /projects#graphics)"
-                  value={selectedService.projectsUrl || ""}
-                  onChange={(v) => updateSelectedService({ projectsUrl: v })}
-                  icon={Globe}
-                />
-              </div>
-              <div className="lg:col-span-6">
-                <Field
-                  label="Redirect Button Label (e.g., View More)"
-                  value={selectedService.projectsLabel || ""}
-                  onChange={(v) => updateSelectedService({ projectsLabel: v })}
-                  icon={Type}
                 />
               </div>
               <div className="lg:col-span-12">
@@ -418,117 +327,6 @@ export default function AdminServicesPage() {
                     className="p-8 rounded-[33px] bg-[#f7f4ef]/40 border-2 border-[#e4e4e7] space-y-8"
                   >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="md:col-span-2">
-                        <div className="flex flex-col gap-6 p-6 rounded-[24px] bg-white border-2 border-[#0020d7]/10 mb-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-lg bg-[#0020d7]/5 flex items-center justify-center text-[#0020d7]">
-                                <Package size={18} />
-                              </div>
-                              <h4 className="text-[13px] font-extrabold text-[#0b0b0c] uppercase tracking-wider">Project Linkage</h4>
-                            </div>
-                            <button 
-                              onClick={() => loadAllProjects()}
-                              className={`p-2 rounded-full hover:bg-zinc-100 transition-colors ${refreshingProjects ? 'animate-spin' : ''}`}
-                              title="Refresh projects list"
-                            >
-                              <RefreshCw size={14} className="text-zinc-400" />
-                            </button>
-                          </div>
-                          
-                          <AdminSectionWorkspace.SelectField
-                            label="Synchronize with Existing Project"
-                            value={selectedProject.projectId || ""}
-                            options={[
-                              { label: "None (Internal Showcase Only)", value: "" },
-                              ...allProjects.map(p => ({ label: `[${p.type}] ${p.title}`, value: p.id }))
-                            ]}
-                            onChange={(v) => {
-                              const project = allProjects.find(p => p.id === v);
-                              if (project) {
-                                // Intelligent mapping based on project type/category
-                                const isVideo = project.category?.toLowerCase().includes("motion") || 
-                                              project.category?.toLowerCase().includes("vfx") || 
-                                              project.mediaType === "VIDEO";
-                                
-                                const links = [];
-                                if (project.externalUrl) {
-                                  let icon: any = "ExternalLink";
-                                  if (project.externalUrl.includes("github.com")) icon = "Github";
-                                  else if (project.externalUrl.includes("figma.com")) icon = "Figma";
-                                  else if (project.externalUrl.includes("behance.net")) icon = "ExternalLink";
-                                  
-                                  links.push({ 
-                                    label: isVideo ? "Watch Reel" : project.externalUrl.includes("behance.net") ? "View on Behance" : "View Project", 
-                                    url: project.externalUrl, 
-                                    icon 
-                                  });
-                                }
-
-                                updateSelectedProject({
-                                  projectId: project.id,
-                                  projectSlug: project.slug,
-                                  title: project.title,
-                                  description: project.description,
-                                  mockupImage: project.mediaUrl || (project.type === 'BEHANCE' ? "" : ""),
-                                  videoUrl: isVideo ? project.externalUrl || "" : "",
-                                  iframeUrl: project.isShowcaseItem || project.type === 'BEHANCE' ? project.externalUrl : "",
-                                  techStack: project.tags || [],
-                                  projectLinks: links,
-                                });
-                                toast.success(`Deep-synced with "${project.title}"`);
-                              } else {
-                                updateSelectedProject({ projectId: "", projectSlug: "", iframeUrl: "" });
-                              }
-                            }}
-                          />
-                          
-                          {selectedProject.projectId && (
-                            <div className="flex items-center gap-2">
-                              <TinyButton 
-                                onClick={() => {
-                                  const project = allProjects.find(p => p.id === selectedProject.projectId);
-                                  if (project) {
-                                    const isVideo = project.category?.toLowerCase().includes("motion") || 
-                                                  project.category?.toLowerCase().includes("vfx") || 
-                                                  project.mediaType === "VIDEO";
-                                    
-                                    const links = [];
-                                    if (project.externalUrl) {
-                                      let icon: any = "ExternalLink";
-                                      if (project.externalUrl.includes("github.com")) icon = "Github";
-                                      else if (project.externalUrl.includes("figma.com")) icon = "Figma";
-                                      else if (project.externalUrl.includes("behance.net")) icon = "ExternalLink";
-                                      
-                                      links.push({ 
-                                        label: isVideo ? "Watch Reel" : project.externalUrl.includes("behance.net") ? "View on Behance" : "View Project", 
-                                        url: project.externalUrl, 
-                                        icon 
-                                      });
-                                    }
-
-                                    updateSelectedProject({
-                                      projectSlug: project.slug,
-                                      title: project.title,
-                                      description: project.description,
-                                      mockupImage: project.mediaUrl || (project.type === 'BEHANCE' ? "" : ""),
-                                      videoUrl: isVideo ? project.externalUrl || "" : "",
-                                      iframeUrl: project.isShowcaseItem || project.type === 'BEHANCE' ? project.externalUrl : "",
-                                      techStack: project.tags || [],
-                                      projectLinks: links,
-                                    });
-                                    toast.success("Full project synchronization complete");
-                                  }
-                                }}
-                                variant="primary"
-                                className="w-full justify-center py-3"
-                              >
-                                <RefreshCw size={12} className="mr-2" /> Full System Sync
-                              </TinyButton>
-                            </div>
-                          )}
-                        </div>
-                      </div>
                       <div className="md:col-span-2">
                         <Field
                           label="Showcase Heading"

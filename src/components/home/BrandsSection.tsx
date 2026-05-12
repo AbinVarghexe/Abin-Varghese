@@ -41,7 +41,6 @@ const BrandsSection = ({ logos }: BrandsSectionProps) => {
             alt="Decorative Icon"
             fill
             className="object-contain blur-[2px] brightness-0"
-            sizes="(max-width: 768px) 128px, 160px"
           />
         </div>
 
@@ -61,7 +60,6 @@ const BrandsSection = ({ logos }: BrandsSectionProps) => {
             alt="Decorative Icon"
             fill
             className="object-contain blur-[1px] brightness-0 invert"
-            sizes="(max-width: 768px) 128px, 200px"
           />
         </div>
 

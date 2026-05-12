@@ -13,7 +13,6 @@ export interface PinterestPin {
   dominantColor: string;
   previewHeight: number;
   likes: number;
-  externalUrl?: string | null;
 }
 
 const MODEL_PREVIEW_IMAGES = [

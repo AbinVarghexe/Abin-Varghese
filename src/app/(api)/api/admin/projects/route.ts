@@ -15,7 +15,11 @@ const projectSchema = z.object({
   mediaType: z.enum(['IMAGE', 'VIDEO', 'GIF', 'MODEL']),
   mediaUrl: z.string().default(''),
   // Accept valid URL, empty string, or null
-    externalUrl: z.string().optional().nullable(),
+  externalUrl: z.union([
+    z.string().url(),
+    z.literal(''),
+    z.null(),
+  ]).optional().default(null),
   iframeUrl: z.string().optional().nullable(),
   category: z.string().optional().nullable(),
   tags: z.array(z.string()).default([]),

@@ -115,8 +115,6 @@ const siteCopySchema = z.object({
   footerCtaCopy: z.string(),
   footerCopyright: z.string(),
   footerCredit: z.string(),
-  aboutResumeUrl: z.string().default(""),
-  aboutDesignResumeUrl: z.string().default(""),
 });
 
 export async function GET() {

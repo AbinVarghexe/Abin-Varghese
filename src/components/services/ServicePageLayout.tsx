@@ -30,25 +30,6 @@ const iconMap = {
 
 // ─── Video Preview Sub-Component ──────────────────────────────────────────
 function VideoPreview({ videoUrl, poster }: { videoUrl: string; poster?: string }) {
-  if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.includes('vimeo.com')) {
-    let embedUrl = videoUrl;
-    if (videoUrl.includes('youtube.com/watch?v=')) {
-      embedUrl = videoUrl.replace('watch?v=', 'embed/').split('&')[0];
-    } else if (videoUrl.includes('youtu.be/')) {
-      embedUrl = videoUrl.replace('youtu.be/', 'www.youtube.com/embed/');
-    } else if (videoUrl.includes('vimeo.com/')) {
-      embedUrl = videoUrl.replace('vimeo.com/', 'player.vimeo.com/video/');
-    }
-
-    return (
-      <iframe
-        src={`${embedUrl}?autoplay=1&mute=1&loop=1&background=1&playlist=${embedUrl.split('/').pop()}`}
-        className="w-full h-full object-cover border-0 pointer-events-none"
-        allow="autoplay; fullscreen"
-      />
-    );
-  }
-
   return (
     <video
       autoPlay
@@ -452,12 +433,12 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                                 </div>
                                 <div>
                                    <a 
-                                     href={item.projectSlug ? `/projects/${item.projectSlug}` : (item.projectLinks?.[0]?.url || item.url || "#")} 
-                                     target={item.projectSlug ? undefined : "_blank"} 
-                                     rel={item.projectSlug ? undefined : "noopener noreferrer"}
+                                     href={item.projectLinks?.[0]?.url || item.url || "#"} 
+                                     target="_blank" 
+                                     rel="noopener noreferrer"
                                      className="hover:text-blue-600 transition-colors inline-block cursor-pointer"
                                      onClick={(e) => e.stopPropagation()}
-                                     onMouseEnter={() => setHoveredLinkLabel(item.projectSlug ? "View Case Study" : "View Project")}
+                                     onMouseEnter={() => setHoveredLinkLabel("View Project")}
                                      onMouseLeave={() => setHoveredLinkLabel(activeIndex < projectItems.length - 1 ? "Next Project" : "Last Project")}
                                    >
                                      <h3 className="text-2xl md:text-3xl font-black text-zinc-900 tracking-tight leading-none mb-1">{item.title}</h3>
@@ -468,18 +449,18 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                                      ))}
                                    </div>
                                 </div>
-                                <a 
-                                  href={item.projectSlug ? `/projects/${item.projectSlug}` : (item.projectLinks?.[0]?.url || item.url || "#")} 
-                                  target={item.projectSlug ? undefined : "_blank"} 
-                                  rel={item.projectSlug ? undefined : "noopener noreferrer"}
-                                  className="w-12 h-12 rounded-full border-2 border-zinc-100 flex items-center justify-center text-zinc-400 hover:border-zinc-900 hover:text-zinc-900 transition-colors cursor-pointer z-30 relative"
-                                  onClick={(e) => e.stopPropagation()}
-                                  onMouseEnter={() => setHoveredLinkLabel(item.projectSlug ? "View Case Study" : "View Project")}
-                                  onMouseLeave={() => setHoveredLinkLabel(activeIndex < projectItems.length - 1 ? "Next Project" : "Last Project")}
-                                >
-                                  <ArrowUpRight className="w-6 h-6" />
-                                </a>
                               </div>
+                              <a 
+                                href={item.projectLinks?.[0]?.url || item.url || "#"} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="w-12 h-12 rounded-full border-2 border-zinc-100 flex items-center justify-center text-zinc-400 hover:border-zinc-900 hover:text-zinc-900 transition-colors cursor-pointer z-30 relative"
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseEnter={() => setHoveredLinkLabel("View Project")}
+                                onMouseLeave={() => setHoveredLinkLabel(activeIndex < projectItems.length - 1 ? "Next Project" : "Last Project")}
+                              >
+                                <ArrowUpRight className="w-6 h-6" />
+                              </a>
                             </div>
 
                             <p className="text-sm md:text-lg text-zinc-600 font-medium leading-relaxed max-w-lg balance mb-8">
@@ -502,22 +483,13 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
 
                           <div className="lg:w-[45%] h-[300px] lg:h-full relative overflow-hidden bg-white/40 flex items-start justify-center">
                             <div className="absolute inset-0 z-0 opacity-[0.05]" style={{ backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`, backgroundSize: '24px 24px' }} />
-                            <div className="relative w-full h-full flex items-center justify-center p-4">
-                              <motion.div 
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.6 }}
-                                className="relative w-full h-full bg-zinc-100 rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-white/40 group-hover:scale-[1.02] transition-transform duration-700"
+                            <div className="relative w-full h-full flex items-center justify-center">
+                              <img src="/mockups/hand_held_phone.png" alt="Mockup" className="absolute inset-0 w-full h-full object-contain z-20 pointer-events-none scale-100 lg:scale-[1.1] " />
+                              <div 
+                                className="relative w-[124px] h-[268px] lg:w-[145px] lg:h-[312px] bg-zinc-200 rounded-[28px] overflow-hidden z-10 shadow-inner"
+                                style={{ transform: 'perspective(1200px) rotateY(-11deg) rotateX(4deg) translate(-5px, -26px)' }}
                               >
-                                {item.iframeUrl ? (
-                                  <iframe 
-                                    src={item.iframeUrl} 
-                                    className="w-full h-full border-0"
-                                    allowFullScreen
-                                    loading="lazy"
-                                    title={item.title}
-                                  />
-                                ) : item.videoUrl ? (
+                                {item.videoUrl ? (
                                   <VideoPreview videoUrl={item.videoUrl} poster={item.mockupImage} />
                                 ) : item.mockupImage ? (
                                   <img src={item.mockupImage} alt={item.title} className="w-full h-full object-cover" />
@@ -526,10 +498,7 @@ export default function ServicePageLayout({ service }: ServicePageLayoutProps) {
                                     <Sparkles className="w-8 h-8 text-white/20" />
                                   </div>
                                 )}
-
-                                {/* Subtle Glass Reflection Overlay */}
-                                <div className="absolute inset-0 bg-linear-to-tr from-white/10 to-transparent pointer-events-none z-10" />
-                              </motion.div>
+                              </div>
                             </div>
                           </div>
 

@@ -183,46 +183,21 @@ const Herosection = ({
   
   const [availabilityText, setAvailabilityText] = useState(data.heroAvailabilityText);
   const [isAvailable, setIsAvailable] = useState(true);
-  const [showHero3d, setShowHero3d] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 767px)");
-    const update = () => setShowHero3d(media.matches);
-    update();
-
-    if (media.addEventListener) {
-      media.addEventListener("change", update);
-    } else {
-      media.addListener(update);
-    }
-
-    return () => {
-      if (media.removeEventListener) {
-        media.removeEventListener("change", update);
-      } else {
-        media.removeListener(update);
-      }
-    };
-  }, []);
 
   // Fetch real-time availability from Cal.com via our API route
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      fetch('/api/cal/availability')
-        .then(res => res.json())
-        .then(json => {
-          if (json.available && json.message) {
-            setAvailabilityText(`✦ ${json.message}`);
-            setIsAvailable(true);
-          } else if (json.available === false) {
-            setAvailabilityText('✦ Fully booked right now');
-            setIsAvailable(false);
-          }
-        })
-        .catch(err => console.error("Could not fetch Cal.com availability:", err));
-    }, 1200);
-
-    return () => window.clearTimeout(timeoutId);
+    fetch('/api/cal/availability')
+      .then(res => res.json())
+      .then(json => {
+        if (json.available && json.message) {
+          setAvailabilityText(`✦ ${json.message}`);
+          setIsAvailable(true);
+        } else if (json.available === false) {
+          setAvailabilityText('✦ Fully booked right now');
+          setIsAvailable(false);
+        }
+      })
+      .catch(err => console.error("Could not fetch Cal.com availability:", err));
   }, []);
 
   return (
@@ -280,7 +255,7 @@ const Herosection = ({
           <div className="flex max-w-4xl flex-col items-center text-center">
             {/* Mobile-only 3D Robot Container */}
             <div className="md:hidden w-full h-[360px] -mt-20 mb-0 pointer-events-auto">
-              {showHero3d ? <Hero3DLayer /> : null}
+              <Hero3DLayer />
             </div>
 
             {/* headline */}

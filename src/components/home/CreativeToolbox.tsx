@@ -46,7 +46,6 @@ const CreativeToolbox = ({ heading, intro, categories, tools }: CreativeToolboxP
             alt="Background Element"
             fill
             className="object-contain"
-            sizes="(max-width: 1024px) 90vw, 1000px"
           />
         </motion.div>
 
@@ -135,8 +134,6 @@ const CreativeToolbox = ({ heading, intro, categories, tools }: CreativeToolboxP
                       src={tool.icon}
                       alt={tool.name}
                       className="w-full h-full object-contain"
-                      loading="lazy"
-                      decoding="async"
                     />
                   </div>
                   <div className="min-w-0">

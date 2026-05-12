@@ -213,39 +213,7 @@ export const VideoEditing = () => {
 };
 
 // --- 3. Graphics Design ---
-export const GraphicDesign = ({ imageUrl, iframeUrl }: { imageUrl?: string; iframeUrl?: string }) => {
-  const displayUrl = useMemo(() => {
-    if (imageUrl) return imageUrl;
-    if (iframeUrl) return extractUrlFromEmbed(iframeUrl);
-    return "";
-  }, [imageUrl, iframeUrl]);
-  
-  const isIframe = !imageUrl && !!iframeUrl;
-
-  if (displayUrl) {
-    return (
-      <div className="relative w-full h-full overflow-hidden p-3 md:p-5">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          className="w-full h-full rounded-[24px] overflow-hidden border border-zinc-100 shadow-xl bg-white"
-        >
-          {isIframe ? (
-            <iframe 
-              src={displayUrl} 
-              className="w-full h-full border-0"
-              loading="lazy"
-              title="Graphic Design Project"
-            />
-          ) : (
-            <img src={displayUrl} alt="Graphic Design" className="w-full h-full object-cover" />
-          )}
-          <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent pointer-events-none" />
-        </motion.div>
-      </div>
-    );
-  }
-
+export const GraphicDesign = () => {
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center pt-8 md:pt-16 pb-24 md:pb-32 px-4 md:px-8 overflow-hidden bg-transparent">
       {/* Artboard Background with Grid */}

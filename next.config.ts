@@ -90,16 +90,6 @@ const nextConfig: NextConfig = {
         hostname: "static.vecteezy.com",
         pathname: "/**",
       },
-      {
-        protocol: "https",
-        hostname: "i.vimeocdn.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "img.youtube.com",
-        pathname: "/**",
-      },
     ],
   },
 

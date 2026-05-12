@@ -38,8 +38,6 @@ export const metadata: Metadata = createPageMetadata({
   ],
 });
 
-export const revalidate = 3600;
-
 export default async function Home() {
   const [heroData, homeData, aboutData, siteCopy, services, allProjects, dbAchievements] =
     await Promise.all([

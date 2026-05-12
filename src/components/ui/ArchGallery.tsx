@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import dynamic from "next/dynamic";
+import Lottie from "lottie-react";
 import { Zap } from "lucide-react";
-
-const Lottie = dynamic(() => import("lottie-react").then((mod) => mod.default), { ssr: false });
 
 interface Category {
   title: string;
@@ -20,12 +18,12 @@ interface ArchGalleryProps {
   onSelect: (index: number) => void;
 }
 
-function useLottieData(url?: string, enabled = true) {
+function useLottieData(url?: string) {
   const [animationData, setAnimationData] = useState<any>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!url || !enabled) return;
+    if (!url) return;
     let cancelled = false;
     fetch(url)
       .then(res => {
@@ -35,20 +33,12 @@ function useLottieData(url?: string, enabled = true) {
       .then(data => { if (!cancelled) setAnimationData(data); })
       .catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };
-  }, [url, enabled]);
+  }, [url]);
 
   return { animationData, error };
 }
 
-const LottieCardPlayer = ({
-  url,
-  fallbackImage,
-  enabled = true,
-}: {
-  url?: string;
-  fallbackImage?: string;
-  enabled?: boolean;
-}) => {
+const LottieCardPlayer = ({ url, fallbackImage }: { url?: string, fallbackImage?: string }) => {
   const urlLower = url?.toLowerCase() || '';
   const fallbackLower = fallbackImage?.toLowerCase() || '';
   
@@ -68,7 +58,6 @@ const LottieCardPlayer = ({
           loop 
           muted 
           playsInline 
-          preload="metadata"
           className="w-full h-full object-cover"
         />
       </div>
@@ -82,29 +71,11 @@ const LottieCardPlayer = ({
         src={imgSrc || fallbackImage} 
         alt="Creative content" 
         className="w-full h-full object-cover"
-        loading="lazy"
-        decoding="async"
       />
     );
   }
 
-  if (!enabled) {
-    if (fallbackImage) {
-      return (
-        <img
-          src={fallbackImage}
-          alt="Card graphic"
-          className="w-full h-full object-cover"
-          loading="lazy"
-          decoding="async"
-        />
-      );
-    }
-
-    return <div className="w-full h-full bg-zinc-100" />;
-  }
-
-  const { animationData, error } = useLottieData(url, enabled);
+  const { animationData, error } = useLottieData(url);
 
   if (error || (!url && !fallbackImage)) {
     return (
@@ -138,8 +109,6 @@ const LottieCardPlayer = ({
         src={fallbackImage} 
         alt="Card graphic" 
         className="w-full h-full object-cover"
-        loading="lazy"
-        decoding="async"
       />
     );
   }
@@ -202,7 +171,7 @@ export function ArchGallery({ categories, selectedIndex, onSelect }: ArchGallery
               >
                 <div className="w-full h-full relative">
                   <div className="w-full h-full transition-all duration-700">
-                    <LottieCardPlayer url={cat.lottieUrl} fallbackImage={cat.image} enabled={isSelected || isHovered} />
+                    <LottieCardPlayer url={cat.lottieUrl} fallbackImage={cat.image} />
                   </div>
                   <div className="absolute inset-0 bg-linear-to-b from-black/0 via-black/0 to-black/20 opacity-60 pointer-events-none" />
                 </div>

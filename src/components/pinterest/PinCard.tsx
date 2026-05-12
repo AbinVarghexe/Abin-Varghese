@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,9 +55,6 @@ export default function PinCard({
   }, []);
 
   const { extractedSrc, iframeRatio } = useMemo(() => {
-    // Only process URLs if we are in view or close to it
-    if (!isInView && !isLoaded) return { extractedSrc: null, iframeRatio: null };
-
     const sources = [pin.mediaPath, pin.externalUrl].filter(Boolean) as string[];
     
     let rawSrc = null;
@@ -66,8 +63,8 @@ export default function PinCard({
     for (const src of sources) {
       const trimmed = src.trim();
       
-      if (trimmed.includes('<iframe')) {
-        const matchSrc = trimmed.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+      if (trimmed.startsWith('<iframe')) {
+        const matchSrc = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
         if (matchSrc) rawSrc = matchSrc[1];
 
         const widthAttr = trimmed.match(/width\s*=\s*["']?([^"']+)["']?/i);
@@ -155,7 +152,7 @@ export default function PinCard({
   const isIframeEmbed = extractedSrc !== null;
 
   useEffect(() => {
-    if (!isInView || !isIframeEmbed || !extractedSrc) return;
+    if (!isIframeEmbed || !extractedSrc) return;
     
     // Fallback: force load state after 2.5s if onLoad doesn't fire
     const timer = setTimeout(() => setIsLoaded(true), 2500);
@@ -207,9 +204,7 @@ export default function PinCard({
   }, [pin.previewHeight]);
 
   const activeMeasuredRatio =
-    measuredMedia && (measuredMedia.path === pin.mediaPath || measuredMedia.path === pin.externalUrl) 
-      ? measuredMedia.ratio 
-      : (isIframeEmbed && iframeRatio) ? iframeRatio : null;
+    measuredMedia && measuredMedia.path === pin.mediaPath ? measuredMedia.ratio : null;
 
   const mediaStyle = fixedHeight
     ? { minHeight: fixedHeight }
@@ -223,7 +218,7 @@ export default function PinCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ 
         duration: 0.6, 
-        delay: Math.min(index * 0.05, 0.3), // Cap the stagger delay to avoid long waits
+        delay: index * 0.05, // Staggered reveal
         ease: [0.22, 1, 0.36, 1] 
       }}
     >
@@ -238,47 +233,29 @@ export default function PinCard({
         }}
       >
         <div className="relative w-full overflow-hidden" style={{ ...mediaStyle, borderRadius: cardRadius }}>
-          {/* Static Placeholder (Always visible until media loads) */}
-          <AnimatePresence>
-            {!isLoaded && (
-              <motion.div 
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 z-10 overflow-hidden bg-zinc-100/50 backdrop-blur-sm"
-              >
-                <div className="h-full w-full" style={{
-                  background: `linear-gradient(135deg, ${pin.dominantColor || '#f4f4f5'}33 0%, #ffffff 100%)`,
-                }} />
-                <div className="absolute inset-0" style={{
+          {/* Shimmering Skeleton Placeholder */}
+          {!isLoaded && (
+            <div 
+              className="absolute inset-0 z-10 overflow-hidden bg-zinc-100"
+            >
+              <div 
+                className="h-full w-full"
+                style={{
                   background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
                   transform: 'translateX(-100%)',
                   animation: 'shimmer 2s infinite',
-                }} />
-                <style dangerouslySetInnerHTML={{ __html: `@keyframes shimmer { 100% { transform: translateX(100%); } }` }} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+                }}
+              />
+               <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes shimmer {
+                  100% { transform: translateX(100%); }
+                }
+              `}} />
+            </div>
+          )}
 
-          {/* Lazy Media Container */}
-          <div className={`transition-all duration-700 ease-out ${isLoaded ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-105 blur-lg'}`}>
-            {isInView && (
-              <>
-            {isIframeEmbed && extractedSrc && (
-              <div className="absolute inset-0 h-full w-full overflow-hidden bg-transparent">
-                <iframe
-                  src={extractedSrc}
-                  className="absolute inset-0 h-full w-full transition-transform duration-700 ease-out scale-[1.02] group-hover:scale-[1.12]"
-                  style={{ border: 'none', background: 'transparent' }}
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowTransparency={true}
-                  loading="lazy"
-                  onLoad={() => setIsLoaded(true)}
-                />
-                {/* Transparent overlay to capture clicks for the Link component while allowing iframe to initialize */}
-                <div className="absolute inset-0 z-10 bg-transparent cursor-pointer" />
-              </div>
-            )}
-
-            {pin.mediaType === "image" && !isIframeEmbed && (
+          <div className={`transition-opacity duration-700 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+            {pin.mediaType === "image" && (
               <Image
                 src={pin.mediaPath}
                 alt={pin.title}
@@ -297,7 +274,7 @@ export default function PinCard({
               />
             )}
 
-            {(pin.mediaType === "video" || pin.mediaType === "image") && !videoFailed && !isIframeEmbed && pin.mediaPath.endsWith('.mp4') && (
+            {pin.mediaType === "video" && !videoFailed && (
               <video
                 src={pin.mediaPath}
                 autoPlay
@@ -322,27 +299,36 @@ export default function PinCard({
               />
             )}
 
-            {pin.mediaType === "model" && !isIframeEmbed && (
-              <Image
-                src={pin.mediaPath}
-                alt={pin.title}
-                fill
-                sizes={compact ? "(max-width: 1280px) 100vw, 20vw" : "(max-width: 1280px) 100vw, 30vw"}
-                className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                onLoadingComplete={(image) => {
-                  setIsLoaded(true);
-                  if (!fixedHeight && image.naturalWidth && image.naturalHeight) {
-                    setMeasuredMedia({
-                      path: pin.mediaPath,
-                      ratio: image.naturalWidth / image.naturalHeight,
-                    });
-                  }
-                }}
-              />
+            {pin.mediaType === "video" && videoFailed && (
+              <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-center text-xs font-medium text-zinc-500">
+                Preview unavailable
+              </div>
+            )}
+
+            {pin.mediaType === "model" && (
+              <>
+                <Image
+                  src={pin.mediaPath}
+                  alt={pin.title}
+                  fill
+                  sizes={compact ? "(max-width: 1280px) 100vw, 20vw" : "(max-width: 1280px) 100vw, 30vw"}
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  onLoadingComplete={(image) => {
+                    setIsLoaded(true);
+                    if (!fixedHeight && image.naturalWidth && image.naturalHeight) {
+                      setMeasuredMedia({
+                        path: pin.mediaPath,
+                        ratio: image.naturalWidth / image.naturalHeight,
+                      });
+                    }
+                  }}
+                />
+              </>
             )}
               </>
             )}
           </div>
+
         </div>
       </Link>
     </motion.article>

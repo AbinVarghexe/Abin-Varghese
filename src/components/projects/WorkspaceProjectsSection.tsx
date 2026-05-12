@@ -49,14 +49,14 @@ function sanitizeBehanceSrc(src: string): string {
 
 type DesignCategory =
   | 'All'
-  | 'Graphic Design'
+  | 'Graphic design'
   | 'Web Design'
   | 'Motion Graphics'
   | 'VFX & 3D Animation';
 
 const DESIGN_CATEGORIES: DesignCategory[] = [
   'All',
-  'Graphic Design',
+  'Graphic design',
   'Web Design',
   'Motion Graphics',
   'VFX & 3D Animation',
@@ -72,7 +72,7 @@ function toConcreteDesignCategory(
   const normalized = value.trim().toLowerCase();
 
   if (normalized === 'graphic design') {
-    return 'Graphic Design';
+    return 'Graphic design';
   }
 
   if (normalized === 'web design') {
@@ -83,7 +83,7 @@ function toConcreteDesignCategory(
     return 'Motion Graphics';
   }
 
-  if (normalized === 'vfx & 3d animation' || normalized === 'vfx & 3d') {
+  if (normalized === 'vfx & 3d animation') {
     return 'VFX & 3D Animation';
   }
 
@@ -122,7 +122,7 @@ function normalizeDesignCategory(
   const fingerprint = `${category ?? ''} ${tags.join(' ')} ${fallbackText}`.toLowerCase();
 
   if (/graphic|branding|poster|logo|collage|editorial|print|typography/.test(fingerprint)) {
-    return 'Graphic Design';
+    return 'Graphic design';
   }
 
   if (/motion|animation|kinetic|after effects|lottie|reel/.test(fingerprint)) {
@@ -152,7 +152,7 @@ function matchesDesignCategory(pin: PinterestPin, category: DesignCategory) {
   const fingerprint = `${pin.title} ${pin.description} ${pin.board} ${pin.tags.join(' ')}`.toLowerCase();
 
   switch (category) {
-    case 'Graphic Design':
+    case 'Graphic design':
       return pin.mediaType === 'image' && /(graphic|branding|logo|collage|poster|typography|visual language)/.test(fingerprint);
     case 'Web Design':
       return /(ui|ux|dashboard|component|design system|interface|app|prototype|wireframe|web|website|landing|frontend|ecommerce|cms|usability|user flow|journey|interaction)/.test(fingerprint);
@@ -607,7 +607,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const design = homePageDesignSystem;
   const uploadedProjects = useMemo(
-    () => projects.filter((project) => project.isFromDb && (Boolean(project.imageUrl) || Boolean(project.githubUrl))),
+    () => projects.filter((project) => project.isFromDb && Boolean(project.imageUrl)),
     [projects]
   );
 
@@ -633,7 +633,6 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
         dominantColor: '#111827',
         previewHeight: PROJECT_PIN_HEIGHTS[index % PROJECT_PIN_HEIGHTS.length],
         likes: Math.max(project.stars * 30, 120),
-        externalUrl: project.githubUrl,
       };
 
       return {
@@ -719,11 +718,10 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
   
   const isPinterestLayout = [
     'All',
-    'Graphic Design', 
+    'Graphic design', 
     'Motion Graphics', 
     'VFX & 3D Animation'
   ].includes(activeTab);
-
   const showInteractiveWebDesign = activeTab === 'Web Design' && interactiveWebProjects.length > 0;
 
   return (
@@ -855,72 +853,30 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
                 </p>
               </div>
             ) : (
-              <div className={isPinterestLayout ? "max-w-[1400px] mx-auto text-left" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-24 md:gap-y-32"}>
-                {isPinterestLayout ? (
-                  <>
-                    {/* Desktop: 4 Columns (xl) */}
-                    <div className="hidden xl:grid grid-cols-4 gap-4">
-                      {Array.from({ length: 4 }).map((_, colIndex) => (
-                        <div key={`xl-col-${colIndex}`} className="flex flex-col gap-4">
-                          {displayedFeedItems.filter((_, i) => i % 4 === colIndex).map((item, index) => (
-                            <motion.div key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-                              <PinCard pin={item.pin} href={item.href} index={index} />
-                            </motion.div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Tablet/Large: 3 Columns (lg to xl) */}
-                    <div className="hidden lg:grid xl:hidden grid-cols-3 gap-4">
-                      {Array.from({ length: 3 }).map((_, colIndex) => (
-                        <div key={`lg-col-${colIndex}`} className="flex flex-col gap-4">
-                          {displayedFeedItems.filter((_, i) => i % 3 === colIndex).map((item, index) => (
-                            <motion.div key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-                              <PinCard pin={item.pin} href={item.href} index={index} />
-                            </motion.div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Mobile/Tablet: 2 Columns (sm to lg) */}
-                    <div className="hidden sm:grid lg:hidden grid-cols-2 gap-4">
-                      {Array.from({ length: 2 }).map((_, colIndex) => (
-                        <div key={`sm-col-${colIndex}`} className="flex flex-col gap-4">
-                          {displayedFeedItems.filter((_, i) => i % 2 === colIndex).map((item, index) => (
-                            <motion.div key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-                              <PinCard pin={item.pin} href={item.href} index={index} />
-                            </motion.div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Mobile: 1 Column (xs to sm) */}
-                    <div className="grid sm:hidden grid-cols-1 gap-4">
-                      {displayedFeedItems.map((item, index) => (
-                        <motion.div key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
-                          <PinCard pin={item.pin} href={item.href} index={index} />
-                        </motion.div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  // Default Grid Layout for non-Pinterest categories
-                  <AnimatePresence mode="popLayout">
-                    {displayedFeedItems.map((item, index) => (
-                      <motion.div key={item.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.4 }}>
+              <div className={isPinterestLayout ? "columns-2 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 max-w-[1400px] mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-24 md:gap-y-32"}>
+                <AnimatePresence mode="popLayout">
+                  {filteredFeedItems.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
+                      {isPinterestLayout ? (
+                        <PinCard pin={item.pin} href={item.href} index={index} />
+                      ) : (
                         <ProjectGalleryCard
                           title={item.pin.title}
                           category={item.pin.board}
                           image={item.pin.mediaPath}
                           link={item.href}
                         />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                )}
+                      )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
             )}
             
@@ -933,7 +889,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
           </div>
 
           {/* ── Behance Showcase — only under Graphic Design ── */}
-          {activeTab === 'Graphic Design' && behanceShowcaseEmbeds.length > 0 && (
+          {activeTab === 'Graphic design' && behanceShowcaseEmbeds.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}

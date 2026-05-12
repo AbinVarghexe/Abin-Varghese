@@ -23,41 +23,34 @@ export const MobileProjectStack = ({
 
   // Robust auto-shuffle logic
   useEffect(() => {
-    if (projects.length === 0) return;
-    
     const timer = setInterval(() => {
       setItems((prev) => {
-        if (prev.length === 0) return prev;
         const next = [...prev];
-        const first = next.shift();
-        if (first) next.push(first);
+        const first = next.shift()!;
+        next.push(first);
         return next;
       });
     }, autoPlayInterval);
 
     return () => clearInterval(timer);
-  }, [autoPlayInterval, projects.length]);
+  }, [autoPlayInterval]);
 
   const handleManualShuffle = () => {
-    if (isAnimating || items.length === 0) return;
+    if (isAnimating) return;
     setIsAnimating(true);
     setItems((prev) => {
-      if (prev.length === 0) return prev;
       const next = [...prev];
-      const first = next.shift();
-      if (first) next.push(first);
+      const first = next.shift()!;
+      next.push(first);
       return next;
     });
     setTimeout(() => setIsAnimating(false), 600);
   };
 
-  if (projects.length === 0) return null;
-
   return (
     <div className="relative w-full h-[340px] flex items-center justify-center perspective-[1200px] overflow-visible select-none">
       <AnimatePresence mode="popLayout">
         {items.map((project, index) => {
-          if (!project) return null;
           const isFront = index === 0;
           const isMiddle = index === 1;
           const isBack = index === 2;
@@ -125,8 +118,6 @@ export const MobileProjectStack = ({
                     src={project.image} 
                     alt={project.url} 
                     className="absolute inset-0 w-full h-full object-cover object-top"
-                    loading="lazy"
-                    decoding="async"
                   />
                   {/* Subtle Polish Gradients */}
                   <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent pointer-events-none" />
