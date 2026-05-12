@@ -382,6 +382,26 @@ function WorkspaceProjectCard({
 }
 
 function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
+  const [visibleCount, setVisibleCount] = useState(12);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && visibleCount < projects.length) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [projects.length, visibleCount]);
+
   if (projects.length === 0) {
     return null;
   }
@@ -426,11 +446,18 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
           </p>
         </div>
         <div className="grid grid-cols-12 gap-3 md:gap-4 auto-rows-[200px] sm:auto-rows-[210px] md:auto-rows-[220px] xl:auto-rows-[240px]">
-          {projects.map((project, index) => (
+          {projects.slice(0, visibleCount).map((project, index) => (
             <div key={project.id} className={`${getTileClass(index)} h-full overflow-hidden`}>
               <WorkspaceProjectCard project={project} index={index} />
             </div>
           ))}
+        </div>
+
+        {/* Load More Sentinel */}
+        <div ref={loadMoreRef} className="h-20 w-full flex items-center justify-center">
+          {visibleCount < projects.length && (
+            <div className="w-8 h-8 border-4 border-zinc-200 border-t-zinc-800 rounded-full animate-spin" />
+          )}
         </div>
       </div>
     </div>
@@ -576,6 +603,8 @@ function MobileFilterCarousel({
 
 export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] }: { projects: WorkspaceProject[]; behanceShowcaseEmbeds?: BehanceShowcaseEmbed[] }) {
   const [activeTab, setActiveTab] = useState<DesignCategory>('All');
+  const [visibleCount, setVisibleCount] = useState(12);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   const design = homePageDesignSystem;
   const uploadedProjects = useMemo(
     () => projects.filter((project) => project.isFromDb && (Boolean(project.imageUrl) || Boolean(project.githubUrl))),
@@ -616,11 +645,41 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
   }, [uploadedProjects]);
 
   const filteredFeedItems = useMemo(() => {
+    let items = feedItems;
     if (activeTab === 'All') {
-      return feedItems.filter((item) => item.pin.board !== 'Web Design');
+      items = feedItems.filter((item) => item.pin.board !== 'Web Design');
+    } else {
+      items = feedItems.filter((item) => matchesDesignCategory(item.pin, activeTab));
     }
-    return feedItems.filter((item) => matchesDesignCategory(item.pin, activeTab));
+    return items;
   }, [feedItems, activeTab]);
+
+  const displayedFeedItems = useMemo(() => {
+    return filteredFeedItems.slice(0, visibleCount);
+  }, [filteredFeedItems, visibleCount]);
+
+  // Reset visibleCount when tab changes
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [activeTab]);
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && visibleCount < filteredFeedItems.length) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [filteredFeedItems.length, visibleCount]);
 
   const interactiveWebProjects = useMemo(() => {
     return uploadedProjects
@@ -803,7 +862,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
                     <div className="hidden xl:grid grid-cols-4 gap-4">
                       {Array.from({ length: 4 }).map((_, colIndex) => (
                         <div key={`xl-col-${colIndex}`} className="flex flex-col gap-4">
-                          {filteredFeedItems.filter((_, i) => i % 4 === colIndex).map((item, index) => (
+                          {displayedFeedItems.filter((_, i) => i % 4 === colIndex).map((item, index) => (
                             <motion.div key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
                               <PinCard pin={item.pin} href={item.href} index={index} />
                             </motion.div>
@@ -816,7 +875,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
                     <div className="hidden lg:grid xl:hidden grid-cols-3 gap-4">
                       {Array.from({ length: 3 }).map((_, colIndex) => (
                         <div key={`lg-col-${colIndex}`} className="flex flex-col gap-4">
-                          {filteredFeedItems.filter((_, i) => i % 3 === colIndex).map((item, index) => (
+                          {displayedFeedItems.filter((_, i) => i % 3 === colIndex).map((item, index) => (
                             <motion.div key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
                               <PinCard pin={item.pin} href={item.href} index={index} />
                             </motion.div>
@@ -829,7 +888,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
                     <div className="hidden sm:grid lg:hidden grid-cols-2 gap-4">
                       {Array.from({ length: 2 }).map((_, colIndex) => (
                         <div key={`sm-col-${colIndex}`} className="flex flex-col gap-4">
-                          {filteredFeedItems.filter((_, i) => i % 2 === colIndex).map((item, index) => (
+                          {displayedFeedItems.filter((_, i) => i % 2 === colIndex).map((item, index) => (
                             <motion.div key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
                               <PinCard pin={item.pin} href={item.href} index={index} />
                             </motion.div>
@@ -840,7 +899,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
 
                     {/* Mobile: 1 Column (xs to sm) */}
                     <div className="grid sm:hidden grid-cols-1 gap-4">
-                      {filteredFeedItems.map((item, index) => (
+                      {displayedFeedItems.map((item, index) => (
                         <motion.div key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
                           <PinCard pin={item.pin} href={item.href} index={index} />
                         </motion.div>
@@ -850,7 +909,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
                 ) : (
                   // Default Grid Layout for non-Pinterest categories
                   <AnimatePresence mode="popLayout">
-                    {filteredFeedItems.map((item, index) => (
+                    {displayedFeedItems.map((item, index) => (
                       <motion.div key={item.id} layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.4 }}>
                         <ProjectGalleryCard
                           title={item.pin.title}
@@ -864,6 +923,13 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
                 )}
               </div>
             )}
+            
+            {/* Load More Sentinel */}
+            <div ref={loadMoreRef} className="h-20 w-full flex items-center justify-center">
+              {visibleCount < filteredFeedItems.length && (
+                <div className="w-8 h-8 border-4 border-zinc-200 border-t-zinc-800 rounded-full animate-spin" />
+              )}
+            </div>
           </div>
 
           {/* ── Behance Showcase — only under Graphic Design ── */}

@@ -41,12 +41,16 @@ export const metadata: Metadata = createPageMetadata({
 export const revalidate = 3600;
 
 export default async function Home() {
-  const heroData = await getHeroContent();
-  const homeData = await getHomeContent();
-  const aboutData = await getAboutContent();
-  const siteCopy = await getSiteCopyContent();
-  const services = await getServicesContent();
-  const allProjects = await getAllProjects();
+  const [heroData, homeData, aboutData, siteCopy, services, allProjects, dbAchievements] =
+    await Promise.all([
+      getHeroContent(),
+      getHomeContent(),
+      getAboutContent(),
+      getSiteCopyContent(),
+      getServicesContent(),
+      getAllProjects(),
+      getAchievements(),
+    ]);
   
   // Use selected projects if configured, otherwise fallback to latest 3 coding projects
   let webProjects;
@@ -61,7 +65,6 @@ export default async function Home() {
     webProjects = allProjects.filter((p) => p.workspace === "coding").slice(0, 3);
   }
   
-  const dbAchievements = await getAchievements();
   let mappedAchievements = dbAchievements.map((a, index) => ({
     id: a.id || `achievement-${index + 1}`,
     name: a.title,

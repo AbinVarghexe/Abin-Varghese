@@ -455,6 +455,7 @@ useGLTF.preload('/3d_model/flying_bot.glb');
 
 export default function Hero3DLayer() {
   const [isMobile, setIsMobile] = useState(false);
+  const isModelLoaded = useJarvisStore((state) => state.isModelLoaded);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -464,7 +465,26 @@ export default function Hero3DLayer() {
   }, []);
 
   return (
-    <div className="h-full w-full outline-none pointer-events-auto">
+    <div className="relative h-full w-full outline-none pointer-events-auto">
+      {/* ── Progressive Loading Placeholder ────────────────────── */}
+      <AnimatePresence>
+        {!isModelLoaded && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            className="absolute inset-0 z-10 flex items-center justify-center bg-transparent"
+          >
+            <div className="relative">
+              <div className="h-32 w-32 rounded-full border-b-2 border-blue-600/30 animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse" />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Canvas 
         shadows 
         camera={{ position: [0, 0, 24], fov: 35 }}
@@ -472,9 +492,15 @@ export default function Hero3DLayer() {
           antialias: true, 
           toneMapping: THREE.ACESFilmicToneMapping,
           outputColorSpace: THREE.SRGBColorSpace,
-          preserveDrawingBuffer: true
+          preserveDrawingBuffer: true,
+          powerPreference: "high-performance"
         }}
-        style={{ pointerEvents: 'auto', touchAction: isMobile ? 'pan-y' : 'none' }}
+        style={{ 
+          pointerEvents: 'auto', 
+          touchAction: isMobile ? 'pan-y' : 'none',
+          opacity: isModelLoaded ? 1 : 0,
+          transition: 'opacity 1s ease-in-out'
+        }}
       >
         <Suspense fallback={null}>
           <ambientLight intensity={1.5} />
@@ -483,18 +509,19 @@ export default function Hero3DLayer() {
             position={[5, 5, 15]} 
             intensity={3} 
             castShadow 
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
+            shadow-mapSize-width={1024} // Reduced from 2048 for performance
+            shadow-mapSize-height={1024}
             shadow-camera-left={-25}
             shadow-camera-right={25}
             shadow-camera-top={25}
             shadow-camera-bottom={-25}
-            shadow-bias={-0.0005} // Reduced banding
+            shadow-bias={-0.0005}
           />
           
           <spotLight position={[-15, 10, 10]} angle={0.2} penumbra={1} intensity={1.5} castShadow={false} />
           <pointLight position={[10, 5, -5]} intensity={1.5} />
           
+          {/* Use a lighter environment for faster load if needed, but 'city' is generally okay */}
           <Environment preset="city" />
           
           <Model />

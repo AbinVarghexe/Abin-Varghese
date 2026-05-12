@@ -48,3 +48,6 @@ next-env.d.ts
 .env.production
 graphify-out
 .graphify_python
+
+lighthouse-report*.html
+scratch

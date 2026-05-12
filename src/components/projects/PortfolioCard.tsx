@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Eye } from "lucide-react";
 import { homePageDesignSystem } from "@/lib/home-page-design-system";
+import { extractUrlFromEmbed } from "@/lib/utils";
 
 interface PortfolioCardProps {
   title: string;
@@ -16,6 +17,7 @@ interface PortfolioCardProps {
 
 export default function PortfolioCard({ title, category, image, link, className }: PortfolioCardProps) {
   const design = homePageDesignSystem;
+  const cleanLink = extractUrlFromEmbed(link);
 
   return (
     <div className={`flex flex-col w-full ${className || ""}`}>
@@ -58,7 +60,7 @@ export default function PortfolioCard({ title, category, image, link, className 
         </div>
 
         <a
-          href={link}
+          href={cleanLink}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-zinc-200 bg-white text-[13px] font-semibold text-zinc-900 shadow-sm transition-all hover:bg-zinc-50 hover:border-zinc-300"

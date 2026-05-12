@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { homePageDesignSystem } from "@/lib/home-page-design-system";
 import { PinterestPin } from "@/lib/pinterest-content";
 
@@ -26,13 +26,38 @@ export default function PinCard({
   const cardRadius = "14px";
 
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   const [measuredMedia, setMeasuredMedia] = useState<{
     path: string;
     ratio: number;
   } | null>(null);
 
+  // Intersection Observer to trigger lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "400px" } // Start loading 400px before it enters viewport
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   const { extractedSrc, iframeRatio } = useMemo(() => {
+    // Only process URLs if we are in view or close to it
+    if (!isInView && !isLoaded) return { extractedSrc: null, iframeRatio: null };
+
     const sources = [pin.mediaPath, pin.externalUrl].filter(Boolean) as string[];
     
     let rawSrc = null;
@@ -41,8 +66,8 @@ export default function PinCard({
     for (const src of sources) {
       const trimmed = src.trim();
       
-      if (trimmed.startsWith('<iframe')) {
-        const matchSrc = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+      if (trimmed.includes('<iframe')) {
+        const matchSrc = trimmed.match(/<iframe[^>]+src=["']([^"']+)["']/i);
         if (matchSrc) rawSrc = matchSrc[1];
 
         const widthAttr = trimmed.match(/width\s*=\s*["']?([^"']+)["']?/i);
@@ -130,7 +155,7 @@ export default function PinCard({
   const isIframeEmbed = extractedSrc !== null;
 
   useEffect(() => {
-    if (!isIframeEmbed || !extractedSrc) return;
+    if (!isInView || !isIframeEmbed || !extractedSrc) return;
     
     // Fallback: force load state after 2.5s if onLoad doesn't fire
     const timer = setTimeout(() => setIsLoaded(true), 2500);
@@ -192,12 +217,13 @@ export default function PinCard({
 
   return (
     <motion.article 
+      ref={containerRef}
       className="mb-4 break-inside-avoid"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ 
         duration: 0.6, 
-        delay: index * 0.05, 
+        delay: Math.min(index * 0.05, 0.3), // Cap the stagger delay to avoid long waits
         ease: [0.22, 1, 0.36, 1] 
       }}
     >
@@ -212,18 +238,30 @@ export default function PinCard({
         }}
       >
         <div className="relative w-full overflow-hidden" style={{ ...mediaStyle, borderRadius: cardRadius }}>
-          {!isLoaded && (
-            <div className="absolute inset-0 z-10 overflow-hidden bg-zinc-100">
-              <div className="h-full w-full" style={{
-                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
-                transform: 'translateX(-100%)',
-                animation: 'shimmer 2s infinite',
-              }} />
-              <style dangerouslySetInnerHTML={{ __html: `@keyframes shimmer { 100% { transform: translateX(100%); } }` }} />
-            </div>
-          )}
+          {/* Static Placeholder (Always visible until media loads) */}
+          <AnimatePresence>
+            {!isLoaded && (
+              <motion.div 
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-10 overflow-hidden bg-zinc-100/50 backdrop-blur-sm"
+              >
+                <div className="h-full w-full" style={{
+                  background: `linear-gradient(135deg, ${pin.dominantColor || '#f4f4f5'}33 0%, #ffffff 100%)`,
+                }} />
+                <div className="absolute inset-0" style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+                  transform: 'translateX(-100%)',
+                  animation: 'shimmer 2s infinite',
+                }} />
+                <style dangerouslySetInnerHTML={{ __html: `@keyframes shimmer { 100% { transform: translateX(100%); } }` }} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div className={`transition-opacity duration-700 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+          {/* Lazy Media Container */}
+          <div className={`transition-all duration-700 ease-out ${isLoaded ? 'opacity-100 scale-100 blur-0' : 'opacity-0 scale-105 blur-lg'}`}>
+            {isInView && (
+              <>
             {isIframeEmbed && extractedSrc && (
               <div className="absolute inset-0 h-full w-full overflow-hidden bg-transparent">
                 <iframe
@@ -232,7 +270,7 @@ export default function PinCard({
                   style={{ border: 'none', background: 'transparent' }}
                   allow="autoplay; fullscreen; picture-in-picture"
                   allowTransparency={true}
-                  loading="eager"
+                  loading="lazy"
                   onLoad={() => setIsLoaded(true)}
                 />
                 {/* Transparent overlay to capture clicks for the Link component while allowing iframe to initialize */}
@@ -301,6 +339,8 @@ export default function PinCard({
                   }
                 }}
               />
+            )}
+              </>
             )}
           </div>
         </div>

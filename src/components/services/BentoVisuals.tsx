@@ -13,6 +13,7 @@ import Lottie from 'lottie-react';
 import { useEffect, useState } from 'react';
 import Folder from '@/components/ui/Folder';
 import { OrbitingCircles } from '@/components/ui/orbiting-circles';
+import { extractUrlFromEmbed } from '@/lib/utils';
 
 // --- Folder Content ---
 const folderPapers: React.ReactNode[] = [
@@ -213,8 +214,13 @@ export const VideoEditing = () => {
 
 // --- 3. Graphics Design ---
 export const GraphicDesign = ({ imageUrl, iframeUrl }: { imageUrl?: string; iframeUrl?: string }) => {
-  const displayUrl = imageUrl || iframeUrl;
-  const isIframe = !imageUrl && iframeUrl;
+  const displayUrl = useMemo(() => {
+    if (imageUrl) return imageUrl;
+    if (iframeUrl) return extractUrlFromEmbed(iframeUrl);
+    return "";
+  }, [imageUrl, iframeUrl]);
+  
+  const isIframe = !imageUrl && !!iframeUrl;
 
   if (displayUrl) {
     return (

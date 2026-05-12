@@ -39,6 +39,42 @@ type AboutStackImage = {
   priority?: boolean;
 };
 
+function MediaComponent({ src, alt, fill, className, sizes, priority }: { 
+  src: string; 
+  alt: string; 
+  fill?: boolean; 
+  className?: string; 
+  sizes?: string; 
+  priority?: boolean;
+}) {
+  const isVideo = src.match(/\.(mp4|webm|ogg)$/i) || src.includes('video');
+  
+  if (isVideo) {
+    return (
+      <video
+        src={src}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className={`${className} object-cover`}
+        style={fill ? { position: 'absolute', height: '100%', width: '100%', left: 0, top: 0 } : {}}
+      />
+    );
+  }
+
+  return (
+    <Image 
+      src={src} 
+      alt={alt} 
+      fill={fill} 
+      className={className} 
+      sizes={sizes} 
+      priority={priority} 
+    />
+  );
+}
+
 export default function AboutImageStack({ images = IMAGES }: { images?: AboutStackImage[] }) {
   const stackImages = images.length >= 3 ? images : IMAGES;
   const [cards, setCards] = useState(stackImages);
@@ -143,15 +179,15 @@ export default function AboutImageStack({ images = IMAGES }: { images?: AboutSta
           onMouseLeave={() => applyState('default')}
         >
           <div ref={leftRef} className="absolute inset-0 rounded-[12px] overflow-hidden shadow-[0_8px_28px_rgba(0,0,0,0.22)]">
-            <Image src={stackImages[1]?.src || "/about/Abin_2.png"} alt="" fill className="object-cover object-top" sizes="300px" />
+            <MediaComponent src={stackImages[1]?.src || "/about/Abin_2.png"} alt="" fill className="object-cover object-top" sizes="300px" />
             <div className="absolute inset-0 bg-black/20" />
           </div>
           <div ref={rightRef} className="absolute inset-0 rounded-[12px] overflow-hidden shadow-[0_8px_28px_rgba(0,0,0,0.22)]">
-            <Image src={stackImages[2]?.src || "/about/Abin_3.png"} alt="" fill className="object-cover object-top" sizes="300px" />
+            <MediaComponent src={stackImages[2]?.src || "/about/Abin_3.png"} alt="" fill className="object-cover object-top" sizes="300px" />
             <div className="absolute inset-0 bg-black/20" />
           </div>
           <div ref={centerRef} className="absolute inset-0 rounded-[12px] overflow-hidden shadow-[0_18px_52px_rgba(0,0,0,0.34)]">
-            <Image src={stackImages[0]?.src || "/about/About_Image.png"} alt="Abin Varghese" fill className="object-cover object-top" sizes="300px" priority />
+            <MediaComponent src={stackImages[0]?.src || "/about/About_Image.png"} alt="Abin Varghese" fill className="object-cover object-top" sizes="300px" priority />
           </div>
         </div>
       )}
@@ -200,7 +236,7 @@ function SwipeCard({
       exit={{ x: x.get() < 0 ? -500 : 500, opacity: 0, transition: { duration: 0.4 } }}
       className="absolute inset-0 rounded-[12px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.3)] bg-white cursor-grab active:cursor-grabbing touch-none"
     >
-      <Image 
+      <MediaComponent 
         src={card.src} 
         alt="" 
         fill 

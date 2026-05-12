@@ -20,7 +20,7 @@ const vina = localFont({
   src: "../../public/fonts/vina.ttf",
   variable: "--font-vina",
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 const dancingScript = Dancing_Script({

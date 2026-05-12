@@ -181,6 +181,9 @@ portfolio-website/
 │   ├── types/                # TypeScript types
 │   └── seo/                  # SEO metadata & structured data
 ├── docs/                     # Design system docs, content master
+├── scratch/                  # Local scripts and experiments
+│   ├── experiments/          # UI spikes and temp assets
+│   └── scripts/              # One-off data/admin scripts
 ├── supabase/                 # SQL migrations & vector store
 ├── public/                   # Static assets, 3D models, Lottie animations
 └── next.config.ts            # Optimized Next.js config

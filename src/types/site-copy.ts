@@ -163,13 +163,13 @@ export const siteCopyDefaults: SiteCopyContent = {
       title: "UI/UX Design",
       description: "Crafting intuitive, user-centered interfaces that blend aesthetic beauty with seamless functional experiences.",
       image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600",
-      lottieUrl: "https://i.pinimg.com/originals/9d/1f/1f/9d1f1fb1b6004da53df6ae2aa320aeea.gif"
+      lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/9d/1f/1f/9d1f1fb1b6004da53df6ae2aa320aeea_720w.mp4"
     },
     {
       title: "Video Production",
       description: "High-quality video editing and direction, focusing on rhythm, color grading, and impactful visual narratives.",
       image: "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=600",
-      lottieUrl: "https://i.pinimg.com/originals/05/a9/ca/05a9ca456daeb936b7715aaa52477cb2.gif"
+      lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/05/a9/ca/05a9ca456daeb936b7715aaa52477cb2_720w.mp4"
     },
     {
       title: "VFX Animation",
@@ -187,7 +187,7 @@ export const siteCopyDefaults: SiteCopyContent = {
       title: "Visual Branding",
       description: "Designing cohesive brand identities that tell a unique story through color, typography, and iconography.",
       image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=600",
-      lottieUrl: "https://i.pinimg.com/originals/bf/1c/a1/bf1ca126169bd06a802f17b1c218416d.gif"
+      lottieUrl: "https://v1.pinimg.com/videos/iht/expMp4/bf/1c/a1/bf1ca126169bd06a802f17b1c218416d_720w.mp4"
     },
     {
       title: "Character Design",
