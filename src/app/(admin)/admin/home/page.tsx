@@ -126,7 +126,7 @@ export default function AdminHomePage() {
   const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
 
   useEffect(() => {
-    setSaveAction(() => saveHome);
+    setSaveAction(saveHome);
     setStatusText(saving ? "Deploying..." : "System Standby");
     setIsSaving(saving);
     

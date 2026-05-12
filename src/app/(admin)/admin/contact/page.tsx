@@ -68,7 +68,7 @@ export default function AdminContactPage() {
   const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
 
   useEffect(() => {
-    setSaveAction(() => saveSettings);
+    setSaveAction(saveSettings);
     setStatusText(savingSettings ? "Synchronizing..." : "System Standby");
     setIsSaving(savingSettings);
     

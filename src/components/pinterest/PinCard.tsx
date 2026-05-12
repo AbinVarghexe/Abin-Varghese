@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Play } from "lucide-react";
 import { homePageDesignSystem } from "@/lib/home-page-design-system";
 import { PinterestPin } from "@/lib/pinterest-content";
@@ -26,6 +26,8 @@ interface PinCardProps {
   fixedHeight?: number;
   index?: number;
   showPlayOverlay?: boolean;
+  /** If false, no link wrapper (gallery-only). Used on /projects for All Boards + Graphic design. */
+  interactive?: boolean;
 }
 
 export default function PinCard({
@@ -35,6 +37,7 @@ export default function PinCard({
   fixedHeight,
   index = 0,
   showPlayOverlay = false,
+  interactive = true,
 }: PinCardProps) {
   const design = homePageDesignSystem;
   const cardRadius = "14px";
@@ -247,30 +250,14 @@ export default function PinCard({
     ? { minHeight: fixedHeight }
     : { aspectRatio: activeMeasuredRatio ?? fallbackAspectRatio };
 
-  return (
-    <motion.article 
-      ref={containerRef}
-      className="mb-4 break-inside-avoid"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.6, 
-        delay: index * 0.05, // Staggered reveal
-        ease: [0.22, 1, 0.36, 1] 
-      }}
-    >
-      <Link
-        href={href}
-        target={isExternalHref ? "_blank" : undefined}
-        rel={isExternalHref ? "noreferrer" : undefined}
-        className="group block shadow-[0_18px_45px_-38px_rgba(0,0,0,0.62)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-36px_rgba(0,0,0,0.68)]"
-        style={{
-          background: design.colors.surface,
-          border: `1px solid ${design.colors.border.card}`,
-          borderRadius: cardRadius,
-          boxShadow: design.shadows.card,
-        }}
-      >
+  const shellStyle = {
+    background: design.colors.surface,
+    border: `1px solid ${design.colors.border.card}`,
+    borderRadius: cardRadius,
+    boxShadow: design.shadows.card,
+  };
+
+  const cardMedia = (
         <div className="relative w-full overflow-hidden" style={{ ...mediaStyle, borderRadius: cardRadius }}>
           {/* Shimmering Skeleton Placeholder */}
           {!isLoaded && (
@@ -416,7 +403,38 @@ export default function PinCard({
           ) : null}
 
         </div>
+  );
+
+  return (
+    <motion.article 
+      ref={containerRef}
+      className="mb-4 break-inside-avoid"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.05, // Staggered reveal
+        ease: [0.22, 1, 0.36, 1] 
+      }}
+    >
+      {interactive ? (
+      <Link
+        href={href}
+        target={isExternalHref ? "_blank" : undefined}
+        rel={isExternalHref ? "noreferrer" : undefined}
+        className="group block shadow-[0_18px_45px_-38px_rgba(0,0,0,0.62)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-36px_rgba(0,0,0,0.68)]"
+        style={shellStyle}
+      >
+        {cardMedia}
       </Link>
+      ) : (
+        <div
+          className="group block cursor-default shadow-[0_18px_45px_-38px_rgba(0,0,0,0.62)] transition hover:shadow-[0_28px_70px_-36px_rgba(0,0,0,0.68)]"
+          style={shellStyle}
+        >
+          {cardMedia}
+        </div>
+      )}
     </motion.article>
   );
 }

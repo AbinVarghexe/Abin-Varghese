@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type React from "react";
 import {
   Instagram,
@@ -21,7 +21,8 @@ import {
   ArrowDown,
   Trash2,
   Loader2,
-  FileDown
+  FileDown,
+  AlignLeft,
 } from "lucide-react";
 import AdminSectionWorkspace, {
   SectionTitle,
@@ -64,8 +65,40 @@ export default function AdminAboutPage() {
 
   const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
 
+  const saveAbout = useCallback(async () => {
+    setSaving(true);
+    const toastId = toast.loading("Deploying About section updates...");
+    try {
+      const requests = [
+        fetch("/api/admin/site-content", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "about", data: about }),
+        }),
+        fetch("/api/admin/site-copy", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ siteCopy }),
+        }),
+      ];
+
+      const responses = await Promise.all(requests);
+      const allOk = responses.every((r) => r.ok);
+
+      if (!allOk) {
+        throw new Error("One or more requests failed.");
+      }
+
+      toast.success("About workspace successfully synchronized.", { id: toastId });
+    } catch {
+      toast.error("Deployment failed. Check integrity logs.", { id: toastId });
+    } finally {
+      setSaving(false);
+    }
+  }, [about, siteCopy]);
+
   useEffect(() => {
-    setSaveAction(() => saveAbout);
+    setSaveAction(saveAbout);
     setStatusText(saving ? "Deploying..." : "System Standby");
     setIsSaving(saving);
     
@@ -122,38 +155,6 @@ export default function AdminAboutPage() {
       toast.success(`${type === "resume" ? "Document" : "Asset"} synchronized.`, { id: toastId });
     } catch (error: any) {
       toast.error(error.message || "Upload failed.", { id: toastId });
-    }
-  }
-
-  async function saveAbout() {
-    setSaving(true);
-    const toastId = toast.loading("Deploying About section updates...");
-    try {
-      const requests = [
-        fetch("/api/admin/site-content", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "about", data: about }),
-        }),
-        fetch("/api/admin/site-copy", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ siteCopy }),
-        }),
-      ];
-
-      const responses = await Promise.all(requests);
-      const allOk = responses.every(r => r.ok);
-
-      if (!allOk) {
-        throw new Error("One or more requests failed.");
-      }
-
-      toast.success("About workspace successfully synchronized.", { id: toastId });
-    } catch (error) {
-      toast.error("Deployment failed. Check integrity logs.", { id: toastId });
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -373,7 +374,7 @@ export default function AdminAboutPage() {
                         value={siteCopy.aboutIntroBody}
                         onChange={(v) => updateSiteCopy("aboutIntroBody", v)}
                         rows={12}
-                        icon={AlignLeftIcon}
+                        icon={AlignLeft}
                       />
                     </div>
                     <div className="lg:col-span-5 space-y-8">
@@ -725,26 +726,5 @@ function AboutAdminTabs({
         })}
       </div>
     </div>
-  );
-}
-
-function AlignLeftIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="21" x2="3" y1="6" y2="6" />
-      <line x1="15" x2="3" y1="12" y2="12" />
-      <line x1="17" x2="3" y1="18" y2="18" />
-    </svg>
   );
 }

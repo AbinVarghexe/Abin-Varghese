@@ -1,5 +1,6 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import AdminSectionWorkspace, { SectionPanel, SectionTitle, Field, TextareaField, SelectField, ActionButton, TinyButton, StatusBadge } from "@/components/admin/AdminSectionWorkspace";
 import { uploadToStorage } from "@/lib/supabase";
@@ -15,7 +16,7 @@ type Project = {
   title: string;
   description: string;
   content: string | null;
-  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST";
+  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST" | "GRAPHIC"; // GRAPHIC: legacy rows
   mediaType: "IMAGE" | "VIDEO" | "GIF" | "MODEL";
   mediaUrl: string;
   externalUrl: string | null;
@@ -33,7 +34,7 @@ type ProjectForm = {
   title: string;
   description: string;
   content: string;
-  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST";
+  type: "CODE" | "FIGMA" | "BEHANCE" | "PINTEREST" | "GRAPHIC"; // GRAPHIC: legacy rows
   mediaType: "IMAGE" | "VIDEO" | "GIF" | "MODEL";
   mediaUrl: string;
   externalUrl: string;
@@ -91,17 +92,17 @@ type ProjectSubTab =
   | "live-website" | "git-integration" // Coding
   | "graphic" | "web" | "motion" | "vfx-3d"; // Designing
 
-const projectMainTabs: Array<{ id: ProjectMainTab; label: string; icon: React.ElementType }> = [
+const projectMainTabs: Array<{ id: ProjectMainTab; label: string; icon: LucideIcon }> = [
   { id: "coding", label: "Coding", icon: Code },
   { id: "designing", label: "Designing", icon: Palette },
 ];
 
-const codingSubTabs: Array<{ id: ProjectSubTab; label: string; icon: React.ElementType }> = [
+const codingSubTabs: Array<{ id: ProjectSubTab; label: string; icon: LucideIcon }> = [
   { id: "live-website", label: "Live Website", icon: Globe },
   { id: "git-integration", label: "Git Integration", icon: Github },
 ];
 
-const designingSubTabs: Array<{ id: ProjectSubTab; label: string; icon: React.ElementType; category: string }> = [
+const designingSubTabs: Array<{ id: ProjectSubTab; label: string; icon: LucideIcon; category: string }> = [
   { id: "graphic", label: "Graphic Design", icon: Palette, category: "Graphic Design" },
   { id: "web", label: "Web Design", icon: Monitor, category: "Web Design" },
   { id: "motion", label: "Motion Graphics", icon: PlayCircle, category: "Motion Graphics" },
@@ -322,13 +323,13 @@ export default function AdminProjectsPage() {
 
   // Synchronize with global admin controls using a stable bridge
   useEffect(() => {
-    const stableSave = async () => {
+    async function dispatchSaveFromRef() {
       if (saveActionRef.current) {
         await saveActionRef.current();
       }
-    };
+    }
 
-    setSaveAction(() => stableSave);
+    setSaveAction(dispatchSaveFromRef);
     setStatusText(isSaving ? "Synchronizing..." : "Workspace Online");
     setIsSaving(isSaving || isSavingBehance || isSavingPinterest);
     
@@ -418,7 +419,7 @@ export default function AdminProjectsPage() {
       const data = await res.json();
       setForm(prev => ({
         ...prev,
-        title: prev.title || data.name.replace(/[-_]+/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+        title: prev.title || data.name.replace(/[-_]+/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
         description: prev.description || data.description || "",
         iframeUrl: prev.iframeUrl || data.homepage || "",
       }));

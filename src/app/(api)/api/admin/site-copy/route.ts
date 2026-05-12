@@ -90,6 +90,8 @@ const siteCopySchema = z.object({
   aboutBookImage: z.string(),
   aboutTimelineTitle: z.string(),
   aboutTimelineEntries: z.array(timelineEntrySchema),
+  aboutResumeUrl: z.string(),
+  aboutDesignResumeUrl: z.string(),
   aboutTypewriterQuote: z.string(),
   servicesHeroTitle: z.string(),
   servicesWhyEyebrow: z.string(),

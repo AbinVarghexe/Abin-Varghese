@@ -898,6 +898,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
     'Motion Graphics', 
     'VFX & 3D Animation'
   ].includes(activeTab);
+  /** Motion + VFX: linked cards with play overlay; All + Graphic design: masonry is display-only (no navigation). */
   const usePlayOverlayCards =
     activeTab === 'Motion Graphics' || activeTab === 'VFX & 3D Animation';
   const showInteractiveWebDesign = activeTab === 'Web Design' && interactiveWebProjects.length > 0;
@@ -1052,6 +1053,7 @@ export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] 
                           }
                           index={index}
                           showPlayOverlay={usePlayOverlayCards}
+                          interactive={usePlayOverlayCards}
                         />
                       ) : (
                         <ProjectGalleryCard

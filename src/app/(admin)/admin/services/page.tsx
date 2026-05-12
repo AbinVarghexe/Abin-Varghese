@@ -89,7 +89,7 @@ export default function AdminServicesPage() {
   }, [services]);
 
   useEffect(() => {
-    setSaveAction(() => saveServices);
+    setSaveAction(saveServices);
     setStatusText(saving ? "Syncing..." : "System Standby");
     setIsSaving(saving);
     
