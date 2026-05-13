@@ -6,7 +6,7 @@ import ProjectPreviewImage from '@/components/projects/ProjectPreviewImage';
 import LiveProjectFrame from '@/components/projects/LiveProjectFrame';
 import {
   getGithubWorkspaceProjectBySlug,
-  getGithubWorkspaceProjects,
+  getAllProjects,
   type WorkspaceProject,
 } from '@/lib/github-projects';
 import { createPageMetadata } from '@/seo/page-metadata';
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!project) {
     return createPageMetadata({
       title: 'Project Not Found | Abin Varghese',
-      description: 'This project could not be loaded from GitHub.',
+      description: 'This project could not be loaded.',
       path: '/projects',
       noIndex: true,
     });
@@ -50,7 +50,9 @@ function scoreProjectRelation(current: WorkspaceProject, candidate: WorkspacePro
 }
 
 function RelatedProjectCard({ project }: { project: WorkspaceProject }) {
-  const fallbackSrc = `https://opengraph.githubassets.com/portfolio/${project.owner}/${project.repo}`;
+  const fallbackSrc = project.owner && project.repo 
+    ? `https://opengraph.githubassets.com/portfolio/${project.owner}/${project.repo}`
+    : `https://opengraph.githubassets.com/portfolio/AbinVarghexe/portfolio`;
 
   return (
     <article className="group overflow-hidden rounded-xl border border-black/10 bg-white">
@@ -86,7 +88,7 @@ function RelatedProjectCard({ project }: { project: WorkspaceProject }) {
 
 export default async function ProjectDetailPage({ params, searchParams }: PageProps) {
   const { projectSlug } = await params;
-  const { from, workspace } = await searchParams;
+  const { from, workspace: workspaceParam } = await searchParams;
   const project = await getGithubWorkspaceProjectBySlug(projectSlug);
 
   if (!project) {
@@ -99,7 +101,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
     day: 'numeric',
   }).format(new Date(project.updatedAt));
 
-  const allProjects = await getGithubWorkspaceProjects();
+  const allProjects = await getAllProjects();
 
   const relatedProjects = allProjects
     .filter((candidate) => candidate.slug !== project.slug)
@@ -107,15 +109,18 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
       project: candidate,
       score: scoreProjectRelation(project, candidate),
     }))
-    .sort((a, b) => b.score - a.score || b.project.stars - a.project.stars)
+    .sort((a, b) => b.score - a.score || (b.project.stars || 0) - (a.project.stars || 0))
     .map((entry) => entry.project)
     .slice(0, 6);
 
   const backHref =
-    from === 'projects' && workspace === 'designing'
+    from === 'projects' && workspaceParam === 'designing'
       ? '/projects?workspace=designing'
       : '/projects';
-  const fallbackSrc = `https://opengraph.githubassets.com/portfolio/${project.owner}/${project.repo}`;
+      
+  const fallbackSrc = project.owner && project.repo 
+    ? `https://opengraph.githubassets.com/portfolio/${project.owner}/${project.repo}`
+    : `https://opengraph.githubassets.com/portfolio/AbinVarghexe/portfolio`;
 
   return (
     <main className="min-h-screen bg-[#f8f5f2] px-3 pb-14 pt-24 sm:px-5 lg:px-8">
@@ -147,7 +152,6 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
 
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
           <div className="xl:col-span-8">
-            {/* Hero preview: live iframe if liveUrl is set, otherwise GitHub OG banner */}
             <div className="w-full overflow-hidden rounded-xl border border-black/10 bg-zinc-200">
               {project.liveUrl ? (
                 <div className="aspect-video w-full overflow-hidden rounded-xl" style={{ borderRadius: '0.75rem' }}>
@@ -242,22 +246,30 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
               </p>
               <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-zinc-100 p-3 text-sm text-zinc-600">
                 <span>Stars</span>
-                <span className="text-right font-semibold text-zinc-900">{project.stars}</span>
+                <span className="text-right font-semibold text-zinc-900">{project.stars || 0}</span>
                 <span>Updated</span>
                 <span className="text-right font-semibold text-zinc-900">{updatedOn}</span>
-                <span>Owner</span>
-                <span className="text-right font-semibold text-zinc-900">{project.owner}</span>
-                <span>Repository</span>
-                <span className="text-right font-semibold text-zinc-900">{project.repo}</span>
+                {project.owner && (
+                  <>
+                    <span>Owner</span>
+                    <span className="text-right font-semibold text-zinc-900">{project.owner}</span>
+                  </>
+                )}
+                {project.repo && (
+                  <>
+                    <span>Repository</span>
+                    <span className="text-right font-semibold text-zinc-900">{project.repo}</span>
+                  </>
+                )}
               </div>
             </article>
           </aside>
         </section>
 
-        {relatedProjects.length > 0 ? (
+        {relatedProjects.length > 0 && (
           <section className="mt-8">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-zinc-900">More Coding Projects</h2>
+              <h2 className="text-xl font-semibold text-zinc-900">More Projects</h2>
               <span className="text-sm text-zinc-500">Related by stack and workspace</span>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -266,12 +278,12 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
               ))}
             </div>
           </section>
-        ) : null}
+        )}
 
         <section className="mt-8 rounded-xl border border-black/10 bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-500">
             <span>
-              You are viewing the coding-focused project stack for {project.title}.
+              You are viewing the details for {project.title}.
             </span>
             <div className="flex flex-wrap gap-2">
               {project.liveUrl ? (

@@ -1,7 +1,37 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import AdminSectionWorkspace from "@/components/admin/AdminSectionWorkspace";
+import AdminSectionWorkspace, { 
+  SectionTitle, 
+  Field, 
+  TextareaField, 
+  SectionPanel, 
+  TinyButton, 
+  ActionButton 
+} from "@/components/admin/AdminSectionWorkspace";
+import { 
+  Mail, 
+  Settings, 
+  MessageSquare, 
+  Trash2, 
+  CheckCircle2, 
+  Inbox, 
+  Instagram, 
+  Linkedin, 
+  AlignLeft, 
+  Info,
+  Clock,
+  User,
+  Hash,
+  ShieldCheck,
+  ChevronRight,
+  Filter,
+  Search,
+  Bell
+} from "lucide-react";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAdmin } from "@/components/admin/AdminContext";
 
 type ContactSettings = {
   introText: string;
@@ -22,10 +52,10 @@ type ContactSubmission = {
 };
 
 const defaultSettings: ContactSettings = {
-  introText: "We promise to reply within 24 hours, every time.",
+  introText: "I promise to reply within 24 hours, every time.",
   instagramUrl: "https://instagram.com",
   linkedinUrl: "https://linkedin.com",
-  contactEmail: "toabinvarghes@gmail.com",
+  contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "toabinvarghese@gmail.com",
   formEnabled: true,
 };
 
@@ -35,13 +65,21 @@ export default function AdminContactPage() {
   const [activeFilter, setActiveFilter] = useState<"all" | "unread" | "read" | "replied">("all");
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
+  const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
+
+  useEffect(() => {
+    setSaveAction(saveSettings);
+    setStatusText(savingSettings ? "Synchronizing..." : "System Standby");
+    setIsSaving(savingSettings);
+    
+    return () => {
+      setSaveAction(null);
+    };
+  }, [saveSettings, savingSettings, setSaveAction, setIsSaving, setStatusText]);
 
   const filteredSubmissions = useMemo(() => {
-    if (activeFilter === "all") {
-      return submissions;
-    }
-
-    return submissions.filter((submission) => submission.status === activeFilter);
+    if (activeFilter === "all") return submissions;
+    return submissions.filter((s) => s.status === activeFilter);
   }, [activeFilter, submissions]);
 
   async function loadData() {
@@ -67,20 +105,21 @@ export default function AdminContactPage() {
   }
 
   useEffect(() => {
-    queueMicrotask(() => {
-      void loadData();
-    });
+    void loadData();
   }, []);
 
   async function saveSettings() {
     setSavingSettings(true);
-
+    const toastId = toast.loading("Updating communication protocols...");
     try {
       await fetch("/api/admin/forms/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       });
+      toast.success("Settings synchronized.", { id: toastId });
+    } catch {
+      toast.error("Synchronization failed.", { id: toastId });
     } finally {
       setSavingSettings(false);
     }
@@ -96,157 +135,225 @@ export default function AdminContactPage() {
     setSubmissions((current) =>
       current.map((item) => (item.id === id ? { ...item, status } : item))
     );
+    toast.success(`Submission marked as ${status}.`);
   }
 
   async function deleteSubmission(id: string) {
+    if (!confirm("Permanently purge this transmission record?")) return;
+    const toastId = toast.loading("Purging record...");
     await fetch(`/api/admin/forms/submissions/${id}`, { method: "DELETE" });
     setSubmissions((current) => current.filter((item) => item.id !== id));
+    toast.success("Record purged.", { id: toastId });
   }
 
   if (loading) {
-    return <div className="text-sm text-[var(--color-text-body)]">Loading contact section...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 border-4 border-[#007aff] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest">Opening Secure Inbox...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <AdminSectionWorkspace
-      sectionLabel="Contact Section"
-      sectionTitle="Contact Content and Inbox"
-      sectionDescription="Update contact handles and monitor incoming form submissions with status management."
-      previewPath="/contact"
+      sectionLabel="Transmission Control"
+      sectionTitle="Communication Dashboard"
+      sectionDescription="Orchestrate your incoming inquiries and manage public contact endpoints with high-fidelity status tracking."
+      icon={Inbox}
+      iconColor="#0020d7"
     >
-      <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-6">
-        <h3 className="text-lg font-medium text-[#0b0b0c]">Contact Settings</h3>
-        <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <label className="space-y-2 text-sm">
-            <span className="text-[var(--color-text-body)]">Intro Text</span>
-            <textarea
-              value={settings.introText}
-              onChange={(event) => setSettings({ ...settings, introText: event.target.value })}
-              rows={3}
-              className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c] outline-none"
-            />
-          </label>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+        
+        {/* Settings Sidebar */}
+        <aside className="xl:col-span-4 space-y-10">
+          <SectionPanel className="flex flex-col gap-10 bg-white/50 backdrop-blur-sm">
+            <SectionTitle title="Protocol Configuration" copy="Global contact endpoint settings." icon={Settings} />
+            
+            <div className="space-y-8">
+              <TextareaField
+                label="Introductory Narrative"
+                value={settings.introText}
+                onChange={(v) => setSettings({ ...settings, introText: v })}
+                rows={4}
+                icon={AlignLeft}
+              />
 
-          <label className="space-y-2 text-sm">
-            <span className="text-[var(--color-text-body)]">Contact Email</span>
-            <input
-              value={settings.contactEmail}
-              onChange={(event) => setSettings({ ...settings, contactEmail: event.target.value })}
-              className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c] outline-none"
-            />
-          </label>
+              <Field
+                label="Primary Contact Point"
+                value={settings.contactEmail}
+                onChange={(v) => setSettings({ ...settings, contactEmail: v })}
+                icon={Mail}
+              />
 
-          <label className="space-y-2 text-sm">
-            <span className="text-[var(--color-text-body)]">Instagram URL</span>
-            <input
-              value={settings.instagramUrl}
-              onChange={(event) => setSettings({ ...settings, instagramUrl: event.target.value })}
-              className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c] outline-none"
-            />
-          </label>
-
-          <label className="space-y-2 text-sm">
-            <span className="text-[var(--color-text-body)]">LinkedIn URL</span>
-            <input
-              value={settings.linkedinUrl}
-              onChange={(event) => setSettings({ ...settings, linkedinUrl: event.target.value })}
-              className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c] outline-none"
-            />
-          </label>
-        </div>
-
-        <label className="mt-4 inline-flex items-center gap-2 text-sm text-[#0b0b0c]">
-          <input
-            type="checkbox"
-            checked={settings.formEnabled}
-            onChange={(event) => setSettings({ ...settings, formEnabled: event.target.checked })}
-          />
-          Contact form enabled
-        </label>
-
-        <div className="mt-5">
-          <button
-            type="button"
-            onClick={saveSettings}
-            disabled={savingSettings}
-            className="rounded-full border-[2px] border-[var(--color-border-dark)] bg-[#dbe7ff] px-5 py-2 text-sm font-medium text-[#0020d7] shadow-[0_8px_18px_rgba(0,32,215,0.14)] disabled:opacity-60"
-          >
-            {savingSettings ? "Saving..." : "Save Settings"}
-          </button>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-lg font-medium text-[#0b0b0c]">Contact Form Submissions</h3>
-          <div className="flex flex-wrap gap-2">
-            {(["all", "unread", "read", "replied"] as const).map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setActiveFilter(status)}
-                className={`rounded-full border px-3 py-1.5 text-xs uppercase tracking-wider ${
-                  activeFilter === status
-                    ? "border-[var(--color-border-dark)] bg-[#dbe7ff] text-[#0020d7]"
-                    : "border-[var(--color-border-light)] bg-white text-[var(--color-text-body)]"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-4 space-y-3">
-          {filteredSubmissions.length === 0 ? (
-            <p className="text-sm text-[var(--color-text-body)]">No submissions for this filter.</p>
-          ) : null}
-
-          {filteredSubmissions.map((submission) => (
-            <article key={submission.id} className="rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-[#0b0b0c]">{submission.name}</p>
-                  <p className="text-xs text-[var(--color-text-body)]">{submission.email}</p>
-                  <p className="mt-1 text-xs text-[var(--color-text-body)]">
-                    {new Date(submission.createdAt).toLocaleString()}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <select
-                    value={submission.status}
-                    onChange={(event) =>
-                      updateStatus(submission.id, event.target.value as ContactSubmission["status"])
-                    }
-                    className="rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1 text-xs text-[#0b0b0c]"
-                  >
-                    <option value="unread">Unread</option>
-                    <option value="read">Read</option>
-                    <option value="replied">Replied</option>
-                  </select>
-
-                  <button
-                    type="button"
-                    onClick={() => deleteSubmission(submission.id)}
-                    className="rounded-lg border border-red-300 bg-red-50 px-3 py-1 text-xs text-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
+              <div className="grid grid-cols-1 gap-6">
+                <Field
+                  label="Instagram Index"
+                  value={settings.instagramUrl}
+                  onChange={(v) => setSettings({ ...settings, instagramUrl: v })}
+                  icon={Instagram}
+                />
+                <Field
+                  label="LinkedIn Node"
+                  value={settings.linkedinUrl}
+                  onChange={(v) => setSettings({ ...settings, linkedinUrl: v })}
+                  icon={Linkedin}
+                />
               </div>
 
-              {submission.subject ? (
-                <p className="mt-3 text-sm text-[#0b0b0c]">
-                  <span className="text-[var(--color-text-body)]">Subject:</span> {submission.subject}
-                </p>
-              ) : null}
+              <div className="p-6 rounded-[28px] bg-[#f7f4ef]/50 border-2 border-[#e4e4e7] flex items-center justify-between group hover:border-[#0020d7]/20 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className={`h-12 w-12 rounded-[18px] flex items-center justify-center transition-all ${settings.formEnabled ? "bg-[#0020d7] text-white shadow-xl shadow-[#0020d7]/20" : "bg-[#4a4a68]/10 text-[#4a4a68]"}`}>
+                    <ShieldCheck size={24} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-extrabold text-[#0b0b0c] tracking-tight">Public Form Status</p>
+                    <p className="text-[11px] text-[#4a4a68] font-extrabold uppercase tracking-widest opacity-60">{settings.formEnabled ? "Operational" : "Disabled"}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSettings({ ...settings, formEnabled: !settings.formEnabled })}
+                  className={`h-7 w-12 rounded-full transition-all relative ring-4 ring-transparent active:scale-95 ${settings.formEnabled ? "bg-[#0020d7]" : "bg-[#e4e4e7]"}`}
+                >
+                  <div className={`absolute top-1 left-1 h-5 w-5 bg-white rounded-full shadow-lg transition-transform ${settings.formEnabled ? "translate-x-5" : ""}`} />
+                </button>
+              </div>
+            </div>
 
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#1f2937]">{submission.message}</p>
-            </article>
-          ))}
-        </div>
-      </section>
+          </SectionPanel>
+
+          <SectionPanel className="p-8 bg-[#0020d7]/[0.02] border-2 border-dashed border-[#0020d7]/20 rounded-[33px]">
+            <div className="flex items-center gap-5">
+              <div className="h-14 w-14 rounded-[22px] bg-[#0020d7] text-white flex items-center justify-center shadow-2xl shadow-[#0020d7]/30">
+                <Bell size={28} strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="text-[16px] font-extrabold text-[#0b0b0c] tracking-tight">Inbox Statistics</p>
+                <p className="text-[12px] text-[#4a4a68] font-extrabold uppercase tracking-widest opacity-60 mt-1">{submissions.filter(s => s.status === "unread").length} Unprocessed transmissions</p>
+              </div>
+            </div>
+          </SectionPanel>
+        </aside>
+
+        {/* Inbox Submissions */}
+        <main className="xl:col-span-8 space-y-8">
+          <SectionPanel className="flex flex-col gap-8 bg-white/50 backdrop-blur-sm">
+            <div className="flex flex-wrap items-center justify-between gap-6 pb-2 border-b-2 border-[#f7f4ef]">
+              <SectionTitle title="Transmission Feed" copy="Monitor and audit incoming signals." icon={Inbox} />
+              <div className="flex p-1.5 rounded-full bg-[#f7f4ef] border-2 border-[#e4e4e7] shadow-inner">
+                {(["all", "unread", "read", "replied"] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setActiveFilter(filter)}
+                    className={`px-6 py-2 rounded-full text-[10px] font-extrabold uppercase tracking-widest transition-all ${
+                      activeFilter === filter 
+                        ? "bg-[#0b0b0c] text-white shadow-xl shadow-black/20" 
+                        : "text-[#4a4a68] hover:bg-white hover:text-[#0b0b0c]"
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <AnimatePresence mode="popLayout">
+                {filteredSubmissions.length === 0 ? (
+                  <motion.div 
+                    initial={{ opacity: 0 }} 
+                    animate={{ opacity: 1 }} 
+                    className="p-20 rounded-[40px] border-4 border-dashed border-[#e4e4e7] text-center bg-[#f7f4ef]/20"
+                  >
+                    <div className="h-24 w-24 rounded-[33px] bg-white border-2 border-[#e4e4e7] flex items-center justify-center mx-auto mb-8 shadow-sm">
+                      <MessageSquare className="text-[#4a4a68] opacity-20" size={48} strokeWidth={1.5} />
+                    </div>
+                    <p className="text-[18px] font-extrabold text-[#0b0b0c] tracking-tight">Zero Transmissions Detected</p>
+                    <p className="text-[14px] text-[#4a4a68] font-medium mt-2">All communication channels are clear.</p>
+                  </motion.div>
+                ) : (
+                  filteredSubmissions.map((submission) => (
+                    <motion.article 
+                      key={submission.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.98 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className={`group p-8 rounded-[40px] border-2 transition-all relative overflow-hidden ${
+                        submission.status === "unread" 
+                          ? "bg-white border-[#0020d7]/20 shadow-2xl shadow-[#0020d7]/5" 
+                          : "bg-[#f7f4ef]/30 border-[#e4e4e7] opacity-80"
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-6 mb-8 relative z-10">
+                        <div className="flex items-center gap-5">
+                          <div className={`h-16 w-16 rounded-[24px] flex items-center justify-center transition-all ${submission.status === "unread" ? "bg-[#0020d7] text-white shadow-2xl shadow-[#0020d7]/20" : "bg-white border-2 border-[#e4e4e7] text-[#4a4a68]"}`}>
+                            <User size={28} strokeWidth={2.5} />
+                          </div>
+                          <div>
+                            <h4 className="text-[20px] font-extrabold text-[#0b0b0c] tracking-tight">{submission.name}</h4>
+                            <div className="flex items-center gap-3 mt-1">
+                               <p className="text-[12px] font-extrabold text-[#0020d7] tracking-widest uppercase opacity-60">{submission.email}</p>
+                               <div className="h-1 w-1 rounded-full bg-[#e4e4e7]" />
+                               <p className="text-[12px] font-extrabold text-[#4a4a68] tracking-widest uppercase opacity-40">{new Date(submission.createdAt).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 relative z-10">
+                          <div className="relative">
+                            <select
+                              value={submission.status}
+                              onChange={(e) => updateStatus(submission.id, e.target.value as any)}
+                              className="h-10 rounded-full bg-white border-2 border-[#e4e4e7] px-6 pr-10 text-[10px] font-extrabold uppercase tracking-widest outline-none focus:border-[#0020d7] transition-all appearance-none cursor-pointer text-[#0b0b0c] shadow-sm"
+                            >
+                              <option value="unread">Unread</option>
+                              <option value="read">Processed</option>
+                              <option value="replied">Synchronized</option>
+                            </select>
+                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-[#4a4a68] pointer-events-none" size={14} />
+                          </div>
+                          <button
+                            onClick={() => deleteSubmission(submission.id)}
+                            className="h-10 w-10 flex items-center justify-center rounded-full bg-white border-2 border-[#e4e4e7] text-[#ff3b30] hover:bg-[#ff3b30] hover:text-white hover:border-[#ff3b30] transition-all active:scale-90 shadow-sm"
+                          >
+                            <Trash2 size={16} strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="pl-20 space-y-6 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="h-6 w-6 rounded-lg bg-[#f7f4ef] flex items-center justify-center text-[#4a4a68] shadow-inner">
+                            <Hash size={12} strokeWidth={3} />
+                          </div>
+                          <p className="text-[15px] font-extrabold text-[#0b0b0c] tracking-tight">{submission.subject || "No Designation"}</p>
+                        </div>
+                        <div className="p-8 rounded-[33px] bg-white border-2 border-[#f7f4ef] shadow-inner relative group-hover:border-[#0020d7]/5 transition-all">
+                          <p className="text-[16px] leading-relaxed text-[#0b0b0c] whitespace-pre-wrap font-medium opacity-90">{submission.message}</p>
+                        </div>
+                        <div className="flex items-center gap-6 text-[10px] font-extrabold text-[#4a4a68] uppercase tracking-widest pt-4 opacity-40">
+                          <span className="flex items-center gap-2"><Clock size={14} strokeWidth={2.5} /> {new Date(submission.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="flex items-center gap-2"><ShieldCheck size={14} strokeWidth={2.5} /> Secure Channel Verified</span>
+                        </div>
+                      </div>
+
+                      {/* Accent decoration */}
+                      {submission.status === "unread" && (
+                        <div className="absolute top-0 right-0 h-40 w-40 bg-[#0020d7] rounded-full blur-[100px] opacity-[0.03] -mr-20 -mt-20" />
+                      )}
+                    </motion.article>
+                  ))
+                )}
+              </AnimatePresence>
+            </div>
+          </SectionPanel>
+        </main>
+      </div>
     </AdminSectionWorkspace>
   );
 }
+
+

@@ -7,6 +7,12 @@ export const siteConfig = {
   locale: "en_IN",
   creator: "Abin Varghese",
   twitterHandle: "@abin_varghese",
+  /** LinkedIn, GitHub, Behance for social graph signals */
+  socialProfiles: [
+    "https://www.linkedin.com/in/toabinvarghese",
+    "https://github.com/AbinVarghexe",
+    "https://www.behance.net/toabinvarghese",
+  ],
   navigation: [
     { name: "Home", path: "/" },
     { name: "About", path: "/about" },
@@ -18,12 +24,13 @@ export const siteConfig = {
 
 const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
-export const siteUrl = (configuredSiteUrl && configuredSiteUrl.length > 0
-  ? configuredSiteUrl
-  : "https://abinvarghese.me"
+export const siteUrl = (
+  configuredSiteUrl && configuredSiteUrl.length > 0
+    ? configuredSiteUrl
+    : "https://abinvarghese.me"
 ).replace(/\/+$/, "");
 
-export const defaultOgImage = `${siteUrl}/profile.jpg`;
+export const defaultOgImage = `${siteUrl}/og-image.jpg`;
 
 export function getAbsoluteUrl(path = "/") {
   return new URL(path.startsWith("/") ? path : `/${path}`, siteUrl).toString();

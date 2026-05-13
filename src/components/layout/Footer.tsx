@@ -1,14 +1,18 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight, Instagram, Linkedin, Mail } from 'lucide-react';
 import { homeContentDefaults } from '@/lib/home-content-defaults';
-import {
-  siteCopyDefaults,
-  type PublicSiteShellContent,
-} from '@/lib/site-copy-content';
-import { contactSectionDefaults } from '@/lib/contact-content';
+import { 
+  siteCopyDefaults, 
+  type PublicSiteShellContent 
+} from '@/types/site-copy';
+import { contactSectionDefaults } from '@/types/contact';
+import { InteractiveDotPattern } from '@/components/ui/InteractiveDotPattern';
+
 
 export default function Footer() {
   const [shellContent, setShellContent] = useState<PublicSiteShellContent>({
@@ -51,10 +55,10 @@ export default function Footer() {
 
   const navLinks = [
     { name: 'HOME', href: '/' },
+    { name: 'ABOUT', href: '/about' },
     { name: 'PROJECTS', href: '/projects' },
     { name: 'SERVICES', href: '/services' },
-    { name: 'ABOUT ME', href: '/about' },
-    { name: 'GET IN TOUCH', href: '/contact' },
+    { name: 'CONTACT', href: '/contact' },
   ];
 
   const socialLinks = [
@@ -64,23 +68,26 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative w-full bg-transparent overflow-hidden px-6 md:px-12 lg:px-20 pt-20">
+    <footer className="relative w-full min-h-screen bg-transparent overflow-hidden px-6 md:px-12 lg:px-20 pt-12 flex flex-col">
       {/* ── Background Layer (Below Bot at z-10) ────────── */}
       <div className="absolute inset-0 bg-white z-5 pointer-events-none" />
 
       {/* ── Content Layer (Above Bot at z-10) ────────── */}
-      <div className="relative z-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-0 border-t border-black/20 pt-12">
+      <div className="relative z-20 flex-grow flex flex-col justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-0 border-t border-black/20 pt-8">
           {/* Left Section */}
           <div className="lg:col-span-4 flex flex-col space-y-8 lg:pr-12">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-full border-2 border-black flex items-center justify-center font-bold text-2xl">
-                A
-              </div>
-              <div>
-                <p className="font-bold text-sm tracking-widest uppercase">{shellContent.siteCopy.footerBrandEyebrow}</p>
-                <p className="font-bold text-sm tracking-widest uppercase text-black/50">{"// ABIN VARGHESE"}</p>
-              </div>
+            <div className="flex items-center">
+              <Link href="/" aria-label="Abin Varghese Home" className="transition-opacity hover:opacity-80 flex items-center space-x-2">
+                <Image
+                  src="/Logo.svg"
+                  alt="Abin Varghese logo"
+                  width={46}
+                  height={40}
+                  className="h-12 w-auto"
+                />
+                <span className="font-bold text-3xl tracking-tight uppercase">ABIN VARGHESE</span>
+              </Link>
             </div>
             
             <p className="text-black/60 text-sm max-w-sm leading-relaxed">
@@ -107,7 +114,7 @@ export default function Footer() {
                   <Link 
                     key={idx} 
                     href={link.href}
-                    className="group relative flex items-center justify-between p-6 border-b border-black/20 overflow-hidden transition-colors duration-300"
+                    className="group relative flex items-center justify-between p-8 md:p-9 border-b border-black/20 overflow-hidden transition-colors duration-300"
                   >
                     {/* Hover background slide effect */}
                     <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
@@ -124,15 +131,15 @@ export default function Footer() {
           {/* Right Section - CTA */}
           <div className="lg:col-span-4 flex flex-col justify-between lg:pl-12 pt-8 lg:pt-0">
             <div className="space-y-6">
-              <h2 className="text-4xl md:text-5xl font-medium leading-tight">
+              <h2 className="text-4xl md:text-5xl lg:text-7xl font-medium leading-tight">
                 {shellContent.siteCopy.footerCtaHeading}
               </h2>
-              <p className="text-black/60 text-lg max-w-sm">
+              <p className="text-black/60 text-xl max-w-sm">
                 {shellContent.siteCopy.footerCtaCopy}
               </p>
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between items-end mt-20 text-xs tracking-widest text-black/40 uppercase">
+            <div className="flex flex-col md:flex-row justify-between items-end mt-24 text-xs tracking-widest text-black/40 uppercase">
               <p>{shellContent.siteCopy.footerCopyright}</p>
               {shellContent.siteCopy.footerCredit ? (
                 <p className="mt-4 md:mt-0">{shellContent.siteCopy.footerCredit}</p>
@@ -142,10 +149,73 @@ export default function Footer() {
         </div>
 
         {/* Bottom Large Text */}
-        <div className="mt-20 -mb-4 md:-mb-8 lg:-mb-12">
-          <h1 className="text-[12vw] font-bold tracking-tighter leading-none whitespace-nowrap overflow-hidden select-none font-vina uppercase text-black transition-colors duration-300">
-            Abin Varghese
-          </h1>
+        <div className="relative mt-auto h-[30vh] md:h-[35vh] -mb-6 md:-mb-12 lg:-mb-16 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 z-0 overflow-hidden" 
+            style={{ 
+              maskImage: "linear-gradient(to bottom, transparent, black 15%)", 
+              WebkitMaskImage: "linear-gradient(to bottom, transparent, black 15%)" 
+            }}
+          >
+            <InteractiveDotPattern 
+              cx={2} 
+              cy={2} 
+              cr={1.5} 
+              width={20} 
+              height={20} 
+              dotColor="rgba(0, 0, 0, 0.08)" 
+              activeDotColor="rgba(0, 0, 0, 0.4)" 
+              hoverRadius={120} 
+            />
+          </div>
+          <div className="relative flex items-center justify-center">
+            <h1 className="flex text-[13vw] font-bold tracking-tighter leading-none select-none font-vina uppercase pointer-events-none">
+              {"Abin Varghese".split("").map((char, i) => (
+                <span key={i} className="relative inline-block" style={{ minWidth: char === " " ? "0.3em" : "auto" }}>
+                  {/* Stroke Layer */}
+                  <motion.span
+                    className="absolute inset-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ 
+                      opacity: [0, 1, 1, 0],
+                    }}
+                    transition={{
+                      duration: 4,
+                      delay: i * 0.1,
+                      repeat: Infinity,
+                      times: [0, 0.1, 0.9, 1],
+                      ease: "easeInOut"
+                    }}
+                    style={{ 
+                      WebkitTextStroke: "1px rgba(0, 0, 0, 0.3)",
+                      color: "transparent"
+                    }}
+                  >
+                    {char}
+                  </motion.span>
+
+                  {/* Fill Layer */}
+                  <motion.span
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ 
+                      opacity: [0, 0, 1, 0],
+                      y: [10, 0, 0, -10]
+                    }}
+                    transition={{
+                      duration: 4,
+                      delay: i * 0.1 + 0.4,
+                      repeat: Infinity,
+                      times: [0, 0.2, 0.8, 1],
+                      ease: "easeInOut"
+                    }}
+                    className="text-black"
+                  >
+                    {char}
+                  </motion.span>
+                </span>
+              ))}
+            </h1>
+          </div>
         </div>
       </div>
     </footer>

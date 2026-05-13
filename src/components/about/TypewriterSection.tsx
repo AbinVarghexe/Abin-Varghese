@@ -1,213 +1,283 @@
 "use client";
 
-
-import { motion } from "framer-motion";
-import { useEffect, useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import MilesStickerBoard from "@/components/about/MilesStickerBoard";
 
-
-const TypewriterSection = ({ quote }: { quote: string }) => {
+const TelevisionSection = ({ quote }: { quote: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const lastIndexRef = useRef(0);
-  const soundArmedRef = useRef(false);
-  const typewriterVideo = "/Typewritter.mp4";
-  const typewriterTransparentVideo = "/Typewritter-alpha.webm";
-  const animationLoopSeconds = 4;
-
-  // Paper animation and typing effect
   const [typedText, setTypedText] = useState("");
+  const [showCursor, setShowCursor] = useState(true);
+  const [isOn, setIsOn] = useState(false);
+  const [showStatic, setShowStatic] = useState(false);
   const fullText = quote;
-  const typewriterFont = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
-  const paperWidth = 370;
-  const paperHeight = 360;
-  const paperViewportTop = 130;
 
+  // TV turn-on sequence
   useEffect(() => {
+    const staticTimer = setTimeout(() => setShowStatic(true), 400);
+    const onTimer = setTimeout(() => {
+      setShowStatic(false);
+      setIsOn(true);
+    }, 1200);
     return () => {
-      void audioContextRef.current?.close();
-      audioContextRef.current = null;
+      clearTimeout(staticTimer);
+      clearTimeout(onTimer);
     };
   }, []);
 
-  const playTypewriterSound = useCallback(() => {
-    if (!soundArmedRef.current) return;
-    if (typeof window === "undefined") return;
-
-    const AudioCtx =
-      window.AudioContext ||
-      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-
-    if (!AudioCtx) return;
-
-    const ctx = audioContextRef.current ?? new AudioCtx();
-    audioContextRef.current = ctx;
-
-    if (ctx.state === "suspended") {
-      void ctx.resume();
-    }
-
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
-
-    oscillator.type = "square";
-    oscillator.frequency.setValueAtTime(980, ctx.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(620, ctx.currentTime + 0.035);
-
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(1800, ctx.currentTime);
-
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.009, ctx.currentTime + 0.006);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.035);
-
-    oscillator.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.04);
-  }, []);
-
+  // Typing effect loop
   useEffect(() => {
-    const loopDurationMs = animationLoopSeconds * 1000;
-    const startTime = performance.now();
+    if (!isOn) return;
+    
+    let currentIndex = 0;
+    let typingInterval: ReturnType<typeof setInterval>;
+    let delayTimeout: ReturnType<typeof setTimeout>;
 
-    const updateLoop = () => {
-      const elapsed = (performance.now() - startTime) % loopDurationMs;
-      const progress = elapsed / loopDurationMs;
-      const nextIndex = Math.floor(progress * (fullText.length + 1));
-      setTypedText(fullText.slice(0, nextIndex));
+    const startTyping = () => {
+      currentIndex = 0;
+      setTypedText("");
+      
+      typingInterval = setInterval(() => {
+        if (currentIndex <= fullText.length) {
+          setTypedText(fullText.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          clearInterval(typingInterval);
+          // Wait 3.5 seconds, then clear and restart
+          delayTimeout = setTimeout(() => {
+            startTyping();
+          }, 3500);
+        }
+      }, 65);
     };
 
-    updateLoop();
-    const typingInterval = window.setInterval(updateLoop, 50);
-    return () => window.clearInterval(typingInterval);
-  }, [fullText]);
-
-  useEffect(() => {
-    const currentLength = typedText.length;
-    const latestChar = typedText.at(-1) ?? "";
-    const shouldPlayClick =
-      currentLength > lastIndexRef.current &&
-      currentLength < fullText.length &&
-      latestChar.trim() !== "" &&
-      currentLength % 3 === 0;
-
-    if (shouldPlayClick) {
-      playTypewriterSound();
-    }
-
-    lastIndexRef.current = currentLength;
-  }, [typedText, fullText.length, playTypewriterSound]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const syncPlaybackRate = () => {
-      if (!video.duration || Number.isNaN(video.duration)) return;
-      video.playbackRate = video.duration / animationLoopSeconds;
-    };
-
-    syncPlaybackRate();
-    video.addEventListener("loadedmetadata", syncPlaybackRate);
+    startTyping();
 
     return () => {
-      video.removeEventListener("loadedmetadata", syncPlaybackRate);
+      clearInterval(typingInterval);
+      clearTimeout(delayTimeout);
     };
+  }, [isOn, fullText]);
+
+  // Cursor blink
+  useEffect(() => {
+    const cursorInterval = setInterval(() => {
+      setShowCursor((prev) => !prev);
+    }, 530);
+    return () => clearInterval(cursorInterval);
   }, []);
 
-  // Paper animation: y position depends on typing progress
-  const paperStartY = 110; // px, just inside the roller
-  const paperEndY = -65; // Keep the paper reveal inside this section
-  const typingProgress = typedText.length / fullText.length;
-  const paperY = paperStartY + ((paperEndY - paperStartY) * typingProgress);
+  // Static noise canvas
+  const staticCanvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    if (!showStatic) return;
+    const canvas = staticCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-  // Aged sand paper stock with warm fiber noise and subtle vintage banding.
-  const grainyPaper =
-    'data:image/svg+xml;utf8,<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg"><defs><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.86" numOctaves="3" seed="11"/><feColorMatrix type="saturate" values="0"/></filter><linearGradient id="tone" x1="0" y1="0" x2="0" y2="1"><stop offset="0%25" stop-color="%23e3d1b0"/><stop offset="52%25" stop-color="%23d4c09a"/><stop offset="100%25" stop-color="%23c2ad84"/></linearGradient><linearGradient id="fade" x1="0" y1="0" x2="1" y2="1"><stop offset="0%25" stop-color="%23f6edd8" stop-opacity="0.34"/><stop offset="100%25" stop-color="%238b7551" stop-opacity="0.14"/></linearGradient><pattern id="bands" width="400" height="42" patternUnits="userSpaceOnUse"><rect width="400" height="1" fill="%23b09567" opacity="0.1"/><rect y="21" width="400" height="1" fill="%23fff8ea" opacity="0.07"/></pattern></defs><rect width="100%25" height="100%25" fill="url(%23tone)"/><rect width="100%25" height="100%25" fill="url(%23fade)"/><rect width="100%25" height="100%25" fill="url(%23bands)"/><rect width="100%25" height="100%25" filter="url(%23grain)" opacity="0.11"/></svg>';
+    let animId: number;
+    const drawNoise = () => {
+      const imageData = ctx.createImageData(canvas.width, canvas.height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const v = Math.random() * 255;
+        data[i] = v;
+        data[i + 1] = v;
+        data[i + 2] = v;
+        data[i + 3] = 200;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      animId = requestAnimationFrame(drawNoise);
+    };
+    drawNoise();
+    return () => cancelAnimationFrame(animId);
+  }, [showStatic]);
 
   return (
     <section
       ref={containerRef}
-      onPointerEnter={() => {
-        soundArmedRef.current = true;
-      }}
-      onPointerDown={() => {
-        soundArmedRef.current = true;
-      }}
-      className="relative z-20 w-full pt-48 pb-28 flex items-center justify-center overflow-visible bg-[#fdfaf5]"
-      style={{ 
-        backgroundImage: 'radial-gradient(circle, rgba(139, 90, 43, 0.15) 1.5px, transparent 1.5px)',
-        backgroundSize: '32px 32px',
-        backgroundPosition: 'center center'
+      className="relative z-20 w-full pt-16 md:pt-48 pb-16 md:pb-28 flex items-center justify-center overflow-visible bg-[#fdfaf5]"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle, rgba(139, 90, 43, 0.15) 1.5px, transparent 1.5px)",
+        backgroundSize: "32px 32px",
+        backgroundPosition: "center center",
       }}
     >
       <MilesStickerBoard />
-      <div className="relative w-[850px] h-[760px] flex justify-center items-end">
-        {/* Animated Paper */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 z-10 pointer-events-none"
-          style={{
-            top: paperViewportTop,
-            width: paperWidth,
-          }}
-        >
-          <motion.div
-            initial={false}
-            animate={{ y: paperY }}
-            transition={{ ease: "linear", duration: 0.05 }}
-            className="rounded-[2px] shadow-[0_-5px_15px_rgba(0,0,0,0.10),0_0_20px_rgba(0,0,0,0.05)] border-t border-x border-[#bea57c] flex flex-col justify-start items-start px-10 pt-12 pb-8"
+
+      <div className="relative w-[800px] max-w-[100%] sm:max-w-[95%] md:max-w-full flex justify-center items-center">
+        {/* Television image */}
+        <div className="relative w-full select-none leading-none flex justify-center">
+          {/* Ambient glow behind the TV when on */}
+          <AnimatePresence>
+            {isOn && (
+              <motion.div
+                className="absolute pointer-events-none -z-20"
+                style={{
+                  top: "32.6%",
+                  left: "32.3%",
+                  width: "31.8%",
+                  height: "15.7%",
+                  borderRadius: "50%",
+                  background:
+                    "radial-gradient(ellipse at center, rgba(51,255,51,0.15) 0%, transparent 70%)",
+                  filter: "blur(45px)",
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1 }}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* CRT Screen overlay — placed behind the TV bezel */}
+          <div
+            className="absolute z-0 overflow-hidden"
             style={{
-              width: paperWidth,
-              height: paperHeight,
-              background: `url('${grainyPaper}') center/cover, #d4c09a`,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.14), inset 0 0 0 1px rgba(250,243,226,0.18)',
+              top: "32.6%",
+              left: "32.3%",
+              width: "31.8%",
+              height: "15.7%",
+              borderRadius: "8px / 10px",
             }}
           >
-            <span
-              className="block text-[1.28rem] text-[#2f2619] leading-8 whitespace-pre-wrap select-none"
+            {/* Screen background glow */}
+            <motion.div
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isOn || showStatic ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
               style={{
-                fontFamily: typewriterFont,
-                letterSpacing: '0.04em',
-                textShadow: '0 1px 0 rgba(253,248,239,0.28)',
-                userSelect: 'none',
+                background: isOn
+                  ? "radial-gradient(ellipse at center, #1a2a1a 0%, #0a140a 60%, #050a05 100%)"
+                  : "#111",
               }}
-            >
-              {typedText}
-              {typedText.length < fullText.length && (
-                <span className="inline-block w-2 h-6 bg-black/80 align-middle ml-1 animate-pulse" />
+            />
+
+            {/* Static noise */}
+            <AnimatePresence>
+              {showStatic && (
+                <motion.canvas
+                  ref={staticCanvasRef}
+                  width={260}
+                  height={200}
+                  className="absolute inset-0 w-full h-full"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.9 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                />
               )}
-            </span>
-          </motion.div>
+            </AnimatePresence>
+
+            {/* CRT power-on flash */}
+            <AnimatePresence>
+              {isOn && (
+                <motion.div
+                  className="absolute inset-0"
+                  initial={{
+                    opacity: 1,
+                    background:
+                      "radial-gradient(ellipse at center, #ffffff 0%, #88ff88 40%, transparent 70%)",
+                  }}
+                  animate={{ opacity: 0 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Quote text */}
+            {isOn && (
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center p-2 sm:p-3 md:p-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                <p
+                  className="text-[0.6rem] sm:text-[0.65rem] md:text-[1.1rem] leading-[1.4] md:leading-[1.6] tracking-wide text-center select-none"
+                  style={{
+                    fontFamily:
+                      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace',
+                    color: "#33ff33",
+                    textShadow:
+                      "0 0 8px rgba(51,255,51,0.6), 0 0 20px rgba(51,255,51,0.2)",
+                  }}
+                >
+                  {typedText}
+                  {typedText.length < fullText.length && showCursor && (
+                    <span className="inline-block w-[4px] h-[9px] md:w-[10px] md:h-[22px] bg-[#33ff33] align-middle ml-[2px] shadow-[0_0_4px_rgba(51,255,51,0.6)] md:shadow-[0_0_8px_rgba(51,255,51,0.8)]" />
+                  )}
+                </p>
+              </motion.div>
+            )}
+
+            {/* CRT Scanlines */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)",
+                mixBlendMode: "multiply",
+              }}
+            />
+
+            {/* CRT curvature vignette */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.45) 100%)",
+              }}
+            />
+
+            {/* Screen reflection / glare */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.03) 100%)",
+              }}
+            />
+
+            {/* Subtle flicker animation */}
+            {isOn && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                animate={{
+                  opacity: [0, 0.03, 0, 0.02, 0, 0.04, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+                style={{ background: "rgba(255,255,255,1)" }}
+              />
+            )}
+          </div>
+
+          {/* Television image */}
+          <Image
+            src="/Televison.png"
+            alt="Retro television set"
+            width={1181}
+            height={1831}
+            className="relative z-10 w-full h-auto drop-shadow-[0_25px_50px_rgba(0,0,0,0.35)] pointer-events-none block"
+            priority
+          />
+
         </div>
-        
-        <div
-          className="absolute z-20 left-1/2 -translate-x-1/2 bottom-0 w-[550px] pointer-events-none"
-        >
-          <video
-            ref={videoRef}
-            className="w-full object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.4)] origin-bottom"
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            aria-label="Vintage typewriter animation"
-            style={{ backgroundColor: "transparent" }}
-          >
-            <source src={typewriterTransparentVideo} type="video/webm; codecs=vp9" />
-            <source src={typewriterVideo} type="video/mp4" />
-            Your browser does not support the typewriter video.
-          </video>
-        </div>
-        {/* Shadow on the desk */}
-        <div className="absolute bottom-[10%] z-0 left-1/2 -translate-x-1/2 w-[450px] h-[35px] bg-black/40 blur-[25px] rounded-[100%]" />
+
+        {/* Shadow beneath the TV cabinet */}
+        <div className="absolute bottom-[4%] z-0 left-1/2 -translate-x-1/2 w-[70%] h-[4%] bg-black/35 blur-[22px] rounded-[100%]" />
       </div>
     </section>
   );
 };
 
-export default TypewriterSection;
+export default TelevisionSection;

@@ -1,8 +1,56 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import AdminSectionWorkspace, { 
+  SectionTitle, 
+  Field, 
+  TextareaField, 
+  SectionPanel, 
+  ActionButton,
+} from "@/components/admin/AdminSectionWorkspace";
+import { 
+  Layers, 
+  Package, 
+  Plus, 
+  Trash2, 
+  Palette, 
+  Type, 
+  AlignLeft, 
+  List, 
+  Video, 
+  Code, 
+  ImageIcon,
+  Sparkles,
+  ChevronRight,
+  RefreshCw,
+  Unlink,
+  FolderKanban,
+} from "lucide-react";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAdmin } from "@/components/admin/AdminContext";
 import type { Service, ServiceContent } from "@/constants/services";
-import AdminSectionWorkspace from "@/components/admin/AdminSectionWorkspace";
+import type { BehanceShowcaseEmbed } from "@/lib/site-content";
+import {
+  mapPortfolioProjectToServiceShowcase,
+  mapBehanceShowcaseEmbedToServiceContent,
+  SERVICE_LINK_BEHANCE_PREFIX,
+  isBehanceShowcaseServiceLink,
+  parseBehanceShowcaseLinkId,
+  type AdminProjectForShowcase,
+} from "@/lib/map-portfolio-project-to-service-showcase";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const PORTFOLIO_SELECT_NONE = "__portfolio_none__";
 
 const defaultProjectContent: ServiceContent = {
   type: "project",
@@ -14,28 +62,70 @@ const defaultProjectContent: ServiceContent = {
 
 export default function AdminServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
+  const [portfolioProjects, setPortfolioProjects] = useState<AdminProjectForShowcase[]>([]);
+  const [behanceShowcaseEmbeds, setBehanceShowcaseEmbeds] = useState<BehanceShowcaseEmbed[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string>("");
   const [selectedProjectIndex, setSelectedProjectIndex] = useState<number>(0);
   const [status, setStatus] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
+
+  const saveServices = useCallback(async () => {
+    setSaving(true);
+    const toastId = toast.loading("Synchronizing service portfolio...");
+    try {
+      const response = await fetch("/api/admin/services", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ services }),
+      });
+      if (!response.ok) throw new Error("Save failed");
+      toast.success("Portfolio synchronized successfully.", { id: toastId });
+    } catch {
+      toast.error("Portfolio synchronization failed.", { id: toastId });
+    } finally {
+      setSaving(false);
+    }
+  }, [services]);
+
+  useEffect(() => {
+    setSaveAction(saveServices);
+    setStatusText(saving ? "Syncing..." : "System Standby");
+    setIsSaving(saving);
+    
+    return () => {
+      setSaveAction(null);
+    };
+  }, [saveServices, saving, setSaveAction, setIsSaving, setStatusText]);
+
+  useEffect(() => {
+    async function loadLinkSources() {
+      const [projectsRes, siteRes] = await Promise.all([
+        fetch("/api/admin/projects", { cache: "no-store" }),
+        fetch("/api/admin/site-content", { cache: "no-store" }),
+      ]);
+      if (projectsRes.ok) {
+        const data = await projectsRes.json();
+        setPortfolioProjects(data.projects || []);
+      }
+      if (siteRes.ok) {
+        const data = await siteRes.json();
+        setBehanceShowcaseEmbeds(Array.isArray(data.behanceShowcase) ? data.behanceShowcase : []);
+      }
+    }
+    void loadLinkSources();
+  }, []);
 
   useEffect(() => {
     async function loadServices() {
       const response = await fetch("/api/admin/services", { cache: "no-store" });
-      if (!response.ok) {
-        return;
-      }
-
+      if (!response.ok) return;
       const data = await response.json();
       const loadedServices: Service[] = data.services || [];
       setServices(loadedServices);
-      if (loadedServices[0]) {
-        setSelectedServiceId(loadedServices[0].id);
-      }
+      if (loadedServices[0]) setSelectedServiceId(loadedServices[0].id);
     }
-
-    queueMicrotask(() => {
-      void loadServices();
-    });
+    void loadServices();
   }, []);
 
   const selectedService = useMemo(
@@ -44,343 +134,507 @@ export default function AdminServicesPage() {
   );
 
   const projectItems = useMemo(
-    () =>
-      (selectedService?.contents || [])
-        .map((item, index) => ({ item, index }))
-        .filter(({ item }) => item.type === "project"),
+    () => (selectedService?.contents || [])
+      .map((item, index) => ({ item, index }))
+      .filter(({ item }) => item.type === "project"),
     [selectedService]
   );
 
   const selectedProject = projectItems[selectedProjectIndex]?.item;
 
-  function updateSelectedService(patch: Partial<Service>) {
-    if (!selectedService) {
-      return;
+  const linkedSelectValue = useMemo(() => {
+    const linkedId = selectedProject?.linkedProjectId;
+    if (!linkedId) {
+      return PORTFOLIO_SELECT_NONE;
     }
+    if (isBehanceShowcaseServiceLink(linkedId)) {
+      const embedId = parseBehanceShowcaseLinkId(linkedId);
+      return embedId && behanceShowcaseEmbeds.some((e) => e.id === embedId)
+        ? linkedId
+        : PORTFOLIO_SELECT_NONE;
+    }
+    return portfolioProjects.some((p) => p.id === linkedId) ? linkedId : PORTFOLIO_SELECT_NONE;
+  }, [selectedProject?.linkedProjectId, portfolioProjects, behanceShowcaseEmbeds]);
 
-    setServices((current) =>
-      current.map((service) =>
-        service.id === selectedService.id
-          ? {
-              ...service,
-              ...patch,
-            }
-          : service
-      )
-    );
+  const linkedSourceMissing = useMemo(() => {
+    const linkedId = selectedProject?.linkedProjectId;
+    if (!linkedId) {
+      return false;
+    }
+    if (isBehanceShowcaseServiceLink(linkedId)) {
+      const embedId = parseBehanceShowcaseLinkId(linkedId);
+      return Boolean(embedId && !behanceShowcaseEmbeds.some((e) => e.id === embedId));
+    }
+    return !portfolioProjects.some((p) => p.id === linkedId);
+  }, [selectedProject?.linkedProjectId, portfolioProjects, behanceShowcaseEmbeds]);
+
+  const sortedPortfolioProjects = useMemo(
+    () =>
+      [...portfolioProjects].sort((a, b) =>
+        (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" })
+      ),
+    [portfolioProjects]
+  );
+
+  const sortedBehanceEmbeds = useMemo(
+    () =>
+      [...behanceShowcaseEmbeds].sort((a, b) =>
+        (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" })
+      ),
+    [behanceShowcaseEmbeds]
+  );
+
+  function updateSelectedService(patch: Partial<Service>) {
+    if (!selectedService) return;
+    setServices((current) => current.map((s) => s.id === selectedService.id ? { ...s, ...patch } : s));
   }
 
   function updateSelectedProject(patch: Partial<ServiceContent>) {
-    if (!selectedService || !selectedProject) {
-      return;
-    }
-
+    if (!selectedService || !selectedProject) return;
     const targetIndex = projectItems[selectedProjectIndex]?.index;
-    if (targetIndex === undefined) {
+    if (targetIndex === undefined) return;
+
+    setServices((current) => current.map((s) => {
+      if (s.id !== selectedService.id) return s;
+      const nextContents = [...(s.contents || [])];
+      nextContents[targetIndex] = { ...nextContents[targetIndex], ...patch };
+      return { ...s, contents: nextContents };
+    }));
+  }
+
+  function applyLinkedPortfolioProject(projectId: string) {
+    const p = portfolioProjects.find((x) => x.id === projectId);
+    if (!p) return;
+    updateSelectedProject(mapPortfolioProjectToServiceShowcase(p));
+  }
+
+  function applyLinkedSource(rawId: string) {
+    if (rawId.startsWith(SERVICE_LINK_BEHANCE_PREFIX)) {
+      const embedId = rawId.slice(SERVICE_LINK_BEHANCE_PREFIX.length);
+      const embed = behanceShowcaseEmbeds.find((e) => e.id === embedId);
+      if (embed) {
+        updateSelectedProject(mapBehanceShowcaseEmbedToServiceContent(embed));
+      }
+      return;
+    }
+    applyLinkedPortfolioProject(rawId);
+  }
+
+  async function syncSelectedShowcaseFromPortfolio() {
+    const id = selectedProject?.linkedProjectId;
+    if (!id) return;
+
+    if (isBehanceShowcaseServiceLink(id)) {
+      const res = await fetch("/api/admin/site-content", { cache: "no-store" });
+      if (!res.ok) {
+        toast.error("Could not reload Behance showcase data.");
+        return;
+      }
+      const data = await res.json();
+      const list: BehanceShowcaseEmbed[] = Array.isArray(data.behanceShowcase)
+        ? data.behanceShowcase
+        : [];
+      setBehanceShowcaseEmbeds(list);
+      const embedId = parseBehanceShowcaseLinkId(id);
+      const embed = embedId ? list.find((e) => e.id === embedId) : undefined;
+      if (embed) {
+        updateSelectedProject(mapBehanceShowcaseEmbedToServiceContent(embed));
+        toast.success("Showcase synced from Behance embed.");
+      } else {
+        toast.error("That Behance embed is no longer in the list.");
+      }
       return;
     }
 
-    setServices((current) =>
-      current.map((service) => {
-        if (service.id !== selectedService.id) {
-          return service;
-        }
+    applyLinkedPortfolioProject(id);
+    toast.success("Showcase refreshed from Projects.");
+  }
 
-        const nextContents = [...(service.contents || [])];
-        nextContents[targetIndex] = {
-          ...nextContents[targetIndex],
-          ...patch,
-        };
-
-        return {
-          ...service,
-          contents: nextContents,
-        };
-      })
-    );
+  function unlinkSelectedShowcase() {
+    updateSelectedProject({ linkedProjectId: undefined });
   }
 
   function addProjectShowcase() {
-    if (!selectedService) {
-      return;
-    }
-
-    setServices((current) =>
-      current.map((service) => {
-        if (service.id !== selectedService.id) {
-          return service;
-        }
-
-        return {
-          ...service,
-          contents: [...(service.contents || []), defaultProjectContent],
-        };
-      })
-    );
-
+    if (!selectedService) return;
+    setServices((current) => current.map((s) => {
+      if (s.id !== selectedService.id) return s;
+      return { ...s, contents: [...(s.contents || []), defaultProjectContent] };
+    }));
     setSelectedProjectIndex(projectItems.length);
   }
 
   function removeProjectShowcase(indexInFiltered: number) {
-    if (!selectedService) {
-      return;
-    }
-
+    if (!selectedService) return;
     const targetIndex = projectItems[indexInFiltered]?.index;
-    if (targetIndex === undefined) {
-      return;
-    }
+    if (targetIndex === undefined) return;
 
-    setServices((current) =>
-      current.map((service) => {
-        if (service.id !== selectedService.id) {
-          return service;
-        }
-
-        const nextContents = [...(service.contents || [])];
-        nextContents.splice(targetIndex, 1);
-
-        return {
-          ...service,
-          contents: nextContents,
-        };
-      })
-    );
-
+    setServices((current) => current.map((s) => {
+      if (s.id !== selectedService.id) return s;
+      const nextContents = [...(s.contents || [])];
+      nextContents.splice(targetIndex, 1);
+      return { ...s, contents: nextContents };
+    }));
     setSelectedProjectIndex(0);
   }
 
-  async function saveServices() {
-    setStatus("Saving service section...");
-
-    const response = await fetch("/api/admin/services", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ services }),
-    });
-
-    if (!response.ok) {
-      setStatus("Save failed.");
-      return;
-    }
-
-    setStatus("Service section saved.");
-  }
-
   if (!selectedService) {
-    return <div className="text-sm text-[var(--color-text-body)]">Loading service section...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[500px] bg-[#f7f4ef]/50 rounded-[33px] border-[5px] border-[#e4e4e7]">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="h-16 w-16 border-4 border-[#0020d7]/10 border-t-[#0020d7] rounded-full animate-spin" />
+            <Layers className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#0020d7]" size={24} />
+          </div>
+          <p className="text-[14px] font-extrabold text-[#0b0b0c] uppercase tracking-[0.25em]">Initializing Workspace</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <AdminSectionWorkspace
-      sectionLabel="Service Section"
-      sectionTitle="Services and Subsection Projects"
-      sectionDescription="Edit each service and manage project showcase cards shown inside service details pages."
-      previewPath="/services"
+      sectionLabel="Service Architecture"
+      sectionTitle="Service Portfolio Manager"
+      sectionDescription="Refine your professional offerings. Manage detailed service descriptions and showcase project deep-dives."
+      icon={Layers}
+      iconColor="#0020d7"
     >
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-5 xl:col-span-3">
-          <h3 className="text-lg font-medium text-[#0b0b0c]">Services</h3>
-          <div className="mt-4 space-y-2">
-            {services.map((service) => (
-              <button
-                key={service.id}
-                type="button"
-                onClick={() => {
-                  setSelectedServiceId(service.id);
-                  setSelectedProjectIndex(0);
-                }}
-                className={`w-full rounded-lg border px-3 py-2 text-left text-sm ${
-                  selectedServiceId === service.id
-                    ? "border-[var(--color-border-medium)] bg-[#eef2ff] text-[#0b0b0c]"
-                    : "border-[var(--color-border-light)] bg-[#f8f5f2] text-[var(--color-text-body)]"
-                }`}
-              >
-                {service.title}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-6 xl:col-span-9">
-          <h3 className="text-lg font-medium text-[#0b0b0c]">Service Details</h3>
-
-          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm">
-              <span className="text-[var(--color-text-body)]">Title</span>
-              <input
-                value={selectedService.title}
-                onChange={(event) => updateSelectedService({ title: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm">
-              <span className="text-[var(--color-text-body)]">Accent Color</span>
-              <input
-                value={selectedService.accentColor}
-                onChange={(event) => updateSelectedService({ accentColor: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm md:col-span-2">
-              <span className="text-[var(--color-text-body)]">Description</span>
-              <textarea
-                rows={3}
-                value={selectedService.description}
-                onChange={(event) => updateSelectedService({ description: event.target.value })}
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm md:col-span-2">
-              <span className="text-[var(--color-text-body)]">Detailed Description</span>
-              <textarea
-                rows={4}
-                value={selectedService.detailedDescription}
-                onChange={(event) =>
-                  updateSelectedService({ detailedDescription: event.target.value })
-                }
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
-
-            <label className="space-y-2 text-sm md:col-span-2">
-              <span className="text-[var(--color-text-body)]">Provided Services (one per line)</span>
-              <textarea
-                rows={4}
-                value={selectedService.providedServices.join("\n")}
-                onChange={(event) =>
-                  updateSelectedService({
-                    providedServices: event.target.value
-                      .split("\n")
-                      .map((item) => item.trim())
-                      .filter(Boolean),
-                  })
-                }
-                className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-              />
-            </label>
-          </div>
-
-          <div className="mt-8 rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h4 className="text-sm font-semibold text-[#0b0b0c]">Showcase Subsection Projects</h4>
-              <button
-                type="button"
-                onClick={addProjectShowcase}
-                className="rounded-full border border-[var(--color-border-light)] bg-white px-3 py-1 text-xs text-[var(--color-text-body)]"
-              >
-                Add Project
-              </button>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+        
+        {/* Navigation Sidebar */}
+        <aside className="xl:col-span-3 space-y-8">
+          <SectionPanel className="p-5 bg-white shadow-xl shadow-black/5">
+            <h3 className="px-4 py-3 text-[11px] font-extrabold text-[#4a4a68] uppercase tracking-[0.2em] mb-3">Professional Segments</h3>
+            <div className="space-y-2">
+              {services.map((service) => (
+                <button
+                  key={service.id}
+                  onClick={() => { setSelectedServiceId(service.id); setSelectedProjectIndex(0); }}
+                  className={`w-full flex items-center justify-between px-5 py-4 rounded-[18px] text-[13px] font-bold transition-all active:scale-[0.98] ${
+                    selectedServiceId === service.id 
+                      ? "bg-[#0b0b0c] text-white shadow-xl shadow-black/20" 
+                      : "bg-[#f7f4ef] text-[#4a4a68] hover:bg-[#e4e4e7] hover:text-[#0b0b0c]"
+                  }`}
+                >
+                  <span className="truncate">{service.title}</span>
+                  <ChevronRight size={14} className={selectedServiceId === service.id ? "opacity-100" : "opacity-0"} />
+                </button>
+              ))}
             </div>
+          </SectionPanel>
 
-            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
-              <div className="space-y-2 lg:col-span-4">
-                {projectItems.map(({ item }, index) => (
-                  <div key={`${item.title}-${index}`} className="rounded-lg border border-[var(--color-border-light)] bg-white p-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedProjectIndex(index)}
-                      className={`w-full rounded px-2 py-1 text-left text-xs ${
-                        selectedProjectIndex === index
-                          ? "bg-[#eef2ff] text-[#0b0b0c]"
-                          : "text-[var(--color-text-body)]"
-                      }`}
-                    >
-                      {item.title || `Project ${index + 1}`}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeProjectShowcase(index)}
-                      className="mt-2 rounded border border-red-300 bg-red-50 px-2 py-1 text-[10px] text-red-700"
-                    >
-                      Remove
-                    </button>
+          <SectionPanel className="p-8 bg-[#f7f4ef] border-dashed border-[#e4e4e7]">
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center shadow-sm">
+                <Sparkles className="text-[#0020d7]" size={24} />
+              </div>
+              <div>
+                <p className="text-[14px] font-extrabold text-[#0b0b0c] tracking-tight">Portfolio Intelligence</p>
+                <p className="text-[12px] text-[#4a4a68] mt-1.5 leading-relaxed font-medium">Each category houses specialized project deep-dives to demonstrate high-fidelity expertise.</p>
+              </div>
+            </div>
+          </SectionPanel>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="xl:col-span-9 space-y-10 pb-32">
+          
+          {/* Primary Details Panel */}
+          <SectionPanel className="flex flex-col gap-10 bg-white/50 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <SectionTitle title="Segment Identity" copy="Core visual and descriptive properties." icon={Type} />
+              <div 
+                className="h-10 w-10 rounded-[14px] border-2 border-white shadow-lg ring-4 ring-[#f7f4ef]" 
+                style={{ backgroundColor: selectedService.accentColor }} 
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-6">
+                <Field
+                  label="Primary Designation"
+                  value={selectedService.title}
+                  onChange={(v) => updateSelectedService({ title: v })}
+                  icon={Type}
+                />
+              </div>
+              <div className="lg:col-span-6">
+                <Field
+                  label="Brand Accent Color"
+                  value={selectedService.accentColor}
+                  onChange={(v) => updateSelectedService({ accentColor: v })}
+                  icon={Palette}
+                />
+              </div>
+              <div className="lg:col-span-12">
+                <TextareaField
+                  label="Elevator Pitch"
+                  value={selectedService.description}
+                  onChange={(v) => updateSelectedService({ description: v })}
+                  rows={2}
+                  icon={AlignLeft}
+                />
+              </div>
+              <div className="lg:col-span-12">
+                <TextareaField
+                  label="Detailed Narrative"
+                  value={selectedService.detailedDescription}
+                  onChange={(v) => updateSelectedService({ detailedDescription: v })}
+                  rows={4}
+                  icon={AlignLeft}
+                />
+              </div>
+              <div className="lg:col-span-12">
+                <TextareaField
+                  label="Deliverables (Line-separated list)"
+                  value={selectedService.providedServices.join("\n")}
+                  onChange={(v) => updateSelectedService({
+                    providedServices: v.split("\n").map(s => s.trim()).filter(Boolean)
+                  })}
+                  rows={6}
+                  icon={List}
+                />
+              </div>
+            </div>
+          </SectionPanel>
+
+          {/* Showcase Projects Panel */}
+          <SectionPanel className="flex flex-col gap-10 bg-white/50 backdrop-blur-sm">
+            <SectionTitle
+              title="Project Showcases"
+              copy="Link rows to items from Admin → Projects, or edit fields manually when not linked."
+              icon={Package}
+            />
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+              {/* Project Tab List */}
+              <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3 content-start">
+                <AnimatePresence mode="popLayout">
+                  {projectItems.map(({ item }, idx) => (
+                    <motion.div key={idx} layout className="group relative">
+                      <button
+                        onClick={() => setSelectedProjectIndex(idx)}
+                        className={`w-full flex items-center justify-between px-5 py-4 rounded-[20px] text-[12px] font-extrabold transition-all border-2 active:scale-[0.98] h-full ${
+                          selectedProjectIndex === idx 
+                            ? "bg-[#0020d7]/5 border-[#0020d7]/30 text-[#0020d7] shadow-sm" 
+                            : "bg-white border-[#e4e4e7] text-[#4a4a68] hover:border-[#0020d7]/20 hover:text-[#0b0b0c]"
+                        }`}
+                      >
+                        <span className="truncate">{item.title || `Asset ${idx + 1}`}</span>
+                        <div className={`h-2 w-2 rounded-full transition-all ${selectedProjectIndex === idx ? "bg-[#0020d7] scale-125 shadow-[0_0_8px_rgba(0,32,215,0.4)]" : "bg-[#e4e4e7]"}`} />
+                      </button>
+                      <button
+                        onClick={() => removeProjectShowcase(idx)}
+                        className="absolute -right-2 -top-2 h-7 w-7 flex items-center justify-center rounded-full bg-[#ff3b30] text-white opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-xl shadow-[#ff3b30]/20 z-10"
+                      >
+                        <Trash2 size={12} strokeWidth={2.5} />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                
+                {/* Visual Add Card */}
+                <button 
+                  onClick={addProjectShowcase}
+                  className="flex flex-col items-center justify-center p-6 rounded-[20px] border-[3px] border-dashed border-[#e4e4e7] bg-white/50 hover:bg-white hover:border-[#0020d7]/30 transition-all gap-3 group min-h-[68px]"
+                >
+                  <div className="h-7 w-7 rounded-full bg-[#f7f4ef] flex items-center justify-center text-[#4a4a68] group-hover:bg-[#0020d7] group-hover:text-white transition-all">
+                    <Plus size={16} strokeWidth={3} />
                   </div>
-                ))}
+                  <span className="text-[10px] font-extrabold text-[#4a4a68] uppercase tracking-widest group-hover:text-[#0b0b0c]">Add showcase</span>
+                </button>
+
+                {projectItems.length === 0 && (
+                  <div className="p-10 rounded-[28px] border-4 border-dashed border-[#e4e4e7] text-center bg-white/50 hidden">
+                    <p className="text-[12px] font-extrabold text-[#4a4a68] uppercase tracking-widest opacity-40 italic">Empty Showcase Repository</p>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-3 lg:col-span-8">
+              {/* Project Editor Area */}
+              <div className="lg:col-span-8">
                 {selectedProject ? (
-                  <>
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Title</span>
-                      <input
-                        value={selectedProject.title}
-                        onChange={(event) => updateSelectedProject({ title: event.target.value })}
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
-                      />
-                    </label>
+                  <motion.div 
+                    key={selectedProjectIndex}
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="p-8 rounded-[33px] bg-[#f7f4ef]/40 border-2 border-[#e4e4e7] space-y-8"
+                  >
+                    <div className="rounded-[24px] border-2 border-[#e4e4e7] bg-white p-6 shadow-sm">
+                      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+                        <div className="w-full min-w-[min(100%,22rem)] flex-1 space-y-2.5 lg:min-w-[min(100%,28rem)]">
+                          <span className="text-[13px] font-bold tracking-tight text-[#4a4a68] ml-1 flex items-center gap-2">
+                            <FolderKanban size={14} className="shrink-0 text-[#0020d7]" strokeWidth={2} />
+                            Link source
+                          </span>
+                          <p className="text-[12px] leading-relaxed text-[#4a4a68] ml-1 -mt-1 font-medium">
+                            Choose a row from Admin → Projects, or a Behance embed from Admin → Projects → Graphic Design → Behance. Leave unlinked to edit this showcase manually.
+                          </p>
+                          <Select
+                            value={linkedSelectValue}
+                            onValueChange={(id) => {
+                              if (id === PORTFOLIO_SELECT_NONE) {
+                                unlinkSelectedShowcase();
+                                return;
+                              }
+                              applyLinkedSource(id);
+                            }}
+                          >
+                            <SelectTrigger
+                              className="h-auto min-h-[52px] w-full max-w-none min-w-[min(100%,20rem)] rounded-[18px] border-2 border-[#e4e4e7] bg-white px-5 py-3.5 text-left text-[14px] font-medium text-[#0b0b0c] shadow-sm transition-all hover:border-[#0020d7]/35 focus:border-[#0020d7] focus:ring-4 focus:ring-[#0020d7]/8 focus:outline-none data-[placeholder]:text-[#c1c1c1] [&>svg]:text-[#4a4a68]"
+                              aria-label="Choose portfolio project or Behance embed"
+                            >
+                              <SelectValue placeholder="Choose a project or Behance embed…" />
+                            </SelectTrigger>
+                            <SelectContent
+                              position="popper"
+                              sideOffset={6}
+                              className="z-[100] max-h-[min(380px,var(--radix-select-content-available-height))] w-[max(var(--radix-select-trigger-width),min(100%,28rem))] max-w-[min(96vw,44rem)] rounded-[18px] border-2 border-[#e4e4e7] bg-white p-1.5 shadow-xl"
+                            >
+                              <SelectItem
+                                value={PORTFOLIO_SELECT_NONE}
+                                className="cursor-pointer rounded-xl py-3 pr-8 text-[13px] font-medium text-[#4a4a68] focus:bg-[#f7f4ef] focus:text-[#0b0b0c]"
+                              >
+                                Not linked — manual showcase fields
+                              </SelectItem>
+                              {sortedBehanceEmbeds.length + sortedPortfolioProjects.length > 0 ? (
+                                <SelectSeparator className="my-1 bg-[#e4e4e7]" />
+                              ) : null}
+                              {sortedBehanceEmbeds.length > 0 ? (
+                                <SelectGroup>
+                                  <SelectLabel className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#4a4a68]">
+                                    Behance showcase embeds
+                                  </SelectLabel>
+                                  {sortedBehanceEmbeds.map((embed) => (
+                                    <SelectItem
+                                      key={embed.id}
+                                      value={`${SERVICE_LINK_BEHANCE_PREFIX}${embed.id}`}
+                                      className="cursor-pointer rounded-xl py-3 pr-8 text-[13px] font-medium focus:bg-[#0020d7]/8 focus:text-[#0b0b0c]"
+                                    >
+                                      <span className="line-clamp-2 text-left">
+                                        {embed.title?.trim() || "Untitled"}{" "}
+                                        <span className="text-[11px] font-semibold text-[#4a4a68]">
+                                          · Behance
+                                        </span>
+                                      </span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              ) : null}
+                              {sortedBehanceEmbeds.length > 0 && sortedPortfolioProjects.length > 0 ? (
+                                <SelectSeparator className="my-1 bg-[#e4e4e7]" />
+                              ) : null}
+                              {sortedPortfolioProjects.length > 0 ? (
+                                <SelectGroup>
+                                  <SelectLabel className="px-3 py-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#4a4a68]">
+                                    Portfolio projects (database)
+                                  </SelectLabel>
+                                  {sortedPortfolioProjects.map((p) => {
+                                    const meta = [
+                                      p.workspace,
+                                      p.category,
+                                      p.type === "BEHANCE" ? "Behance-type project" : null,
+                                    ]
+                                      .filter(Boolean)
+                                      .join(" · ");
+                                    return (
+                                      <SelectItem
+                                        key={p.id}
+                                        value={p.id}
+                                        className="cursor-pointer rounded-xl py-3 pr-8 text-[13px] font-medium focus:bg-[#0020d7]/8 focus:text-[#0b0b0c]"
+                                      >
+                                        <span className="line-clamp-2 text-left">
+                                          {meta ? `${p.title} (${meta})` : p.title}
+                                        </span>
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectGroup>
+                              ) : null}
+                            </SelectContent>
+                          </Select>
+                          {selectedProject.linkedProjectId && linkedSourceMissing ? (
+                            <p className="rounded-[14px] border border-amber-200 bg-amber-50 px-4 py-2.5 text-[12px] font-medium leading-relaxed text-amber-900">
+                              This link no longer matches Projects or Behance embeds. Pick an item again or clear the link.
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col lg:pt-8">
+                          <button
+                            type="button"
+                            disabled={!selectedProject.linkedProjectId}
+                            onClick={syncSelectedShowcaseFromPortfolio}
+                            className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-[#0020d7]/25 bg-[#0020d7]/5 px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider text-[#0020d7] transition-all hover:bg-[#0020d7]/10 disabled:cursor-not-allowed disabled:opacity-45 active:scale-[0.98]"
+                          >
+                            <RefreshCw size={15} strokeWidth={2} className="shrink-0" />
+                            Sync from source
+                          </button>
+                          <button
+                            type="button"
+                            disabled={!selectedProject.linkedProjectId}
+                            onClick={() => unlinkSelectedShowcase()}
+                            className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-[#e4e4e7] bg-white px-5 py-2.5 text-[12px] font-bold uppercase tracking-wider text-[#4a4a68] transition-all hover:bg-[#f7f4ef] disabled:cursor-not-allowed disabled:opacity-45 active:scale-[0.98]"
+                          >
+                            <Unlink size={15} strokeWidth={2} className="shrink-0" />
+                            Clear link
+                          </button>
+                        </div>
+                      </div>
+                    </div>
 
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Description</span>
-                      <textarea
-                        rows={3}
-                        value={selectedProject.description}
-                        onChange={(event) =>
-                          updateSelectedProject({ description: event.target.value })
-                        }
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
-                      />
-                    </label>
-
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Mockup Image URL</span>
-                      <input
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="md:col-span-2">
+                        <Field
+                          label="Showcase Heading"
+                          value={selectedProject.title}
+                          onChange={(v) => updateSelectedProject({ title: v })}
+                          icon={Type}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <TextareaField
+                          label="Showcase Brief"
+                          value={selectedProject.description}
+                          onChange={(v) => updateSelectedProject({ description: v })}
+                          rows={3}
+                          icon={AlignLeft}
+                        />
+                      </div>
+                      <Field
+                        label="Mockup Asset URL"
                         value={selectedProject.mockupImage || ""}
-                        onChange={(event) =>
-                          updateSelectedProject({ mockupImage: event.target.value })
-                        }
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
+                        onChange={(v) => updateSelectedProject({ mockupImage: v })}
+                        icon={ImageIcon}
                       />
-                    </label>
-
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Video URL</span>
-                      <input
+                      <Field
+                        label="Motion Preview URL"
                         value={selectedProject.videoUrl || ""}
-                        onChange={(event) => updateSelectedProject({ videoUrl: event.target.value })}
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
+                        onChange={(v) => updateSelectedProject({ videoUrl: v })}
+                        icon={Video}
                       />
-                    </label>
-
-                    <label className="space-y-1 text-xs">
-                      <span className="text-[var(--color-text-body)]">Tech Stack (comma separated)</span>
-                      <input
-                        value={(selectedProject.techStack || []).join(", ")}
-                        onChange={(event) =>
-                          updateSelectedProject({
-                            techStack: event.target.value
-                              .split(",")
-                              .map((tag) => tag.trim())
-                              .filter(Boolean),
-                          })
-                        }
-                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-white px-2 py-1.5 text-sm text-[#0b0b0c]"
-                      />
-                    </label>
-                  </>
+                      <div className="md:col-span-2">
+                        <Field
+                          label="Tech Ecosystem (Comma separated)"
+                          value={(selectedProject.techStack || []).join(", ")}
+                          onChange={(v) => updateSelectedProject({
+                            techStack: v.split(",").map(t => t.trim()).filter(Boolean)
+                          })}
+                          icon={Code}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
                 ) : (
-                  <p className="text-xs text-[var(--color-text-body)]">No project selected.</p>
+                  <div className="h-full min-h-[300px] flex items-center justify-center p-12 rounded-[33px] bg-[#f7f4ef] border-4 border-dashed border-[#e4e4e7]">
+                    <p className="text-[14px] font-extrabold text-[#4a4a68] uppercase tracking-[0.2em] opacity-40">Select segment to refine</p>
+                  </div>
                 )}
               </div>
             </div>
-          </div>
+          </SectionPanel>
 
-          <div className="mt-6 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={saveServices}
-              className="rounded-full border-[2px] border-[var(--color-border-dark)] bg-[#dbe7ff] px-5 py-2 text-sm font-medium text-[#0020d7] shadow-[0_8px_18px_rgba(0,32,215,0.14)]"
-            >
-              Save Service Section
-            </button>
-          </div>
-
-          {status ? <p className="mt-3 text-xs text-[var(--color-text-body)]">{status}</p> : null}
-        </section>
+        </main>
       </div>
     </AdminSectionWorkspace>
   );

@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendContactEmail } from '@/lib/email';
 import { getContactSectionSettings } from '@/lib/contact-content';
-import prisma from '@/lib/prisma';
+import { createClient } from '@/utils/supabase/server';
 import { z } from 'zod';
 
 // Validation schema for contact form
@@ -30,14 +30,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const submission = await prisma.contactSubmission.create({
-      data: {
+    const supabase = await createClient();
+    const { data: submission, error: dbError } = await supabase
+      .from('contact_submissions')
+      .insert({
         name: validatedData.name,
         email: validatedData.email,
         subject: validatedData.subject || null,
         message: validatedData.message,
-      },
-    });
+      })
+      .select('id')
+      .single();
+
+    if (dbError) {
+      console.error('Database insertion failed:', dbError);
+      // We continue with email even if DB fail so user doesn't lose message
+    }
 
     // Send email directly
     const emailResult = await sendContactEmail(validatedData, formSettings.contactEmail);
@@ -47,7 +55,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Message saved. Email delivery failed, but the admin inbox has your submission.',
-        submissionId: submission.id,
+        submissionId: submission?.id,
       });
     }
 
@@ -55,7 +63,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: 'Message sent successfully!',
-        submissionId: submission.id,
+        submissionId: submission?.id,
       },
       { status: 200 }
     );

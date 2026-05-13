@@ -1,16 +1,26 @@
 import type { Metadata } from "next";
 import ScrapbookHero from "@/components/about/ScrapbookHero";
 import DeskBookSection from "@/components/about/DeskBookSection";
-import TypewriterSection from "@/components/about/TypewriterSection";
+import TelevisionSection from "@/components/about/TypewriterSection";
 import { getAboutContent } from "@/lib/site-content";
 import { getSiteCopyContent } from "@/lib/site-copy-content";
 import { createPageMetadata } from "@/seo/page-metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "About Me | Abin Varghese",
+  title: "About Abin Varghese | Front-End Developer & UI/UX Designer",
   description:
-    "Learn about Abin Varghese's journey, education, and experience as a front-end developer and UI/UX designer. Discover skills, achievements, and background.",
+    "Discover the story of Abin Varghese — a self-driven front-end developer and UI/UX designer from Kerala, India, studying at Amal Jyothi College of Engineering. Expert in React, Next.js, Figma, and Tailwind CSS.",
   path: "/about",
+  keywords: [
+    "Abin Varghese about",
+    "Front-End Developer Kerala",
+    "Amal Jyothi College of Engineering",
+    "UI/UX Designer India",
+    "React developer background",
+    "Figma designer portfolio",
+    "Next.js developer Kerala",
+    "Smart India Hackathon winner",
+  ],
 });
 
 export default async function AboutPage() {
@@ -39,10 +49,12 @@ export default async function AboutPage() {
           aboutTimelineTitle: siteCopy.aboutTimelineTitle,
           aboutTimelineEntries: siteCopy.aboutTimelineEntries,
           homeReviewsItems: siteCopy.homeReviewsItems,
+          aboutResumeUrl: siteCopy.aboutResumeUrl,
+          aboutDesignResumeUrl: siteCopy.aboutDesignResumeUrl,
         }}
       />
       <div className="relative z-20 -mt-28">
-        <TypewriterSection quote={siteCopy.aboutTypewriterQuote} />
+        <TelevisionSection quote={siteCopy.aboutTypewriterQuote} />
       </div>
     </main>
   );

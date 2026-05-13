@@ -1,13 +1,12 @@
 'use client';
 
-import { memo, useRef, type ComponentType } from 'react';
+import { memo, useRef, type ComponentType, useState, useEffect } from 'react';
 import { ArrowUpRight, Calendar, Github, Instagram, Linkedin, ChevronDown } from 'lucide-react';
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useInView,
-} from 'framer-motion';
+import dynamic from 'next/dynamic';
+
+const Hero3DLayer = dynamic(() => import('@/components/ui/Hero3DLayer'), {
+  ssr: false,
+});
 import { HeroContent } from '@/lib/hero-content-defaults';
 import { usePreview } from '@/lib/contexts/PreviewContext';
 import type { HomeContent } from '@/lib/home-content-defaults';
@@ -54,34 +53,6 @@ const socialLabelMap = {
   instagram: 'Instagram',
 } as const;
 
-
-/* ─────────────────── animation variants ────────────────────────── */
-const container = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.10, delayChildren: 0.05 },
-  },
-};
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 28, filter: 'blur(4px)' },
-  show:   {
-    opacity: 1,
-    y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.88 },
-  show:   {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
 /* ──────────────── Figma pill CTA button ────────────────────────── */
 function MagneticButton({
   href,
@@ -94,75 +65,61 @@ function MagneticButton({
   icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
   secondary?: boolean;
 }) {
-  const ref = useRef<HTMLAnchorElement>(null);
-  const x   = useMotionValue(0);
-  const y   = useMotionValue(0);
-  const sx  = useSpring(x, { stiffness: 320, damping: 28 });
-  const sy  = useSpring(y, { stiffness: 320, damping: 28 });
-
-  const handleMouse = (e: React.MouseEvent) => {
-    const box = ref.current?.getBoundingClientRect();
-    if (!box) return;
-    x.set((e.clientX - box.left - box.width  / 2) * 0.28);
-    y.set((e.clientY - box.top  - box.height / 2) * 0.28);
-  };
-  const reset = () => { x.set(0); y.set(0); };
+  const isCalLink = href?.startsWith('https://cal.com/') || href?.startsWith('https://cal.me/');
+  let calLinkValue = undefined;
+  if (isCalLink) {
+    try {
+      const url = new URL(href);
+      // Remove leading and trailing slashes
+      calLinkValue = url.pathname.replace(/^\/+|\/+$/g, '');
+    } catch {
+      // In case URL parsing fails (e.g., malformed URL), fallback
+      calLinkValue = href.replace('https://cal.com/', '').replace('https://cal.me/', '').replace(/\/+$/, '');
+    }
+  }
 
   if (secondary) {
     return (
-      <motion.a
-        ref={ref}
+      <a
         href={href}
-        onMouseMove={handleMouse}
-        onMouseLeave={reset}
-        style={{ x: sx, y: sy }}
-        whileHover={{ scale: 1.04, boxShadow: '0 18px 44px rgba(0,32,215,0.12)' }}
-        whileTap={{ scale: 0.97 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="inline-flex items-center gap-3 rounded-full border-[2.5px] border-[#929292] bg-white pl-8 pr-1.5 md:pr-2 py-3 md:py-2.5 font-['Poppins',sans-serif] text-[13px] md:text-[15px] font-medium text-slate-800 pointer-events-auto"
+        data-cal-link={calLinkValue}
+        data-cal-config='{"theme":"light"}'
+        onClick={(e) => {
+          if (isCalLink) e.preventDefault();
+        }}
+        className="group inline-flex items-center gap-3 rounded-full border-[2.5px] border-[#929292] bg-white pl-8 pr-1.5 md:pr-2 py-3 md:py-2.5 font-['Poppins',sans-serif] text-[13px] md:text-[15px] font-medium text-slate-800 pointer-events-auto transition-transform hover:scale-[1.04] active:scale-[0.97] hover:shadow-[0_18px_44px_rgba(0,32,215,0.12)]"
       >
         <span className="min-w-[70px] md:min-w-[80px] text-center">{label}</span>
         {Icon && (
-          <motion.span
-            whileHover={{ rotate: 45 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-            className="flex h-[42px] md:h-10 w-[42px] md:w-10 items-center justify-center rounded-full bg-slate-100"
-          >
+          <span className="flex h-[42px] md:h-10 w-[42px] md:w-10 items-center justify-center rounded-full bg-slate-100 transition-transform group-hover:rotate-45">
             <Icon className="h-4 md:h-4.5 w-4 md:w-4.5 text-slate-800" strokeWidth={2.2} />
-          </motion.span>
+          </span>
         )}
-      </motion.a>
+      </a>
     );
   }
 
   /* primary — exact Figma pill: gradient + grey border + white icon circle */
   return (
-    <motion.a
-      ref={ref}
+    <a
       href={href}
-      onMouseMove={handleMouse}
-      onMouseLeave={reset}
+      data-cal-link={calLinkValue}
+      data-cal-config='{"theme":"light"}'
+      onClick={(e) => {
+        if (isCalLink) e.preventDefault();
+      }}
       style={{
-        x: sx,
-        y: sy,
         background: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)',
       }}
-      whileHover={{ scale: 1.04, boxShadow: '0 22px 52px rgba(0,32,215,0.38)' }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="inline-flex items-center gap-4 rounded-full border-[2.5px] border-[#929292] pl-8 pr-1.5 md:pr-2 py-3 md:py-2.5 font-['Poppins',sans-serif] text-[13px] md:text-[15px] font-medium text-white pointer-events-auto"
+      className="group inline-flex items-center gap-4 rounded-full border-[2.5px] border-[#929292] pl-8 pr-1.5 md:pr-2 py-3 md:py-2.5 font-['Poppins',sans-serif] text-[13px] md:text-[15px] font-medium text-white pointer-events-auto transition-transform hover:scale-[1.04] active:scale-[0.97] hover:shadow-[0_22px_52px_rgba(0,32,215,0.38)]"
     >
       <span className="min-w-[70px] md:min-w-[88px] text-center">{label}</span>
       {Icon && (
-        <motion.span
-          whileHover={{ rotate: 45 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-          className="flex h-[42px] md:h-10 w-[42px] md:w-10 items-center justify-center rounded-full bg-white"
-        >
+        <span className="flex h-[42px] md:h-10 w-[42px] md:w-10 items-center justify-center rounded-full bg-white transition-transform group-hover:rotate-45">
           <Icon className="h-4 md:h-4.5 w-4 md:w-4.5 text-[#0020d7]" strokeWidth={2.4} />
-        </motion.span>
+        </span>
       )}
-    </motion.a>
+    </a>
   );
 }
 
@@ -172,33 +129,21 @@ function SocialTile({
   label,
   href,
   rotate,
-  delay,
 }: {
   icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
   href: string;
   rotate: number;
-  delay: number;
 }) {
   return (
-    <motion.a
+    <a
       href={href}
       aria-label={label}
-      initial={{ opacity: 0, y: 20, rotate }}
-      animate={{ opacity: 1, y: 0, rotate }}
-      transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{
-        y: -8,
-        rotate: rotate * 0.3,
-        scale: 1.08,
-        boxShadow: '0 28px 56px rgba(97,70,255,0.22)',
-        transition: { type: 'spring', stiffness: 420, damping: 22 },
-      }}
-      whileTap={{ scale: 0.93 }}
-      className="flex h-14 w-14 md:h-16 md:w-16 cursor-pointer items-center justify-center rounded-[16px] md:rounded-[20px] border border-white/90 bg-white shadow-[0_16px_38px_rgba(97,77,219,0.12)] pointer-events-auto"
+      style={{ transform: `rotate(${rotate}deg)` }}
+      className="flex h-14 w-14 md:h-16 md:w-16 cursor-pointer items-center justify-center rounded-[16px] md:rounded-[20px] border border-white/90 bg-white shadow-[0_16px_38px_rgba(97,77,219,0.12)] pointer-events-auto transition-transform hover:-translate-y-2 hover:scale-[1.08] active:scale-[0.93] hover:shadow-[0_28px_56px_rgba(97,70,255,0.22)]"
     >
       <Icon className="h-6 w-6 md:h-7 md:w-7 text-slate-800" strokeWidth={2.2} />
-    </motion.a>
+    </a>
   );
 }
 
@@ -209,17 +154,10 @@ function FloatingDots() {
       {dotPositions.map((pos, i) => {
         const [lx, ly] = pos.split(' ');
         return (
-          <motion.span
+          <span
             key={i}
             className="pointer-events-none absolute h-[5px] w-[5px] rounded-full bg-[rgba(124,108,255,0.55)]"
             style={{ left: lx, top: ly }}
-            animate={{ y: [0, i % 2 === 0 ? -10 : 10, 0] }}
-            transition={{
-              duration: 4 + (i % 3),
-              repeat: Infinity,
-              ease: 'easeInOut',
-              delay: i * 0.25,
-            }}
           />
         );
       })}
@@ -235,20 +173,35 @@ const Herosection = ({
   statusLine,
 }: {
   data: HeroContent;
-  homeLinks: Pick<HomeContent, 'socialLinks' | 'pageLinks'>;
+  homeLinks: Pick<HomeContent, 'socialLinks' | 'otherSocialLinks' | 'pageLinks'>;
   statusLine: string;
 }) => {
   const { previewData, isPreviewing } = usePreview();
-  const sectionRef = useRef<HTMLElement>(null);
-  const inView     = useInView(sectionRef, { once: true, margin: '-60px' });
 
   // Real-time override from admin panel
   const data = isPreviewing ? { ...initialData, ...previewData } : initialData;
   
+  const [availabilityText, setAvailabilityText] = useState(data.heroAvailabilityText);
+  const [isAvailable, setIsAvailable] = useState(true);
+
+  // Fetch real-time availability from Cal.com via our API route
+  useEffect(() => {
+    fetch('/api/cal/availability')
+      .then(res => res.json())
+      .then(json => {
+        if (json.available && json.message) {
+          setAvailabilityText(`✦ ${json.message}`);
+          setIsAvailable(true);
+        } else if (json.available === false) {
+          setAvailabilityText('✦ Fully booked right now');
+          setIsAvailable(false);
+        }
+      })
+      .catch(err => console.error("Could not fetch Cal.com availability:", err));
+  }, []);
 
   return (
     <section
-      ref={sectionRef}
       className="pointer-events-none relative min-h-fit md:min-h-screen w-full bg-transparent pb-0 md:pb-16"
     >
       {/* ── Layer 1: Background (z-0) ─────────────────────────────── */}
@@ -299,126 +252,38 @@ const Herosection = ({
       {/* ── Layer 3: Foreground Text & UI (z-50) ───────────────────── */}
       <div className="pointer-events-none relative z-20 flex min-h-full flex-col items-center justify-start px-4 md:px-6">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-start pt-44 md:pt-80">
-          <motion.div
-            variants={container}
-            initial="hidden"
-            animate={inView ? 'show' : 'hidden'}
-            className="flex max-w-4xl flex-col items-center text-center"
-          >
+          <div className="flex max-w-4xl flex-col items-center text-center">
+            {/* Mobile-only 3D Robot Container */}
+            <div className="md:hidden w-full h-[360px] -mt-20 mb-0 pointer-events-auto">
+              <Hero3DLayer />
+            </div>
+
             {/* headline */}
-            <motion.h1
-              variants={fadeUp}
-              className="pointer-events-auto max-w-4xl text-[48px] font-semibold leading-[0.9] tracking-tighter text-[#0f1020] md:text-5xl lg:text-7xl"
-            >
-            {data.heroGreeting.includes('👋') ? (
-              data.heroGreeting.split('👋').map((part: string, i: number, arr: string[]) => (
-                <span key={i}>
-                  {part}
-                  {i < arr.length - 1 && (
-                    <motion.span
-                      aria-hidden
-                      className="inline-block origin-[70%_80%]"
-                      animate={{ rotate: [0, 25, -5, 20, -10, 0] }}
-                      transition={{
-                        duration: 1.8,
-                        ease: 'easeInOut',
-                        repeat: Infinity,
-                        repeatDelay: 2,
-                      }}
-                    >
-                      👋
-                    </motion.span>
-                  )}
-                </span>
-              ))
-            ) : (
-              <>
-                {data.heroGreeting}{' '}
-                <motion.span
-                  aria-hidden
-                  className="inline-block origin-[70%_80%]"
-                  animate={{ rotate: [0, 25, -5, 20, -10, 0] }}
-                  transition={{
-                    duration: 1.8,
-                    ease: 'easeInOut',
-                    repeat: Infinity,
-                    repeatDelay: 2,
-                  }}
-                >
-                  👋
-                </motion.span>
-              </>
-            )}
-            <br />
-            <span className="mt-2 flex justify-center cursor-default text-[48px] leading-[0.9] tracking-[-0.08em] md:mt-3 md:text-6xl lg:text-7xl">
-              {data.heroName.split('').map((char: string, index: number) => (
-                <motion.span
-                  key={index}
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={inView ? { 
-                    opacity: 1, 
-                    y: 0,
-                    transition: { type: 'spring', damping: 10, stiffness: 400, delay: 0.3 + index * 0.04 }
-                  } : {}}
-                  whileHover={{
-                    scaleY: 1.3,
-                    scaleX: 1.1,
-                    y: -12,
-                    rotate: index % 2 === 0 ? -4 : 4,
-                    transition: { type: 'spring', stiffness: 400, damping: 5 }
-                  }}
-                  className="inline-block origin-bottom bg-clip-text px-[0.02em] pt-2 pb-6 -mb-4 text-transparent"
-                  style={{
-                    backgroundImage: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)',
-                  }}
-                >
-                  {char === ' ' ? '\u00A0' : char}
-                </motion.span>
-              ))}
-            </span>
-          </motion.h1>
+            <h1 className="pointer-events-auto max-w-4xl text-[40px] md:text-5xl lg:text-7xl font-semibold leading-[0.9] tracking-tighter text-[#0f1020]">
+              {data.heroGreeting}
+              <br />
+              <span
+                className="mt-2 inline-block cursor-default bg-clip-text text-[40px] md:text-6xl lg:text-7xl leading-[0.9] tracking-[-0.08em] text-transparent"
+                style={{ backgroundImage: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)' }}
+              >
+                {data.heroName}
+              </span>
+            </h1>
 
           {/* sub-copy */}
-          <motion.p
-            variants={fadeUp}
-            className="pointer-events-auto mt-4 md:mt-8 max-w-[340px] md:max-w-4xl text-[16px] md:text-xl lg:text-2xl text-center leading-snug tracking-tight text-slate-600 sm:text-justify lg:text-center [text-align-last:center] lg:[text-align-last:auto]"
-          >
+          <p className="pointer-events-auto mt-4 md:mt-8 max-w-[340px] md:max-w-4xl text-[14px] md:text-lg lg:text-xl text-center leading-snug tracking-tight text-slate-600 sm:text-justify lg:text-center [text-align-last:center] lg:[text-align-last:auto]">
             {data.heroSubcopy}
-          </motion.p>
+          </p>
 
           {/* audience pill */}
-          <motion.div
-            variants={scaleIn}
-            className="pointer-events-auto mt-6 md:mt-10 flex w-[300px] md:w-[380px] cursor-default items-center rounded-full border border-slate-200 bg-white/70 py-2 shadow-sm backdrop-blur-md"
-          >
-            <div 
-              className="flex w-full overflow-hidden"
-              style={{ maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' }}
-            >
-              <motion.div
-                animate={{ x: ['0%', '-50%'] }}
-                transition={{ ease: 'linear', duration: 15, repeat: Infinity }}
-                className="flex w-max whitespace-nowrap"
-              >
-                {[...Array(2)].map((_, i) => (
-                  <div key={i} className="flex gap-8 pr-8">
-                    <p className="text-[12px] md:text-[14px] font-medium tracking-wide text-[#0020d7]">
-                      {data.heroAvailabilityText}
-                    </p>
-                    <p className="text-[12px] md:text-[14px] font-medium tracking-wide text-[#0020d7]">
-                      {data.heroAvailabilityText}
-                    </p>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-          </motion.div>
+          <div className="pointer-events-auto mt-6 md:mt-10 flex w-[300px] md:w-[380px] cursor-default items-center justify-center rounded-full border border-slate-200 bg-white/70 py-2 shadow-sm backdrop-blur-md">
+            <p className={`text-[12px] md:text-[14px] font-medium tracking-wide ${isAvailable ? 'text-[#0020d7]' : 'text-orange-600'}`}>
+              {availabilityText}
+            </p>
+          </div>
 
           {/* CTA buttons — Figma pill style */}
-          <motion.div
-            variants={fadeUp}
-            className="pointer-events-auto relative z-20 mt-6 md:mt-8 flex flex-col items-center gap-4"
-          >
+          <div className="pointer-events-auto relative z-20 mt-6 md:mt-8 flex flex-col items-center gap-4">
             {/* Desktop Buttons */}
             <div className="hidden md:flex flex-row gap-4">
               <MagneticButton
@@ -427,7 +292,7 @@ const Herosection = ({
                 icon={ArrowUpRight}
               />
               <MagneticButton
-                href={homeLinks.pageLinks.contact || data.heroCtaSecondaryUrl}
+                href={data.heroCtaSecondaryUrl}
                 label={data.heroCtaSecondaryLabel}
                 icon={Calendar}
                 secondary
@@ -451,37 +316,40 @@ const Herosection = ({
               </ResumeDropdown>
             </div>
 
-            <motion.p
-              variants={fadeUp}
-              className="mt-5 flex max-w-[280px] md:max-w-none items-center justify-center gap-2 text-center text-sm text-slate-400"
-            >
+            <p className="mt-5 flex max-w-[280px] md:max-w-none items-center justify-center gap-2 text-center text-sm text-slate-400">
               <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
               {statusLine}
-            </motion.p>
-          </motion.div>
+            </p>
+          </div>
 
           {/* social icon tiles */}
-          <motion.div
-            variants={scaleIn}
-            className="pointer-events-auto relative z-10 mt-8 md:mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6"
-          >
-            {(Object.keys(homeLinks.socialLinks) as Array<keyof HomeContent['socialLinks']>).map((key, index) => {
-              const Icon = socialIconMap[key];
-              const href = homeLinks.socialLinks[key];
-
-              return (
+          <div className="pointer-events-auto relative z-10 mt-8 md:mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6">
+            {[
+              ...(Object.keys(homeLinks.socialLinks) as Array<keyof HomeContent['socialLinks']>).map((key) => ({
+                key,
+                icon: socialIconMap[key],
+                label: socialLabelMap[key],
+                href: homeLinks.socialLinks[key],
+              })),
+              ...(homeLinks.otherSocialLinks || []).map((item) => ({
+                key: item.id,
+                icon: ArrowUpRight,
+                label: item.label,
+                href: item.url,
+              })),
+            ]
+              .filter((item) => item.href)
+              .map((item, index) => (
                 <SocialTile
-                  key={key}
-                  icon={Icon}
-                  label={socialLabelMap[key]}
-                  href={href}
+                  key={item.key}
+                  icon={item.icon}
+                  label={item.label}
+                  href={item.href}
                   rotate={index % 2 === 0 ? -10 : 10}
-                  delay={0.42 + index * 0.07}
                 />
-              );
-            })}
-          </motion.div>
-        </motion.div>
+              ))}
+          </div>
+        </div>
       </div>
     </div>
 

@@ -1,16 +1,33 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import { Play } from "lucide-react";
 import { homePageDesignSystem } from "@/lib/home-page-design-system";
 import { PinterestPin } from "@/lib/pinterest-content";
+
+/** Admin often stores a Vimeo/YouTube *poster* image while media type is still VIDEO. */
+function isProbableRasterPosterUrl(url: string): boolean {
+  const u = url.trim().toLowerCase();
+  if (!u) return false;
+  if (u.startsWith("data:image/")) return true;
+  if (/\.(png|jpe?g|gif|webp|avif|bmp)(?:\?|#|$)/i.test(u)) return true;
+  if (u.includes("i.vimeocdn.com")) return true;
+  if (u.includes("img.youtube.com")) return true;
+  return false;
+}
 
 interface PinCardProps {
   pin: PinterestPin;
   href: string;
   compact?: boolean;
   fixedHeight?: number;
+  index?: number;
+  showPlayOverlay?: boolean;
+  /** If false, no link wrapper (gallery-only). Used on /projects for All Boards + Graphic design. */
+  interactive?: boolean;
 }
 
 export default function PinCard({
@@ -18,14 +35,208 @@ export default function PinCard({
   href,
   compact = false,
   fixedHeight,
+  index = 0,
+  showPlayOverlay = false,
+  interactive = true,
 }: PinCardProps) {
   const design = homePageDesignSystem;
   const cardRadius = "14px";
+  const isExternalHref = /^https?:\/\//i.test(href);
+  const videoPosterFromImageUrl =
+    pin.mediaType === "video" &&
+    Boolean(pin.mediaPath) &&
+    isProbableRasterPosterUrl(pin.mediaPath);
 
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   const [measuredMedia, setMeasuredMedia] = useState<{
-    path: string;
+    pinId: string;
     ratio: number;
   } | null>(null);
+
+  // Intersection Observer to trigger lazy loading
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "400px" } // Start loading 400px before it enters viewport
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const { extractedSrc, iframeRatio } = useMemo(() => {
+    const sources = [
+      pin.mediaPath,
+      pin.externalUrl,
+      ...(pin.embedSourceUrls ?? []),
+    ]
+      .map((s) => (typeof s === "string" ? s.trim() : ""))
+      .filter(Boolean) as string[];
+    
+    let rawSrc = null;
+    let ratio = null;
+
+    for (const src of sources) {
+      const trimmed = src.trim();
+      
+      if (trimmed.startsWith('<iframe')) {
+        const matchSrc = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+        if (matchSrc) rawSrc = matchSrc[1];
+
+        const widthAttr = trimmed.match(/width\s*=\s*["']?([^"']+)["']?/i);
+        const heightAttr = trimmed.match(/height\s*=\s*["']?([^"']+)["']?/i);
+        
+        if (widthAttr && heightAttr && !widthAttr[1].includes('%') && !heightAttr[1].includes('%')) {
+          const w = parseInt(widthAttr[1], 10);
+          const h = parseInt(heightAttr[1], 10);
+          if (w > 0 && h > 0) {
+            ratio = w / h;
+          }
+        }
+        if (rawSrc) break;
+      } else if (trimmed.includes('player.vimeo.com') || trimmed.includes('youtube.com/embed')) {
+        rawSrc = trimmed;
+        break;
+      } else if (trimmed.includes('vimeo.com')) {
+        const match = trimmed.match(/vimeo\.com\/(\d+)/);
+        if (match) {
+          rawSrc = `https://player.vimeo.com/video/${match[1]}`;
+          break;
+        }
+      } else if (trimmed.includes('youtube.com/watch') || trimmed.includes('youtu.be/')) {
+        const videoId = trimmed.includes('v=') 
+          ? trimmed.split('v=')[1]?.split('&')[0]
+          : trimmed.split('youtu.be/')[1]?.split('?')[0];
+        if (videoId) {
+          rawSrc = `https://www.youtube.com/embed/${videoId}`;
+          break;
+        }
+      }
+    }
+
+    if (!rawSrc) return { extractedSrc: null, iframeRatio: null };
+
+    try {
+      const cleanSrc = rawSrc.replace(/&amp;/g, '&');
+      const validUrl = cleanSrc.startsWith('http') ? cleanSrc : `https:${cleanSrc.startsWith('//') ? '' : '//'}${cleanSrc}`;
+      const url = new URL(validUrl);
+      
+      if (url.hostname.includes('vimeo.com')) {
+        url.searchParams.set('background', '1');
+        url.searchParams.set('autoplay', '1');
+        url.searchParams.set('muted', '1');
+        url.searchParams.set('loop', '1');
+        url.searchParams.set('autopause', '0');
+        url.searchParams.set('controls', '0');
+        url.searchParams.set('title', '0');
+        url.searchParams.set('byline', '0');
+        url.searchParams.set('portrait', '0');
+        url.searchParams.set('transparent', '1');
+        url.searchParams.set('playsinline', '1');
+        url.searchParams.set('dnt', '1');
+      } else if (url.hostname.includes('youtube.com')) {
+        let videoId = '';
+        if (url.pathname.includes('/embed/')) {
+          videoId = url.pathname.split('/embed/')[1].split('?')[0];
+        } else {
+          videoId = url.searchParams.get('v') || url.pathname.split('/').pop() || '';
+        }
+        
+        url.searchParams.set('autoplay', '1');
+        url.searchParams.set('mute', '1');
+        url.searchParams.set('loop', '1');
+        if (videoId) url.searchParams.set('playlist', videoId);
+        url.searchParams.set('controls', '0');
+        url.searchParams.set('showinfo', '0');
+        url.searchParams.set('rel', '0');
+        url.searchParams.set('modestbranding', '1');
+        url.searchParams.set('playsinline', '1');
+        url.searchParams.set('iv_load_policy', '3');
+        url.searchParams.set('fs', '0');
+        url.searchParams.set('disablekb', '1');
+        url.searchParams.set('enablejsapi', '1');
+        if (typeof window !== 'undefined') {
+          url.searchParams.set('origin', window.location.origin);
+        }
+      }
+      return { extractedSrc: url.toString(), iframeRatio: ratio };
+    } catch {
+      return { extractedSrc: rawSrc, iframeRatio: ratio };
+    }
+  }, [pin.mediaPath, pin.externalUrl, pin.embedSourceUrls]);
+
+  const isIframeEmbed = extractedSrc !== null;
+
+  // No playable file URL and no iframe — still show card (e.g. play overlay → external page).
+  useEffect(() => {
+    if (
+      pin.mediaType === "video" &&
+      !isIframeEmbed &&
+      !videoPosterFromImageUrl &&
+      !pin.mediaPath?.trim()
+    ) {
+      setIsLoaded(true);
+    }
+  }, [pin.mediaType, pin.mediaPath, videoPosterFromImageUrl, isIframeEmbed]);
+
+  useEffect(() => {
+    if (!isIframeEmbed || !extractedSrc) return;
+    
+    // Fallback: force load state after 2.5s if onLoad doesn't fire
+    const timer = setTimeout(() => setIsLoaded(true), 2500);
+    
+    let isMounted = true;
+    const fetchOembed = async () => {
+      try {
+        const urlObj = new URL(extractedSrc);
+        let oembedUrl = '';
+        
+        if (urlObj.hostname.includes('vimeo.com')) {
+          const match = urlObj.pathname.match(/\/video\/(\d+)/) || urlObj.pathname.match(/\/(\d+)/);
+          if (match && match[1]) {
+            const videoUrl = `https://vimeo.com/${match[1]}`;
+            oembedUrl = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(videoUrl)}`;
+          }
+        } else if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+          let videoUrl = extractedSrc;
+          if (urlObj.pathname.includes('/embed/')) {
+            const videoId = urlObj.pathname.split('/embed/')[1];
+            videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+          }
+          oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(videoUrl)}&format=json`;
+        }
+
+        if (oembedUrl) {
+          const res = await fetch(oembedUrl);
+          const data = await res.json();
+          if (isMounted && data && data.width && data.height) {
+            setMeasuredMedia({
+              pinId: pin.id,
+              ratio: data.width / data.height,
+            });
+          }
+        }
+      } catch (err) {}
+    };
+
+    fetchOembed();
+    return () => { 
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [extractedSrc, pin.id, pin.mediaPath, pin.externalUrl]);
 
   const fallbackAspectRatio = useMemo(() => {
     const estimatedRatio = 320 / Math.max(pin.previewHeight, 1);
@@ -33,117 +244,197 @@ export default function PinCard({
   }, [pin.previewHeight]);
 
   const activeMeasuredRatio =
-    measuredMedia && measuredMedia.path === pin.mediaPath ? measuredMedia.ratio : null;
+    measuredMedia && measuredMedia.pinId === pin.id ? measuredMedia.ratio : null;
 
   const mediaStyle = fixedHeight
     ? { minHeight: fixedHeight }
     : { aspectRatio: activeMeasuredRatio ?? fallbackAspectRatio };
 
-  return (
-    <article className="mb-4 break-inside-avoid">
-      <Link
-        href={href}
-        className="group block shadow-[0_18px_45px_-38px_rgba(0,0,0,0.62)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-36px_rgba(0,0,0,0.68)]"
-        style={{
-          background: design.colors.surface,
-          border: `1px solid ${design.colors.border.card}`,
-          borderRadius: cardRadius,
-          boxShadow: design.shadows.card,
-        }}
-      >
+  const shellStyle = {
+    background: design.colors.surface,
+    border: `1px solid ${design.colors.border.card}`,
+    borderRadius: cardRadius,
+    boxShadow: design.shadows.card,
+  };
+
+  const cardMedia = (
         <div className="relative w-full overflow-hidden" style={{ ...mediaStyle, borderRadius: cardRadius }}>
-          {pin.mediaType === "image" && (
-            <Image
-              src={pin.mediaPath}
-              alt={pin.title}
-              fill
-              sizes={compact ? "(max-width: 1280px) 100vw, 20vw" : "(max-width: 1280px) 100vw, 30vw"}
-              className="object-cover"
-              onLoadingComplete={(image) => {
-                if (!fixedHeight && image.naturalWidth && image.naturalHeight) {
-                  setMeasuredMedia({
-                    path: pin.mediaPath,
-                    ratio: image.naturalWidth / image.naturalHeight,
-                  });
+          {/* Shimmering Skeleton Placeholder */}
+          {!isLoaded && (
+            <div 
+              className="absolute inset-0 z-10 overflow-hidden bg-zinc-100"
+            >
+              <div 
+                className="h-full w-full"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%)',
+                  transform: 'translateX(-100%)',
+                  animation: 'shimmer 2s infinite',
+                }}
+              />
+               <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes shimmer {
+                  100% { transform: translateX(100%); }
                 }
-              }}
-            />
+              `}} />
+            </div>
           )}
 
-          {pin.mediaType === "video" && (
-            <video
-              src={pin.mediaPath}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              className="h-full w-full object-cover"
-              onLoadedMetadata={(event) => {
-                if (!fixedHeight && event.currentTarget.videoWidth && event.currentTarget.videoHeight) {
-                  setMeasuredMedia({
-                    path: pin.mediaPath,
-                    ratio: event.currentTarget.videoWidth / event.currentTarget.videoHeight,
-                  });
-                }
-              }}
-            />
-          )}
-
-          {pin.mediaType === "model" && (
-            <>
+          <div className={`transition-opacity duration-700 ease-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+            {pin.mediaType === "image" && pin.mediaPath && (
               <Image
                 src={pin.mediaPath}
                 alt={pin.title}
                 fill
                 sizes={compact ? "(max-width: 1280px) 100vw, 20vw" : "(max-width: 1280px) 100vw, 30vw"}
-                className="object-cover"
+                className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                 onLoadingComplete={(image) => {
+                  setIsLoaded(true);
                   if (!fixedHeight && image.naturalWidth && image.naturalHeight) {
                     setMeasuredMedia({
-                      path: pin.mediaPath,
+                      pinId: pin.id,
                       ratio: image.naturalWidth / image.naturalHeight,
                     });
                   }
                 }}
               />
-              <div className="absolute inset-0 bg-linear-to-tr from-black/65 via-black/15 to-transparent" />
-              <div className="absolute left-3 top-3 rounded-full border border-white/30 bg-black/30 px-3 py-1 text-xs font-semibold tracking-wide text-white backdrop-blur-sm">
-                3D Preview
-              </div>
-            </>
-          )}
+            )}
 
-          <div className="absolute inset-0 opacity-0 transition group-hover:opacity-100">
-            <div className="absolute inset-0 bg-black/30" />
-            <div
-              className="absolute right-3 top-3 rounded-full px-4 py-2 text-xs font-semibold text-white shadow-lg"
-              style={{
-                background: design.gradients.primaryAction,
-                fontFamily: design.typography.families.sans,
-              }}
-            >
-              Visit
-            </div>
-            <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/85 to-transparent px-4 pb-4 pt-12">
-              <p
-                className="text-xs font-semibold uppercase tracking-[0.15em] text-white/90"
-                style={{ fontFamily: design.typography.families.sans }}
-              >
-                {pin.board}
-              </p>
-              {!compact && (
-                <p
-                  className="mt-1 line-clamp-1 text-sm font-semibold text-white"
-                  style={{ fontFamily: design.typography.families.sans }}
-                >
-                  Related to #{pin.tags[0] ?? "design"}
-                </p>
-              )}
-            </div>
+            {pin.mediaType === "video" && !videoFailed && (
+              isIframeEmbed && extractedSrc ? (
+                <iframe
+                  src={extractedSrc}
+                  className="h-full w-full border-0 transition-transform duration-700 ease-out group-hover:scale-105"
+                  allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  title={pin.title}
+                  onLoad={() => setIsLoaded(true)}
+                />
+              ) : videoPosterFromImageUrl && pin.mediaPath ? (
+                <Image
+                  src={pin.mediaPath}
+                  alt={pin.title}
+                  fill
+                  sizes={compact ? "(max-width: 1280px) 100vw, 20vw" : "(max-width: 1280px) 100vw, 30vw"}
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  onLoadingComplete={(image) => {
+                    setIsLoaded(true);
+                    if (!fixedHeight && image.naturalWidth && image.naturalHeight) {
+                      setMeasuredMedia({
+                        pinId: pin.id,
+                        ratio: image.naturalWidth / image.naturalHeight,
+                      });
+                    }
+                  }}
+                />
+              ) : pin.mediaPath ? (
+                <video
+                  src={pin.mediaPath}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  onLoadedData={() => setIsLoaded(true)}
+                  onError={() => {
+                    setVideoFailed(true);
+                    setIsLoaded(true);
+                  }}
+                  onLoadedMetadata={(event) => {
+                    if (!fixedHeight && event.currentTarget.videoWidth && event.currentTarget.videoHeight) {
+                      setMeasuredMedia({
+                        pinId: pin.id,
+                        ratio: event.currentTarget.videoWidth / event.currentTarget.videoHeight,
+                      });
+                    }
+                  }}
+                />
+              ) : (
+                <div
+                  className="h-full min-h-[180px] w-full bg-gradient-to-br from-zinc-200 to-zinc-300"
+                  aria-hidden
+                />
+              )
+            )}
+
+            {pin.mediaType === "video" && videoFailed && !showPlayOverlay && (
+              <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-center text-xs font-medium text-zinc-500">
+                Preview unavailable
+              </div>
+            )}
+
+            {pin.mediaType === "video" && videoFailed && showPlayOverlay && (
+              <div
+                className="absolute inset-0 bg-gradient-to-br from-zinc-200 to-zinc-300"
+                aria-hidden
+              />
+            )}
+
+            {pin.mediaType === "model" && pin.mediaPath && (
+              <>
+                <Image
+                  src={pin.mediaPath}
+                  alt={pin.title}
+                  fill
+                  sizes={compact ? "(max-width: 1280px) 100vw, 20vw" : "(max-width: 1280px) 100vw, 30vw"}
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                  onLoadingComplete={(image) => {
+                    setIsLoaded(true);
+                    if (!fixedHeight && image.naturalWidth && image.naturalHeight) {
+                      setMeasuredMedia({
+                        pinId: pin.id,
+                        ratio: image.naturalWidth / image.naturalHeight,
+                      });
+                    }
+                  }}
+                />
+              </>
+            )}
           </div>
+          {showPlayOverlay ? (
+            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/20">
+              <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/60 bg-black/55 text-white shadow-[0_12px_30px_rgba(0,0,0,0.45)]">
+                <Play className="h-6 w-6 fill-current" />
+              </span>
+            </div>
+          ) : null}
+
         </div>
+  );
+
+  return (
+    <motion.article 
+      ref={containerRef}
+      className="mb-4 break-inside-avoid"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.05, // Staggered reveal
+        ease: [0.22, 1, 0.36, 1] 
+      }}
+    >
+      {interactive ? (
+      <Link
+        href={href}
+        target={isExternalHref ? "_blank" : undefined}
+        rel={isExternalHref ? "noreferrer" : undefined}
+        className="group block shadow-[0_18px_45px_-38px_rgba(0,0,0,0.62)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-36px_rgba(0,0,0,0.68)]"
+        style={shellStyle}
+      >
+        {cardMedia}
       </Link>
-    </article>
+      ) : (
+        <div
+          className="group block cursor-default shadow-[0_18px_45px_-38px_rgba(0,0,0,0.62)] transition hover:shadow-[0_28px_70px_-36px_rgba(0,0,0,0.68)]"
+          style={shellStyle}
+        >
+          {cardMedia}
+        </div>
+      )}
+    </motion.article>
   );
 }

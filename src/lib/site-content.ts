@@ -1,7 +1,17 @@
-import prisma from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
+
 import { aboutContentDefaults, type AboutContent } from "@/lib/about-content-defaults";
 import { heroContentDefaults, type HeroContent } from "@/lib/hero-content-defaults";
 import { homeContentDefaults, type HomeContent } from "@/lib/home-content-defaults";
+
+export type BehanceShowcaseEmbed = {
+  id: string;
+  src: string;
+  title: string;
+};
+
+const BEHANCE_SHOWCASE_KEY = "behance_showcase_embeds";
 
 export const siteContentDefaults = {
   ...aboutContentDefaults,
@@ -11,6 +21,9 @@ export const siteContentDefaults = {
 
 const aboutKeyMap = {
   aboutImage: "about_image",
+  homeAboutImage1: "home_about_image_1",
+  homeAboutImage2: "home_about_image_2",
+  homeAboutImage3: "home_about_image_3",
   aboutInstagramImage1: "about_instagram_image_1",
   aboutInstagramImage2: "about_instagram_image_2",
   aboutInstagramImage3: "about_instagram_image_3",
@@ -37,19 +50,31 @@ const homeKeyMap = {
   scrollingBannerItems: "home_scrolling_banner_items",
   scrollingLogos: "home_scrolling_logos",
   socialLinks: "home_social_links",
+  otherSocialLinks: "home_other_social_links",
   pageLinks: "home_page_links",
 } as const;
 
 export async function getAboutContent(): Promise<AboutContent> {
+  const supabase = await createClient();
   const keys = Object.values(aboutKeyMap);
-  const records = await prisma.siteContent.findMany({
-    where: { key: { in: keys } },
-  });
+  
+  const { data: records, error } = await supabase
+    .from("site_content")
+    .select("key, value")
+    .in("key", keys);
 
-  const values = new Map(records.map((record) => [record.key, record.value]));
+  if (error) {
+    console.error("Error fetching about content:", error);
+    return siteContentDefaults;
+  }
+
+  const values = new Map(records?.map((record) => [record.key, record.value]));
 
   return {
     aboutImage: values.get(aboutKeyMap.aboutImage) || siteContentDefaults.aboutImage,
+    homeAboutImage1: values.get(aboutKeyMap.homeAboutImage1) || siteContentDefaults.homeAboutImage1,
+    homeAboutImage2: values.get(aboutKeyMap.homeAboutImage2) || siteContentDefaults.homeAboutImage2,
+    homeAboutImage3: values.get(aboutKeyMap.homeAboutImage3) || siteContentDefaults.homeAboutImage3,
     aboutInstagramImage1: values.get(aboutKeyMap.aboutInstagramImage1) || siteContentDefaults.aboutInstagramImage1,
     aboutInstagramImage2: values.get(aboutKeyMap.aboutInstagramImage2) || siteContentDefaults.aboutInstagramImage2,
     aboutInstagramImage3: values.get(aboutKeyMap.aboutInstagramImage3) || siteContentDefaults.aboutInstagramImage3,
@@ -62,12 +87,20 @@ export async function getAboutContent(): Promise<AboutContent> {
 }
 
 export async function getHeroContent(): Promise<HeroContent> {
+  const supabase = await createClient();
   const keys = Object.values(heroKeyMap);
-  const records = await prisma.siteContent.findMany({
-    where: { key: { in: keys } },
-  });
+  
+  const { data: records, error } = await supabase
+    .from("site_content")
+    .select("key, value")
+    .in("key", keys);
 
-  const values = new Map(records.map((record) => [record.key, record.value]));
+  if (error) {
+    console.error("Error fetching hero content:", error);
+    return siteContentDefaults;
+  }
+
+  const values = new Map(records?.map((record) => [record.key, record.value]));
 
   return {
     heroGreeting: values.get(heroKeyMap.heroGreeting) || siteContentDefaults.heroGreeting,
@@ -83,12 +116,20 @@ export async function getHeroContent(): Promise<HeroContent> {
 }
 
 export async function getHomeContent(): Promise<HomeContent> {
+  const supabase = await createClient();
   const keys = Object.values(homeKeyMap);
-  const records = await prisma.siteContent.findMany({
-    where: { key: { in: keys } },
-  });
+  
+  const { data: records, error } = await supabase
+    .from("site_content")
+    .select("key, value")
+    .in("key", keys);
 
-  const values = new Map(records.map((record) => [record.key, record.value]));
+  if (error) {
+    console.error("Error fetching home content:", error);
+    return siteContentDefaults;
+  }
+
+  const values = new Map(records?.map((record) => [record.key, record.value]));
 
   return {
     scrollingBannerItems: values.get(homeKeyMap.scrollingBannerItems) || siteContentDefaults.scrollingBannerItems,
@@ -112,6 +153,23 @@ export async function getHomeContent(): Promise<HomeContent> {
         return siteContentDefaults.socialLinks;
       }
     })(),
+    otherSocialLinks: (() => {
+      const val = values.get(homeKeyMap.otherSocialLinks);
+      if (!val) return siteContentDefaults.otherSocialLinks;
+      try {
+        const parsed = JSON.parse(val);
+        if (!Array.isArray(parsed)) return siteContentDefaults.otherSocialLinks;
+        return parsed
+          .map((item) => ({
+            id: typeof item?.id === "string" ? item.id : "",
+            label: typeof item?.label === "string" ? item.label : "",
+            url: typeof item?.url === "string" ? item.url : "",
+          }))
+          .filter((item) => item.id && item.label);
+      } catch {
+        return siteContentDefaults.otherSocialLinks;
+      }
+    })(),
     pageLinks: (() => {
       const val = values.get(homeKeyMap.pageLinks);
       if (!val) return siteContentDefaults.pageLinks;
@@ -131,42 +189,159 @@ export async function getHomeContent(): Promise<HomeContent> {
 }
 
 export async function upsertAboutContent(content: AboutContent) {
-  await prisma.$transaction(
-    Object.entries(aboutKeyMap).map(([field, key]) =>
-      prisma.siteContent.upsert({
-        where: { key },
-        update: { value: content[field as keyof AboutContent] },
-        create: { key, value: content[field as keyof AboutContent] },
-      })
-    )
-  );
+  const supabase = createAdminClient();
+  const entries = Object.entries(aboutKeyMap).map(([field, key]) => ({
+    key,
+    value: content[field as keyof AboutContent],
+  }));
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(entries, { onConflict: "key" });
+
+  if (error) throw error;
 }
 
 export async function upsertHeroContent(content: HeroContent) {
-  await prisma.$transaction(
-    Object.entries(heroKeyMap).map(([field, key]) =>
-      prisma.siteContent.upsert({
-        where: { key },
-        update: { value: content[field as keyof HeroContent] },
-        create: { key, value: content[field as keyof HeroContent] },
-      })
-    )
-  );
+  const supabase = createAdminClient();
+  const entries = Object.entries(heroKeyMap).map(([field, key]) => ({
+    key,
+    value: (content[field as keyof HeroContent] as string) || "",
+  }));
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(entries, { onConflict: "key" });
+
+  if (error) throw error;
 }
 
 export async function upsertHomeContent(content: HomeContent) {
-  await prisma.$transaction(
-    Object.entries(homeKeyMap).map(([field, key]) => {
-      const value =
-        field === "scrollingLogos" || field === "socialLinks" || field === "pageLinks"
-          ? JSON.stringify(content[field as keyof HomeContent])
-          : content[field as keyof HomeContent];
-        
-      return prisma.siteContent.upsert({
-        where: { key },
-        update: { value: value as string },
-        create: { key, value: value as string },
-      });
-    })
-  );
+  const supabase = createAdminClient();
+  const entries = Object.entries(homeKeyMap).map(([field, key]) => {
+    const rawValue = content[field as keyof HomeContent];
+    const value =
+      field === "scrollingLogos" || field === "socialLinks" || field === "otherSocialLinks" || field === "pageLinks"
+        ? JSON.stringify(rawValue)
+        : rawValue;
+      
+    return {
+      key,
+      value: (value as string) || "",
+    };
+  });
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(entries, { onConflict: "key" });
+
+  if (error) throw error;
+}
+
+export async function getBehanceShowcaseEmbeds(): Promise<BehanceShowcaseEmbed[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("site_content")
+    .select("value")
+    .eq("key", BEHANCE_SHOWCASE_KEY)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching Behance showcase embeds:", error);
+    return [];
+  }
+
+  if (!data?.value) return [];
+
+  try {
+    const parsed = JSON.parse(data.value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (item: any) =>
+          typeof item?.id === "string" &&
+          typeof item?.src === "string" &&
+          typeof item?.title === "string"
+      )
+      .map((item: any) => ({
+        id: item.id,
+        src: item.src,
+        title: item.title,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export async function upsertBehanceShowcaseEmbeds(embeds: BehanceShowcaseEmbed[]) {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(
+      { key: BEHANCE_SHOWCASE_KEY, value: JSON.stringify(embeds) },
+      { onConflict: "key" }
+    );
+
+  if (error) throw error;
+}
+
+/* ─── Pinterest Showcase Logic ─── */
+
+export type PinterestShowcaseItem = {
+  id: string;
+  src: string;
+  title: string;
+};
+
+const PINTEREST_SHOWCASE_KEY = "pinterest_showcase_links";
+
+export async function getPinterestShowcaseItems(): Promise<PinterestShowcaseItem[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("site_content")
+    .select("value")
+    .eq("key", PINTEREST_SHOWCASE_KEY)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching Pinterest showcase items:", error);
+    return [];
+  }
+
+  if (!data?.value) return [];
+
+  try {
+    const parsed = JSON.parse(data.value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (item: any) =>
+          typeof item?.id === "string" &&
+          typeof item?.src === "string" &&
+          typeof item?.title === "string"
+      )
+      .map((item: any) => ({
+        id: item.id,
+        src: item.src,
+        title: item.title,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+export async function upsertPinterestShowcaseItems(items: PinterestShowcaseItem[]) {
+  const supabase = createAdminClient();
+
+  const { error } = await supabase
+    .from("site_content")
+    .upsert(
+      { key: PINTEREST_SHOWCASE_KEY, value: JSON.stringify(items) },
+      { onConflict: "key" }
+    );
+
+  if (error) throw error;
 }

@@ -2,12 +2,27 @@
 
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import type { SiteCopyContent, SiteCopyTimelineEntry } from "@/lib/site-copy-content";
+import { Dialog } from "@headlessui/react";
+import Link from "next/link";
+import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
+import type { SiteCopyContent, SiteCopyTimelineEntry } from "@/types/site-copy";
+import { resumeOptions } from "@/lib/resume-data";
+
+const PDFViewer = dynamic(() => import("@/components/ui/PDFViewer"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex flex-col items-center justify-center gap-4 bg-[#fdfaf5]/30">
+      <div className="w-12 h-12 border-4 border-[#8b5a2b]/20 border-t-[#8b5a2b] rounded-full animate-spin" />
+      <p className="text-[#8b5a2b] font-serif italic animate-pulse">Summoning the scroll...</p>
+    </div>
+  ),
+});
 
 type DeskBookSectionProps = {
   copy: Pick<
     SiteCopyContent,
-    "aboutIntroTitle" | "aboutIntroBody" | "aboutBookImage" | "aboutTimelineTitle" | "aboutTimelineEntries" | "homeReviewsItems"
+    "aboutIntroTitle" | "aboutIntroBody" | "aboutBookImage" | "aboutTimelineTitle" | "aboutTimelineEntries" | "homeReviewsItems" | "aboutResumeUrl" | "aboutDesignResumeUrl"
   >;
 };
 
@@ -24,6 +39,8 @@ type PageContent = {
 
 export default function DeskBookSection({ copy }: DeskBookSectionProps) {
   const [spread, setSpread] = useState(0);
+// State for resume/portfolio modals
+const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>(null);
   const [keyboardEngaged, setKeyboardEngaged] = useState(false);
   const keyboardRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -84,7 +101,7 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
 
         while (remaining.length > 0) {
             const limit = getCapacity(list.length);
-            let currentList: SiteCopyTimelineEntry[] = [];
+            const currentList: SiteCopyTimelineEntry[] = [];
             let currentChars = 0;
             let consumed = 0;
 
@@ -122,7 +139,7 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
 
         while (remaining.length > 0) {
             const limit = getCapacity(list.length);
-            let currentList: any[] = [];
+            const currentList: any[] = [];
             let currentWeight = 0;
             let consumed = 0;
 
@@ -216,10 +233,32 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, []);
 
-  const closeBook = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("close"); setSpread(0); };
-  const openCover = (e: React.MouseEvent) => { e.stopPropagation(); playBookSound("open"); setSpread(1); };
-  const nextSpread = (e: React.MouseEvent) => { e.stopPropagation(); if (spread <= totalSpreads) { playBookSound("turn"); setSpread(s => s + 1); } };
-  const prevSpread = (e: React.MouseEvent) => { e.stopPropagation(); if (spread > 1) { playBookSound("turn"); setSpread(s => s - 1); } else { closeBook(e); } };
+  const [direction, setDirection] = useState(1);
+
+  const closeBook = (e: React.MouseEvent) => { e.stopPropagation(); setDirection(-1); playBookSound("close"); setSpread(0); };
+  const openCover = (e: React.MouseEvent) => { e.stopPropagation(); setDirection(1); playBookSound("open"); setSpread(1); };
+  const nextSpread = (e: React.MouseEvent) => { e.stopPropagation(); if (spread <= totalSpreads) { setDirection(1); playBookSound("turn"); setSpread(s => s + 1); } };
+  const prevSpread = (e: React.MouseEvent) => { e.stopPropagation(); if (spread > 1) { setDirection(-1); playBookSound("turn"); setSpread(s => s - 1); } else { closeBook(e); } };
+
+  const mobileVariants = {
+    enter: (direction: number) => ({
+      y: direction > 0 ? '50%' : '-50%',
+      opacity: 0,
+      scale: 0.98
+    }),
+    center: {
+      zIndex: 1,
+      y: 0,
+      opacity: 1,
+      scale: 1
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      y: direction < 0 ? '50%' : '-50%',
+      opacity: 0,
+      scale: 0.98
+    })
+  };
 
   const renderPage = (content: PageContent, pageNum: number) => {
     return (
@@ -348,15 +387,93 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
         backgroundPosition: 'center center'
       }}
     >
+      {/* Desktop Toggle Button */}
       <button 
         onClick={spread === 0 ? openCover : undefined}
-        className={`z-30 font-mono tracking-[0.4em] text-[10px] uppercase mb-16 transition-all duration-500 ${spread === 0 ? 'text-[#8b5a2b] opacity-100 hover:scale-110 cursor-pointer animate-pulse' : 'text-gray-400 opacity-20 cursor-default'}`}
+        className={`hidden md:block z-30 font-mono tracking-[0.4em] text-[10px] uppercase mb-16 transition-all duration-500 ${spread === 0 ? 'text-[#8b5a2b] opacity-100 hover:scale-110 cursor-pointer animate-pulse' : 'text-gray-400 opacity-20 cursor-default'}`}
       >
          {spread > 0 ? "Chronicle in Progress" : "Click to Unlock the tome"}
       </button>
 
+      {/* Mobile Ancient Scroll View */}
+      <div className="flex md:hidden flex-col items-center w-full z-20 w-[95vw] sm:w-[90vw] mx-auto">
+        {/* Scroll Top Roller */}
+        <div className="w-[105%] h-6 sm:h-8 rounded-full bg-linear-to-b from-[#8b5a2b] via-[#a06b38] to-[#5c3a21] shadow-md z-30 relative border border-[#4a2e1b]">
+            <div className="absolute left-[-6px] sm:left-[-10px] top-[2px] sm:top-[4px] w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-[#5c3a21] border-2 border-[#8b5a2b] shadow-inner"></div>
+            <div className="absolute right-[-6px] sm:right-[-10px] top-[2px] sm:top-[4px] w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-[#5c3a21] border-2 border-[#8b5a2b] shadow-inner"></div>
+        </div>
+
+        {/* Scroll Paper Content */}
+        <div className="w-full relative bg-[#f4e8d1] overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.3)] min-h-[500px] h-[70vh]"
+             style={{ 
+                backgroundImage: "repeating-linear-gradient(135deg, rgba(205,164,123,0.06) 0px, rgba(205,164,123,0.06) 1px, transparent 1px, transparent 12px)",
+             }}>
+             <div className="absolute inset-x-0 top-0 h-6 bg-linear-to-b from-black/30 to-transparent pointer-events-none z-20"></div>
+             <div className="absolute inset-x-0 bottom-0 h-6 bg-linear-to-t from-black/30 to-transparent pointer-events-none z-20"></div>
+
+             <div className="relative w-full h-full">
+                <AnimatePresence initial={false} custom={direction}>
+                  <motion.div
+                    key={spread}
+                    custom={direction}
+                    variants={mobileVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{ type: "tween", duration: 0.6, ease: "easeInOut" }}
+                    className="absolute inset-0 w-full h-full overflow-y-auto overflow-x-hidden"
+                  >
+                     {spread === 0 ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center pt-16">
+                            <div className="w-20 h-20 mb-8 rounded-full border-4 border-[#8b5a2b]/40 flex items-center justify-center bg-[#cda47b] shadow-inner transform -rotate-12">
+                                <svg className="w-10 h-10 text-[#5c3a21] opacity-70" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l4.5 9h-9L12 2zm0 2.5L9.5 9h5L12 4.5zm0 15.5l-4.5-9h9L12 20zM11 17.5l2.5-4.5h-5L12 17.5z"/></svg>
+                            </div>
+                            <h1 className="text-[#382010] text-3xl font-serif uppercase mb-6 leading-tight tracking-[0.08em] font-bold">
+                                The Magical<br/><span className="text-[#8b5a2b]">Chronicles</span>
+                            </h1>
+                            <div className="w-24 h-[2px] bg-[#8b5a2b] opacity-40 mb-6 mx-auto"></div>
+                            <span className="text-[#5c3a21] text-xs font-serif tracking-[0.4em] font-bold opacity-80 decoration-wavy mb-12">ABIN VARGHESE</span>
+                        </div>
+                     ) : (
+                         pages[spread - 1] ? renderPage(pages[spread - 1], spread) : (
+                            <div className="w-full h-full flex items-center justify-center p-12 text-center text-[#8b5a2b] font-serif uppercase tracking-widest font-bold opacity-50">
+                                The End of the Tome
+                            </div>
+                         )
+                     )}
+                  </motion.div>
+                </AnimatePresence>
+             </div>
+        </div>
+
+        {/* Scroll Bottom Roller */}
+        <div className="w-[105%] h-6 sm:h-8 rounded-full bg-linear-to-b from-[#8b5a2b] via-[#a06b38] to-[#5c3a21] shadow-[0_10px_20px_rgba(0,0,0,0.4)] z-30 relative border border-[#4a2e1b]">
+            <div className="absolute left-[-6px] sm:left-[-10px] top-[2px] sm:top-[4px] w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-[#5c3a21] border-2 border-[#8b5a2b] shadow-inner"></div>
+            <div className="absolute right-[-6px] sm:right-[-10px] top-[2px] sm:top-[4px] w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-[#5c3a21] border-2 border-[#8b5a2b] shadow-inner"></div>
+        </div>
+
+        <div className="w-full flex justify-between px-4 mt-6 z-40">
+           <button 
+               onClick={prevSpread} 
+               disabled={spread === 0}
+               className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8b5a2b] disabled:opacity-30 flex items-center gap-2 transition-opacity"
+           >
+               <span className="text-sm">↑</span> Prev Scroll
+           </button>
+           <button 
+               onClick={nextSpread} 
+               disabled={spread > totalSpreads}
+               className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#8b5a2b] disabled:opacity-30 flex items-center gap-2 transition-opacity"
+           >
+               Next Scroll <span className="text-sm">↓</span>
+           </button>
+        </div>
+
+      </div>
+
+      {/* Desktop Book View */}
       <div 
-        className="relative perspective-[3000px] transition-all duration-1000 ease-[cubic-bezier(0.645,0.045,0.355,1)] w-[95vw] sm:w-[650px] md:w-[850px] lg:w-[1050px] h-[500px] sm:h-[600px] md:h-[750px]"
+        className="hidden md:block relative perspective-[3000px] transition-all duration-1000 ease-[cubic-bezier(0.645,0.045,0.355,1)] w-[95vw] sm:w-[650px] md:w-[850px] lg:w-[1050px] h-[500px] sm:h-[600px] md:h-[750px]"
         style={{ 
             transformStyle: "preserve-3d",
             transform: spread === 0 ? "translateX(-25%)" : "translateX(0)"
@@ -435,8 +552,8 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
         <div className={`absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-[4px] bg-black/20 z-200 transition-opacity duration-1000 ${spread > 0 ? 'opacity-100' : 'opacity-0'} pointer-events-none`}></div>
       </div>
 
-      <div className="mt-24 flex flex-col items-center gap-10 z-50">
-          <div className="flex gap-8 md:gap-14 items-center">
+      <div className="mt-12 md:mt-24 flex flex-col items-center gap-10 z-50 w-full px-4">
+          <div className="hidden md:flex gap-8 md:gap-14 items-center">
             <button 
                 onClick={prevSpread} 
                 disabled={spread === 0}
@@ -455,7 +572,89 @@ export default function DeskBookSection({ copy }: DeskBookSectionProps) {
                 Next <span className="text-sm">→</span>
             </button>
           </div>
+          
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-6 md:mt-12 w-full">
+            <button onClick={() => setActivePdfModal("resume")} className="group flex items-center justify-center gap-2 px-8 py-3 bg-[#fdfaf5]/80 border border-[#8b5a2b]/40 text-[#8b5a2b] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] transition-all hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] shadow-sm hover:shadow-md cursor-pointer rounded-full w-full max-w-[280px] md:w-auto md:min-w-[200px]">
+              Resume
+            </button>
+            <button onClick={() => setActivePdfModal("design")} className="group flex items-center justify-center gap-2 px-8 py-3 bg-[#fdfaf5]/80 border border-[#8b5a2b]/40 text-[#8b5a2b] font-serif text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] transition-all hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] shadow-sm hover:shadow-md cursor-pointer rounded-full w-full max-w-[280px] md:w-auto md:min-w-[200px]">
+              Design Resume
+            </button>
+          </div>
       </div>
+
+      {/* Resume/Portfolio Modal */}
+      <AnimatePresence>
+        {activePdfModal !== null && (
+          <Dialog open={activePdfModal !== null} onClose={() => setActivePdfModal(null)} className="relative z-[999999]">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-[#0b0b0c]/80 backdrop-blur-xl transition-opacity pointer-events-none z-[999999]" 
+              aria-hidden="true" 
+            />
+            <div className="fixed inset-0 flex items-center justify-center p-4 sm:p-6 md:p-8 z-[999999]">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="w-full max-w-5xl h-[85vh] md:h-[90vh] flex"
+              >
+                <Dialog.Panel className="w-full h-full bg-[#fdfaf5]/95 backdrop-blur-2xl border border-[#d4bc96]/30 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col relative rounded-[32px]">
+                
+                {/* Elegant Header */}
+                <div className="flex justify-between items-center px-6 md:px-8 py-5 border-b border-[#d4bc96]/30 bg-white/50 relative z-10">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-[#8b5a2b]/10 flex items-center justify-center border border-[#8b5a2b]/20">
+                      <svg className="w-5 h-5 text-[#8b5a2b]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    </div>
+                    <div>
+                      <Dialog.Title className="text-sm md:text-base font-serif font-bold text-[#4a331e] uppercase tracking-[0.2em]">
+                        {activePdfModal === "resume" ? "Resume Archive" : "Design Resume Archive"}
+                      </Dialog.Title>
+                      <p className="text-[10px] md:text-xs font-mono text-[#8b5a2b]/60 uppercase tracking-widest mt-0.5">
+                        Abin Varghese • 2026 Edition
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <a 
+                      href={activePdfModal === "resume" ? copy.aboutResumeUrl : copy.aboutDesignResumeUrl} 
+                      download={activePdfModal === "resume" ? "Abin_Varghese_Resume.pdf" : "Abin_Varghese_Designer_Portfolio.pdf"}
+                      className="group flex items-center justify-center gap-2 w-10 h-10 sm:w-auto sm:h-auto sm:px-5 sm:py-2 bg-[#8b5a2b] border border-[#8b5a2b] text-[#fdfaf5] font-serif text-[10px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-[#5a3b1c] hover:shadow-lg hover:shadow-[#8b5a2b]/20 rounded-full"
+                    >
+                      <span className="hidden sm:inline">Download</span>
+                      <svg className="w-4 h-4 sm:w-3.5 sm:h-3.5 transition-transform group-hover:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    </a>
+                    <div className="w-px h-6 bg-[#d4bc96]/50 mx-0.5 sm:mx-1"></div>
+                    <button 
+                      onClick={() => setActivePdfModal(null)} 
+                      className="group w-10 h-10 flex items-center justify-center rounded-full bg-white border border-[#d4bc96]/50 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-[#fdfaf5] hover:border-[#8b5a2b] transition-all hover:shadow-md hover:scale-105"
+                    >
+                      <span className="sr-only">Close</span>
+                      <svg className="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                </div>
+                
+                {/* PDF Viewer Area */}
+                  {/* Dynamic PDF Viewer using react-pdf for robust mobile support */}
+                  <div className="w-full h-full relative">
+                    <PDFViewer 
+                      url={activePdfModal === "resume" ? copy.aboutResumeUrl : copy.aboutDesignResumeUrl} 
+                      title={activePdfModal === "resume" ? "Resume Preview" : "Design Resume Preview"}
+                    />
+                  </div>
+              </Dialog.Panel>
+              </motion.div>
+            </div>
+          </Dialog>
+        )}
+      </AnimatePresence>
 
     </section>
   );

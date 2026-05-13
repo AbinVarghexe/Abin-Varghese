@@ -2,6 +2,7 @@
 
 import { motion, useAnimationControls } from 'framer-motion';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface LogoCarouselProps {
   logos: string[];
@@ -61,10 +62,12 @@ export default function LogoCarousel({ logos, showTitle = true, className = "" }
                 className="relative h-10 w-32 md:h-15 md:w-48 flex items-center justify-center shrink-0 opacity-100 brightness-0 invert transition-all duration-500 ease-in-out cursor-pointer group"
                 whileHover={{ scale: 1.05, y: -2 }}
               >
-                <img
+                <Image
                   src={logo}
                   alt={`Partner Logo ${index + 1}`}
-                  className="max-h-full max-w-full object-contain drop-shadow-md group-hover:drop-shadow-xl transition-all duration-500"
+                  fill
+                  sizes="(max-width: 768px) 128px, 192px"
+                  className="object-contain drop-shadow-md group-hover:drop-shadow-xl transition-all duration-500"
                 />
               </motion.div>
             ))}

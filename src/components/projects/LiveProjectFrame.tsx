@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Globe, AlertCircle } from 'lucide-react';
+import { Globe } from 'lucide-react';
 
 interface LiveProjectFrameProps {
   url: string;
@@ -89,8 +89,15 @@ export default function LiveProjectFrame({
     >
       {/* Loading state */}
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-50">
-          <div className="w-5 h-5 border-2 border-zinc-200 border-t-zinc-800 rounded-full animate-spin" />
+        <div className="absolute inset-0 z-10 overflow-hidden bg-zinc-50">
+          <div className="absolute inset-y-0 left-0 w-16 border-r border-zinc-200/80 bg-zinc-100/80" />
+          <div className="absolute inset-x-0 top-0 h-11 border-b border-zinc-200/80 bg-white/70" />
+          <div className="absolute inset-0 animate-pulse bg-[linear-gradient(110deg,rgba(228,231,238,0.55),rgba(244,245,247,0.92),rgba(228,231,238,0.55))] bg-[length:200%_100%]" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="rounded-full border border-zinc-200 bg-white/90 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500 shadow-sm">
+              Loading preview
+            </div>
+          </div>
         </div>
       )}
 

@@ -6,17 +6,20 @@ import WorkspaceProjectsSection, {
 } from '@/components/projects/WorkspaceProjectsSection';
 import ProjectsHeroBanner from '@/components/projects/ProjectsHeroBanner';
 import type { WorkspaceProject } from '@/lib/github-projects';
+import type { BehanceShowcaseEmbed } from '@/lib/site-content';
 
 interface ProjectsPageShellProps {
   projects: WorkspaceProject[];
   sourceUrl: string;
   initialWorkspace: WorkspaceFilter;
+  behanceShowcaseEmbeds: BehanceShowcaseEmbed[];
 }
 
 export default function ProjectsPageShell({
   projects,
   sourceUrl,
   initialWorkspace,
+  behanceShowcaseEmbeds,
 }: ProjectsPageShellProps) {
   const [workspace, setWorkspace] = useState<WorkspaceFilter>(initialWorkspace);
 
@@ -31,6 +34,7 @@ export default function ProjectsPageShell({
         projects={projects}
         sourceUrl={sourceUrl}
         workspace={workspace}
+        behanceShowcaseEmbeds={behanceShowcaseEmbeds}
       />
     </main>
   );

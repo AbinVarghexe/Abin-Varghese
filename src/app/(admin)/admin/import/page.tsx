@@ -77,7 +77,6 @@ export default function AdminImportPage() {
       sectionLabel="Import Section"
       sectionTitle="Content Import and Export"
       sectionDescription="Move complete content snapshots in and out of the system as JSON."
-      previewPath="/"
     >
       <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-6">
         <h3 className="text-lg font-medium text-[#0b0b0c]">Export Admin Data</h3>

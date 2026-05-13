@@ -3,8 +3,9 @@ import ProjectsPageShell from '@/components/projects/ProjectsPageShell';
 import type { WorkspaceFilter } from '@/components/projects/WorkspaceProjectsSection';
 import {
   getConfiguredGithubSourceUrl,
-  getGithubWorkspaceProjects,
+  getAllProjects,
 } from '@/lib/github-projects';
+import { getBehanceShowcaseEmbeds } from '@/lib/site-content';
 import { createPageMetadata } from '@/seo/page-metadata';
 
 interface ProjectsPageProps {
@@ -14,8 +15,18 @@ interface ProjectsPageProps {
 export const metadata: Metadata = createPageMetadata({
   title: "Projects | Abin Varghese",
   description:
-    "Discover web apps, AI integrations, and portfolio designs built with React and Next.js. Explore Abin Varghese's portfolio of front-end development projects.",
+    "Explore web apps, AI integrations, and UI/UX designs built by Abin Varghese using React, Next.js, and Figma. Browse open-source projects and live demos.",
   path: "/projects",
+  keywords: [
+    "Abin Varghese projects",
+    "Next.js project portfolio",
+    "React web app projects",
+    "AI integration projects",
+    "Open source Next.js apps",
+    "UI/UX design portfolio",
+    "Figma design projects",
+    "Front-end developer portfolio",
+  ],
 });
 
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
@@ -23,14 +34,18 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
   const initialWorkspace: WorkspaceFilter =
     workspace === 'designing' ? 'designing' : 'coding';
 
-  const projects = await getGithubWorkspaceProjects();
-  const githubSourceUrl = getConfiguredGithubSourceUrl();
+  const [projects, githubSourceUrl, behanceShowcaseEmbeds] = await Promise.all([
+    getAllProjects(),
+    Promise.resolve(getConfiguredGithubSourceUrl()),
+    getBehanceShowcaseEmbeds(),
+  ]);
 
   return (
     <ProjectsPageShell
       projects={projects}
       sourceUrl={githubSourceUrl}
       initialWorkspace={initialWorkspace}
+      behanceShowcaseEmbeds={behanceShowcaseEmbeds}
     />
   );
 }

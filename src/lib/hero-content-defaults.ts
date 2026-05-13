@@ -19,5 +19,5 @@ export const heroContentDefaults: HeroContent = {
   heroCtaPrimaryLabel: "View Projects",
   heroCtaPrimaryUrl: "/projects",
   heroCtaSecondaryLabel: "Book a Call",
-  heroCtaSecondaryUrl: "https://cal.com/abinvarghexe",
+  heroCtaSecondaryUrl: "https://cal.com/abinvarghese",
 };

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { defaultOgImage, getAbsoluteUrl, siteConfig } from "@/seo/config";
+import { defaultOgImage, getAbsoluteUrl, siteConfig, siteUrl } from "@/seo/config";
 
 type PageMetadataOptions = {
   title: string;
@@ -10,6 +10,10 @@ type PageMetadataOptions = {
   keywords?: string[];
   type?: "website" | "article";
   noIndex?: boolean;
+  /** ISO date string for article published date */
+  publishedTime?: string;
+  /** ISO date string for article modified date */
+  modifiedTime?: string;
 };
 
 function normalizeImageUrl(url: string) {
@@ -25,9 +29,12 @@ export function createPageMetadata({
   keywords,
   type = "website",
   noIndex = false,
+  publishedTime,
+  modifiedTime,
 }: PageMetadataOptions): Metadata {
   const canonicalPath = path.startsWith("/") ? path : `/${path}`;
   const url = getAbsoluteUrl(canonicalPath);
+
   const resolvedImages = (images && images.length > 0 ? images : [image ?? defaultOgImage]).map(
     normalizeImageUrl
   );
@@ -38,6 +45,10 @@ export function createPageMetadata({
     keywords,
     alternates: {
       canonical: canonicalPath,
+      languages: {
+        "en-IN": canonicalPath,
+        "x-default": canonicalPath,
+      },
     },
     openGraph: {
       title,
@@ -48,14 +59,26 @@ export function createPageMetadata({
       type,
       images: resolvedImages.map((resolvedImage) => ({
         url: resolvedImage,
+        width: 1200,
+        height: 630,
+        alt: title,
       })),
+      ...(type === "article" && {
+        publishedTime,
+        modifiedTime,
+        authors: [siteUrl],
+      }),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
       creator: siteConfig.twitterHandle,
-      images: resolvedImages,
+      site: siteConfig.twitterHandle,
+      images: resolvedImages.map((resolvedImage) => ({
+        url: resolvedImage,
+        alt: title,
+      })),
     },
     robots: noIndex
       ? {

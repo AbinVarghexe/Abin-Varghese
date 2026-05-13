@@ -1,5 +1,5 @@
 import { getAboutContent, getHeroContent } from "@/lib/site-content";
-import prisma from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
 
 export type AssistantIntent = "about" | "projects" | "skills" | "contact" | "none";
 
@@ -12,11 +12,17 @@ export async function generateJarvisResponse(query: string): Promise<JarvisRespo
   const normalizedQuery = query.toLowerCase();
   
   // 1. Fetch Context
-  const [about, hero, projects] = await Promise.all([
+  const supabase = await createClient();
+  const [about, hero, projectsRes] = await Promise.all([
     getAboutContent(),
     getHeroContent(),
-    prisma.project.findMany({ select: { title: true, description: true, imageUrl: true, demoUrl: true, tags: true } }),
+    supabase
+      .from("projects")
+      .select("title, description, image_url, live_url, tags")
+      .limit(5),
   ]);
+
+  const projects = projectsRes.data || [];
 
   // 2. Intent Matching Logic (The Virtual Self Brain)
   
@@ -39,7 +45,7 @@ export async function generateJarvisResponse(query: string): Promise<JarvisRespo
   // Skills
   if (normalizedQuery.includes("skill") || normalizedQuery.includes("tech") || normalizedQuery.includes("use")) {
     return {
-      text: `Abin's core stack includes React, Next.js, TypeScript, and Three.js for 3D graphics. He also uses Tailwind CSS for styling and Prisma for database management.`,
+      text: `Abin's core stack includes React, Next.js, TypeScript, and Three.js for 3D graphics. He also uses Tailwind CSS for styling and Supabase for database management and authentication.`,
       intent: "skills"
     };
   }

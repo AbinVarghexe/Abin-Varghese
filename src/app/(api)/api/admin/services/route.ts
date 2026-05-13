@@ -26,6 +26,7 @@ const projectLinkSchema = z.object({
 
 const serviceContentSchema = z.object({
   type: z.enum(["image", "video", "text", "project"]),
+  linkedProjectId: z.string().optional(),
   url: z.string().optional(),
   title: z.string(),
   description: z.string(),
@@ -34,6 +35,7 @@ const serviceContentSchema = z.object({
   role: z.string().optional(),
   projectIcon: z.string().optional(),
   mockupImage: z.string().optional(),
+  embedIframeSrc: z.string().optional(),
   threeDModel: z.string().optional(),
   videoUrl: z.string().optional(),
   projectLinks: z.array(projectLinkSchema).optional(),
@@ -51,6 +53,7 @@ const serviceSchema = z.object({
   contents: z.array(serviceContentSchema).optional(),
   projectsUrl: z.string().optional(),
   projectsLabel: z.string().optional(),
+  iconUrl: z.string().optional(),
 });
 
 const payloadSchema = z.object({

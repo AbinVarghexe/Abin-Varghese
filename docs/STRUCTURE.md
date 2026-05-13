@@ -9,6 +9,9 @@ portfolio-website/
 ├── docs/                    # Project docs and implementation notes
 ├── prisma/                  # Database schema, seed scripts, and Prisma helpers
 ├── public/                  # Static assets served from the site root
+├── scratch/                 # Local scripts, experiments, and temp artifacts
+│   ├── experiments/         # UI spikes, throwaway components, notes
+│   └── scripts/             # One-off data/admin scripts
 ├── src/
 │   ├── app/                 # App Router entrypoints and metadata routes
 │   │   ├── (marketing)/     # Public-facing routes

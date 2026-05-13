@@ -161,7 +161,7 @@ Full-Stack Developer · UI/UX Designer · Idukki, Kerala
 
 ### Hero Status Line
 
-Available for freelance projects, collaborations, and internship opportunities.
+Available for freelance projects and collaborations.
 
 ### Scrolling Banner Items
 
@@ -661,7 +661,7 @@ The easiest way to start is with a simple message about what you are working on 
 
 ### Footer Brand Statement
 
-Design-led digital work by Abin Varghese.
+ABIN VARGHESE
 
 ### Footer Support Copy
 

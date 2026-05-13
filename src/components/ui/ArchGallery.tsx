@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Lottie from "lottie-react";
+import { Zap } from "lucide-react";
 
 interface Category {
   title: string;
   description: string;
-  image: string;
+  image?: string;
+  lottieUrl?: string;
 }
 
 interface ArchGalleryProps {
@@ -14,6 +17,108 @@ interface ArchGalleryProps {
   selectedIndex: number;
   onSelect: (index: number) => void;
 }
+
+function useLottieData(url?: string) {
+  const [animationData, setAnimationData] = useState<any>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!url) return;
+    let cancelled = false;
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
+      .then(data => { if (!cancelled) setAnimationData(data); })
+      .catch(() => { if (!cancelled) setError(true); });
+    return () => { cancelled = true; };
+  }, [url]);
+
+  return { animationData, error };
+}
+
+const LottieCardPlayer = ({ url, fallbackImage }: { url?: string, fallbackImage?: string }) => {
+  const urlLower = url?.toLowerCase() || '';
+  const fallbackLower = fallbackImage?.toLowerCase() || '';
+  
+  const isVideo = urlLower.endsWith('.mp4') || fallbackLower.endsWith('.mp4');
+  const isGif = urlLower.includes('pinimg') || urlLower.includes('pinterest') || urlLower.endsWith('.gif') || 
+                fallbackLower.includes('pinimg') || fallbackLower.includes('pinterest') || fallbackLower.endsWith('.gif');
+  const isOtherImage = urlLower.endsWith('.png') || urlLower.endsWith('.jpg') || urlLower.endsWith('.jpeg') || urlLower.endsWith('.webp') ||
+                       fallbackLower.endsWith('.png') || fallbackLower.endsWith('.jpg') || fallbackLower.endsWith('.jpeg') || fallbackLower.endsWith('.webp');
+
+  if (isVideo) {
+    const videoSrc = urlLower.endsWith('.mp4') ? url : fallbackImage;
+    return (
+      <div className="w-full h-full relative bg-black">
+        <video 
+          src={videoSrc} 
+          autoPlay 
+          loop 
+          muted 
+          playsInline 
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
+  if (isGif || isOtherImage) {
+    const imgSrc = (isGif && urlLower.includes('pin')) || (isGif && urlLower.endsWith('.gif')) ? url : fallbackImage;
+    return (
+      <img 
+        src={imgSrc || fallbackImage} 
+        alt="Creative content" 
+        className="w-full h-full object-cover"
+      />
+    );
+  }
+
+  const { animationData, error } = useLottieData(url);
+
+  if (error || (!url && !fallbackImage)) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-zinc-300">
+        <Zap className="w-12 h-12" />
+      </div>
+    );
+  }
+
+  if (url && !animationData) {
+    return <div className="w-full h-full bg-zinc-100 animate-pulse" />;
+  }
+
+  if (animationData) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-white p-4">
+        <Lottie 
+          animationData={animationData} 
+          loop={true} 
+          autoplay={true}
+          className="w-full h-full object-contain"
+        />
+      </div>
+    );
+  }
+
+  // Final fallback: Show the image if it exists, otherwise the Zap icon
+  if (fallbackImage) {
+    return (
+      <img 
+        src={fallbackImage} 
+        alt="Card graphic" 
+        className="w-full h-full object-cover"
+      />
+    );
+  }
+
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-zinc-300">
+      <Zap className="w-12 h-12" />
+    </div>
+  );
+};
 
 export function ArchGallery({ categories, selectedIndex, onSelect }: ArchGalleryProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -25,9 +130,13 @@ export function ArchGallery({ categories, selectedIndex, onSelect }: ArchGallery
           const isHovered = hoveredIndex === i;
           const isSelected = selectedIndex === i;
           
-          // Space them by a tighter angle for closer spacing without overlap
-          const offset = i - 3;
-          const rotation = offset * 8; 
+          // Calculate shortest path offset for continuous carousel
+          let offset = i - selectedIndex;
+          const half = categories.length / 2;
+          if (offset > half) offset -= categories.length;
+          else if (offset < -half) offset += categories.length;
+          
+          const rotation = offset * 10; 
           
           return (
             <motion.div
@@ -38,14 +147,11 @@ export function ArchGallery({ categories, selectedIndex, onSelect }: ArchGallery
                 height: "240px",
                 marginLeft: "-100px",
                 transformOrigin: "50% 1200px",
-                zIndex: isSelected ? 20 : (isHovered ? 15 : (7 - Math.abs(offset))),
+                zIndex: isSelected ? 20 : (isHovered ? 15 : (10 - Math.abs(offset))),
               }}
-              initial={{ rotate: rotation, y: 50, opacity: 0 }}
-              whileInView={{ rotate: rotation, y: 0, opacity: 1 }}
-              viewport={{ once: true, margin: "-100px" }}
+              animate={{ rotate: rotation, y: 0, opacity: 1 }}
               transition={{ 
                 duration: 0.8, 
-                delay: i * 0.05, 
                 ease: [0.16, 1, 0.3, 1] 
               }}
               onMouseEnter={() => setHoveredIndex(i)}
@@ -57,21 +163,16 @@ export function ArchGallery({ categories, selectedIndex, onSelect }: ArchGallery
                   isSelected ? "border-[#3b5bdb]" : "border-white"
                 }`}
                 animate={{
-                  y: isSelected ? -50 : (isHovered ? -25 : 0),
-                  scale: isSelected ? 1.25 : (isHovered ? 1.15 : 1),
-                  rotate: isHovered && !isSelected ? -rotation * 0.1 : 0,
+                  y: isSelected ? -70 : (isHovered ? -35 : 0),
+                  scale: isSelected ? 1.4 : (isHovered ? 1.15 : 1),
+                  rotate: isHovered && !isSelected ? -rotation * 0.15 : 0,
                 }}
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
               >
                 <div className="w-full h-full relative">
-                  <img 
-                    src={cat.image} 
-                    alt={cat.title} 
-                    className={`w-full h-full object-cover transition-all duration-700 ${
-                      (isSelected || isHovered) ? "grayscale-0" : "grayscale"
-                    }`}
-                  />
-                  
+                  <div className="w-full h-full transition-all duration-700">
+                    <LottieCardPlayer url={cat.lottieUrl} fallbackImage={cat.image} />
+                  </div>
                   <div className="absolute inset-0 bg-linear-to-b from-black/0 via-black/0 to-black/20 opacity-60 pointer-events-none" />
                 </div>
               </motion.div>

@@ -1,4 +1,6 @@
 import { posix } from 'path';
+import { unstable_cache } from 'next/cache';
+import { supabase } from '@/lib/supabase';
 
 type WorkspaceType = 'coding' | 'designing';
 
@@ -28,6 +30,12 @@ interface GitHubReadmeResponse {
   path?: string;
 }
 
+interface GithubRepoSetting {
+  full_name: string;
+  enabled: boolean | null;
+  image_url: string | null;
+}
+
 export interface WorkspaceProject {
   id: string;
   slug: string;
@@ -38,10 +46,15 @@ export interface WorkspaceProject {
   liveUrl: string | null;
   tags: string[];
   workspace: WorkspaceType;
+  category?: string | null;
+  type?: 'CODE' | 'FIGMA' | 'BEHANCE' | 'PINTEREST';
+  mediaType?: 'IMAGE' | 'VIDEO' | 'GIF' | 'MODEL';
+  featured?: boolean;
   stars: number;
   updatedAt: string;
   owner: string;
   repo: string;
+  isFromDb?: boolean;
 }
 
 const FALLBACK_GITHUB_SOURCE = 'https://github.com/AbinVarghexe';
@@ -463,34 +476,160 @@ export function getConfiguredGithubSourceUrl(): string {
   return process.env.GITHUB_PROJECT_SOURCE_URL?.trim() || FALLBACK_GITHUB_SOURCE;
 }
 
-export async function getGithubWorkspaceProjects(): Promise<WorkspaceProject[]> {
-  const source = getConfiguredGithubSourceUrl();
-  const owner = parseOwnerFromSource(source);
+const getCachedGithubWorkspaceProjects = unstable_cache(
+  async (): Promise<WorkspaceProject[]> => {
+    const source = getConfiguredGithubSourceUrl();
+    const owner = parseOwnerFromSource(source);
 
-  const response = await fetch(
-    `https://api.github.com/users/${owner}/repos?per_page=100&sort=updated&type=owner`,
-    {
-      headers: createGithubHeaders(),
-      next: { revalidate: 3600 },
+    const [{ data: repoSettings, error: repoSettingsError }, response] = await Promise.all([
+      supabase.from('github_repo_settings').select('full_name, enabled, image_url'),
+      fetch(
+        `https://api.github.com/users/${owner}/repos?per_page=100&sort=updated&type=owner`,
+        {
+          headers: createGithubHeaders(),
+          next: { revalidate: 3600 },
+        }
+      ),
+    ]);
+
+    if (repoSettingsError) {
+      console.error('Failed to fetch GitHub repo settings:', repoSettingsError);
     }
-  );
 
-  if (!response.ok) {
-    console.error('GitHub repo fetch failed:', response.status, response.statusText);
-    return [];
+    if (!response.ok) {
+      console.error('GitHub repo fetch failed:', response.status, response.statusText);
+      return [];
+    }
+
+    const repos = (await response.json()) as GitHubRepo[];
+    const settingsMap = new Map<string, GithubRepoSetting>();
+
+    for (const setting of (repoSettings ?? []) as GithubRepoSetting[]) {
+      settingsMap.set(setting.full_name, setting);
+    }
+
+    const filteredRepos = repos.filter((repo) => {
+      if (repo.fork || repo.archived) {
+        return false;
+      }
+
+      const setting = settingsMap.get(repo.full_name);
+      return setting?.enabled ?? true;
+    });
+    const projects = await mapReposToProjects(filteredRepos);
+
+    const mergedProjects = projects.map((project) => {
+      const setting = settingsMap.get(`${project.owner}/${project.repo}`);
+
+      return {
+        ...project,
+        imageUrl: setting?.image_url?.trim() ? setting.image_url : project.imageUrl,
+      };
+    });
+
+    return mergedProjects.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  },
+  ['workspace-projects-github'],
+  {
+    revalidate: 3600,
+    tags: ['workspace-projects-github'],
+  }
+);
+
+export async function getGithubWorkspaceProjects(): Promise<WorkspaceProject[]> {
+  return getCachedGithubWorkspaceProjects();
+}
+
+const getCachedDbWorkspaceProjects = unstable_cache(
+  async (): Promise<WorkspaceProject[]> => {
+    const { data: dbProjects, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Failed to fetch projects from Supabase:', error);
+      return [];
+    }
+
+    return (dbProjects || []).map((p) => ({
+      id: p.id,
+      slug: p.slug || p.id,
+      title: p.title || "Untitled Project",
+      description: p.description || "View project to learn more.",
+      imageUrl: p.media_url || "",
+      githubUrl: p.external_url || "",
+      liveUrl: p.iframe_url || null,
+      tags: p.tags || [],
+      workspace: (p.workspace === 'designing' ? 'designing' : 'coding') as WorkspaceType,
+      category: p.category || null,
+      type: p.type || undefined,
+      mediaType: p.media_type || undefined,
+      featured: Boolean(p.featured),
+      stars: 0,
+      updatedAt: p.created_at || new Date().toISOString(),
+      owner: "",
+      repo: "",
+      isFromDb: true,
+    }));
+  },
+  ['workspace-projects-db'],
+  {
+    revalidate: 60,
+    tags: ['workspace-projects-db'],
+  }
+);
+
+export async function getAllProjects(): Promise<WorkspaceProject[]> {
+  const [mappedDbProjects, githubProjects] = await Promise.all([
+    getCachedDbWorkspaceProjects(),
+    getGithubWorkspaceProjects(),
+  ]);
+
+  const merged = [...mappedDbProjects];
+  const dbRepoUrls = new Set(mappedDbProjects.map((p) => p.githubUrl).filter(Boolean));
+
+  for (const ghProject of githubProjects) {
+    if (!dbRepoUrls.has(ghProject.githubUrl)) {
+      merged.push(ghProject);
+    }
   }
 
-  const repos = (await response.json()) as GitHubRepo[];
-
-  const filteredRepos = repos.filter((repo) => !repo.fork && !repo.archived);
-  const projects = await mapReposToProjects(filteredRepos);
-
-  return projects.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  return merged.sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
 }
 
 export async function getGithubWorkspaceProjectBySlug(
   slug: string
 ): Promise<WorkspaceProject | null> {
+  // Check Supabase first for the slug or id
+  const { data: dbProject } = await supabase
+    .from('projects')
+    .select('*')
+    .or(`id.eq.${slug},slug.eq.${slug}`)
+    .maybeSingle();
+
+  if (dbProject) {
+    return {
+      id: dbProject.id,
+      slug: dbProject.slug || dbProject.id,
+      title: dbProject.title || "Untitled Project",
+      description: dbProject.description || "View project to learn more.",
+      imageUrl: dbProject.media_url || "",
+      githubUrl: dbProject.external_url || "",
+      liveUrl: dbProject.iframe_url || null,
+      tags: dbProject.tags || [],
+      workspace: (dbProject.workspace === 'designing' ? 'designing' : 'coding') as WorkspaceType,
+      category: dbProject.category || null,
+      type: dbProject.type || undefined,
+      mediaType: dbProject.media_type || undefined,
+      featured: Boolean(dbProject.featured),
+      stars: 0,
+      updatedAt: dbProject.created_at || new Date().toISOString(),
+      owner: "",
+      repo: "",
+    };
+  }
+
   const parsed = parseSlug(slug);
 
   if (!parsed) {

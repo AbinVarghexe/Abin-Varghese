@@ -1,5 +1,8 @@
 export type AboutContent = {
   aboutImage: string;
+  homeAboutImage1: string;
+  homeAboutImage2: string;
+  homeAboutImage3: string;
   aboutInstagramImage1: string;
   aboutInstagramImage2: string;
   aboutInstagramImage3: string;
@@ -11,11 +14,14 @@ export type AboutContent = {
 };
 
 export const aboutContentDefaults: AboutContent = {
-  aboutImage: "/about/abin-varghese.png",
-  aboutInstagramImage1: "https://images.unsplash.com/photo-1549675584-91f19337af3d?w=400&q=80",
-  aboutInstagramImage2: "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?w=400&q=80",
-  aboutInstagramImage3: "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=400&q=80",
-  aboutInstagramImage4: "https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?w=400&q=80",
+  aboutImage: "/about/About_Image.png",
+  homeAboutImage1: "/about/About_Image.png",
+  homeAboutImage2: "/about/Abin_2.png",
+  homeAboutImage3: "/about/Abin_3.png",
+  aboutInstagramImage1: "/about/Abin_1.png",
+  aboutInstagramImage2: "/about/Abin_2.png",
+  aboutInstagramImage3: "/about/Abin_3.png",
+  aboutInstagramImage4: "/about/Abin_4.png",
   aboutInstagramLink1: "",
   aboutInstagramLink2: "",
   aboutInstagramLink3: "",

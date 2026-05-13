@@ -1,0 +1,95 @@
+.admin-theme {
+  /* Scope tokens to admin panel only */
+  --admin-color-primary: #1d1d1f; /* Apple dark text */
+  --admin-color-blue: #007aff;    /* SF Blue */
+  --admin-color-indigo: #1d1d1f;
+  --admin-color-white: #ffffff;
+
+  /* Text Colors */
+  --admin-text-body: #424245; /* Apple secondary text */
+  --admin-text-secondary: #6e6e73; /* Apple tertiary text */
+  --admin-text-muted: #86868b;
+
+  /* Background Colors */
+  --admin-bg-main: #f5f5f7; /* Apple light background */
+  --admin-bg-card: #ffffff;
+  --admin-bg-secondary: #fbfbfd;
+  --admin-bg-tertiary: #f5f5f7;
+  --admin-bg-accent: #e8e8ed;
+
+  /* Border Colors */
+  --admin-border-light: rgba(0, 0, 0, 0.08);
+  --admin-border-medium: rgba(0, 0, 0, 0.12);
+  --admin-border-dark: rgba(0, 0, 0, 0.16);
+
+  /* Glassmorphism */
+  --admin-glass-bg: rgba(255, 255, 255, 0.75);
+  --admin-glass-border: rgba(255, 255, 255, 0.4);
+  --admin-glass-blur: 24px;
+
+  /* Shadows */
+  --admin-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
+  --admin-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --admin-shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.08);
+
+  /* Radius */
+  --admin-radius-sm: 8px;
+  --admin-radius-md: 12px;
+  --admin-radius-lg: 18px;
+  --admin-radius-xl: 24px;
+
+  /* Transitions */
+  --admin-transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Reset local font for admin only */
+  font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+  color: var(--admin-color-primary);
+  background-color: var(--admin-bg-main);
+}
+
+.admin-theme input, 
+.admin-theme textarea, 
+.admin-theme select, 
+.admin-theme button {
+  font-family: inherit;
+}
+
+.admin-glass {
+  background: var(--admin-glass-bg);
+  backdrop-filter: blur(var(--admin-glass-blur));
+  -webkit-backdrop-filter: blur(var(--admin-glass-blur));
+  border: 1px solid var(--admin-glass-border);
+}
+
+.admin-sidebar-item {
+  transition: all var(--admin-transition);
+}
+
+.admin-sidebar-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.admin-sidebar-item.active {
+  background-color: white;
+  box-shadow: var(--admin-shadow-md);
+  border: 1px solid var(--admin-border-light);
+}
+
+/* Scrollbar refinement */
+.admin-theme *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.admin-theme *::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-theme *::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.admin-theme *::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}

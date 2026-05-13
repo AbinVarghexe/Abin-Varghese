@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-
 import { requireAdminSession } from "@/lib/admin-auth";
-import prisma from "@/lib/prisma";
+import { createClient } from "@/utils/supabase/server";
 
 const patchSchema = z.object({
   status: z.enum(["unread", "read", "replied"]),
@@ -22,10 +21,15 @@ export async function PATCH(
     const body = await request.json();
     const data = patchSchema.parse(body);
 
-    const submission = await prisma.contactSubmission.update({
-      where: { id },
-      data: { status: data.status },
-    });
+    const supabase = await createClient();
+    const { data: submission, error } = await supabase
+      .from("contact_submissions")
+      .update({ status: data.status, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select("*")
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ submission });
   } catch (error) {
@@ -51,7 +55,13 @@ export async function DELETE(
 
   try {
     const { id } = await params;
-    await prisma.contactSubmission.delete({ where: { id } });
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("contact_submissions")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch {

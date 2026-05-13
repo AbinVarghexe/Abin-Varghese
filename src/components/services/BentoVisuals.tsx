@@ -13,6 +13,9 @@ import Lottie from 'lottie-react';
 import { useEffect, useState } from 'react';
 import Folder from '@/components/ui/Folder';
 import { OrbitingCircles } from '@/components/ui/orbiting-circles';
+import { extractUrlFromEmbed } from '@/lib/utils';
+import { loadLottieData } from '@/lib/lottie-cache';
+import type { LottieData } from '@/lib/lottie-cache';
 
 // --- Folder Content ---
 const folderPapers: React.ReactNode[] = [
@@ -28,18 +31,19 @@ const folderPapers: React.ReactNode[] = [
 ];
 // --- Lottie JSON Fetch Hook ---
 function useLottieData(url: string) {
-  const [animationData, setAnimationData] = React.useState<any>(null);
+  const [animationData, setAnimationData] = React.useState<LottieData | null>(null);
   const [error, setError] = React.useState(false);
 
   React.useEffect(() => {
     if (!url) return;
     let cancelled = false;
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.json();
+    loadLottieData(url)
+      .then(data => {
+        if (!cancelled) {
+          setAnimationData(data);
+          setError(false);
+        }
       })
-      .then(data => { if (!cancelled) setAnimationData(data); })
       .catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };
   }, [url]);
@@ -60,17 +64,17 @@ const LottiePlayer = ({ url, isLarge = false }: { url: string; isLarge?: boolean
   }
 
   return (
-    <div className={`w-full h-full flex items-center justify-center p-6 ${isLarge ? 'pb-28' : 'pb-24'}`}>
+    <div className={`w-full h-full flex items-center justify-center p-4 md:p-6 pb-20 md:${isLarge ? 'pb-28' : 'pb-24'}`}>
       <div className="w-full h-full">
         {animationData ? (
           <Lottie 
             animationData={animationData} 
             loop={true} 
             autoplay={true}
-            className={`w-full h-full object-contain ${isLarge ? 'scale-125' : 'scale-110'}`}
+            className={`w-full h-full object-contain scale-[0.85] md:${isLarge ? 'scale-125' : 'scale-110'}`}
           />
         ) : (
-          <div className="w-32 h-32 rounded-2xl bg-zinc-100 animate-pulse opacity-50" />
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl bg-zinc-100 animate-pulse opacity-50 mx-auto" />
         )}
       </div>
     </div>
@@ -80,33 +84,35 @@ const LottiePlayer = ({ url, isLarge = false }: { url: string; isLarge?: boolean
 // --- 1. Motion Graphics ---
 export const MotionGraphics = () => {
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-transparent pb-16">
-      <span className="pointer-events-none whitespace-pre-wrap bg-linear-to-b from-zinc-900 to-zinc-400 bg-clip-text text-center text-7xl font-semibold leading-none text-transparent opacity-5 uppercase tracking-tighter">
+    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-transparent pb-16 md:pb-16">
+      <span className="pointer-events-none whitespace-pre-wrap bg-linear-to-b from-zinc-900 to-zinc-400 bg-clip-text text-center text-5xl md:text-7xl font-semibold leading-none text-transparent opacity-5 uppercase tracking-tighter">
         MOTION
       </span>
 
-      {/* Inner Circles — Design Tools */}
-      <OrbitingCircles iconSize={40} radius={65} duration={18} speed={1.2}>
-        <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110">
-          <img src="https://skillicons.dev/icons?i=figma" alt="Figma" className="w-full h-full object-contain" />
-        </div>
-        <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110">
-          <img src="https://skillicons.dev/icons?i=blender" alt="Blender" className="w-full h-full object-contain" />
-        </div>
-      </OrbitingCircles>
+      <div className="absolute inset-0 flex items-center justify-center pb-16 scale-[0.7] md:scale-100 pointer-events-none">
+        {/* Inner Circles — Design Tools */}
+        <OrbitingCircles iconSize={40} radius={65} duration={18} speed={1.2}>
+          <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110 pointer-events-auto">
+            <img src="https://skillicons.dev/icons?i=figma" alt="Figma" className="w-full h-full object-contain" />
+          </div>
+          <div className="flex items-center justify-center w-10 h-10 transition-transform hover:scale-110 pointer-events-auto">
+            <img src="https://skillicons.dev/icons?i=blender" alt="Blender" className="w-full h-full object-contain" />
+          </div>
+        </OrbitingCircles>
 
-      {/* Outer Circles — Motion & Publishing */}
-      <OrbitingCircles iconSize={52} radius={125} duration={25} reverse speed={0.8}>
-        <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110">
-          <img src="https://skillicons.dev/icons?i=ae" alt="After Effects" className="w-full h-full object-contain" />
-        </div>
-        <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110">
-          <img src="https://skillicons.dev/icons?i=pr" alt="Premiere Pro" className="w-full h-full object-contain" />
-        </div>
-        <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110">
-          <img src="https://cdn.simpleicons.org/davinciresolve" alt="DaVinci Resolve" className="w-full h-full object-contain" />
-        </div>
-      </OrbitingCircles>
+        {/* Outer Circles — Motion & Publishing */}
+        <OrbitingCircles iconSize={52} radius={125} duration={25} reverse speed={0.8}>
+          <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110 pointer-events-auto">
+            <img src="https://skillicons.dev/icons?i=ae" alt="After Effects" className="w-full h-full object-contain" />
+          </div>
+          <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110 pointer-events-auto">
+            <img src="https://skillicons.dev/icons?i=pr" alt="Premiere Pro" className="w-full h-full object-contain" />
+          </div>
+          <div className="flex items-center justify-center w-12 h-12 p-2 transition-transform hover:scale-110 pointer-events-auto">
+            <img src="https://cdn.simpleicons.org/davinciresolve" alt="DaVinci Resolve" className="w-full h-full object-contain" />
+          </div>
+        </OrbitingCircles>
+      </div>
     </div>
   );
 };
@@ -120,10 +126,10 @@ export const VideoEditing = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center pt-8 pb-32 px-6 overflow-hidden bg-transparent">
+    <div className="relative w-full h-full flex flex-col items-center justify-center pt-4 md:pt-8 pb-24 md:pb-32 px-4 md:px-6 overflow-hidden bg-transparent">
       {/* Simplified Video Preview "Screen" */}
       <motion.div 
-        className="w-48 h-32 rounded-xl bg-zinc-900 border-4 border-zinc-800 shadow-2xl relative overflow-hidden mb-6 flex items-center justify-center p-4"
+        className="w-40 h-24 md:w-48 md:h-32 rounded-xl bg-zinc-900 border-4 border-zinc-800 shadow-2xl relative overflow-hidden mb-4 md:mb-6 flex items-center justify-center p-3 md:p-4"
         animate={{ y: [0, -4, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
       >
@@ -132,25 +138,25 @@ export const VideoEditing = () => {
           className="w-full h-full rounded-md bg-linear-to-tr from-amber-500/20 to-orange-500/20 relative overflow-hidden"
         >
           <motion.div 
-            className="absolute top-2 left-2 right-2 h-1.5 rounded-full bg-white/20"
+            className="absolute top-2 left-2 right-2 h-1 md:h-1.5 rounded-full bg-white/20"
             animate={{ width: ["10%", "80%", "30%"] }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
           />
           <motion.div 
-            className="absolute bottom-2 left-2 w-12 h-12 rounded-lg bg-orange-500/30 flex items-center justify-center"
+            className="absolute bottom-2 left-2 w-8 h-8 md:w-12 md:h-12 rounded-lg bg-orange-500/30 flex items-center justify-center"
             animate={{ scale: [1, 1.1, 1], rotate: [0, 5, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Sparkles className="w-6 h-6 text-orange-400" />
+            <Sparkles className="w-4 h-4 md:w-6 md:h-6 text-orange-400" />
           </motion.div>
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-orange-500/10 to-transparent" />
         </motion.div>
       </motion.div>
 
       {/* Editing Timeline Animation */}
-      <div className="w-full flex flex-col gap-2 relative">
+      <div className="w-[90%] md:w-full flex flex-col gap-1.5 md:gap-2 relative">
         {/* Timeline Ruler */}
-        <div className="w-full h-4 border-b border-zinc-200 mb-1 flex justify-between px-1">
+        <div className="w-full h-3 md:h-4 border-b border-zinc-200 mb-1 flex justify-between px-1">
           {[...Array(8)].map((_, i) => (
             <div key={i} className={`w-px ${i % 2 === 0 ? 'h-full bg-zinc-300' : 'h-1/2 bg-zinc-200 mt-auto'}`} />
           ))}
@@ -161,7 +167,7 @@ export const VideoEditing = () => {
           { color: '#f97316', width: '30%', x: '55%', delay: 0.2 },
           { color: '#ef4444', width: '25%', x: '20%', delay: 0.4 },
         ].map((track, i) => (
-          <div key={i} className="w-full h-3 bg-zinc-100 rounded-full overflow-hidden relative border border-zinc-200/50 shadow-inner">
+          <div key={i} className="w-full h-2 md:h-3 bg-zinc-100 rounded-full overflow-hidden relative border border-zinc-200/50 shadow-inner">
             <motion.div 
               className="absolute h-full rounded-full shadow-sm"
               style={{ backgroundColor: track.color, left: track.x, width: track.width }}
@@ -177,7 +183,7 @@ export const VideoEditing = () => {
           animate={{ left: ["0%", "100%", "0%"] }}
           transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
         >
-          <div className="absolute -top-1 -left-1 w-2.5 h-2.5 rotate-45 bg-red-500 shadow-sm" />
+          <div className="absolute -top-1 -left-1 w-2 md:w-2.5 h-2 md:h-2.5 rotate-45 bg-red-500 shadow-sm" />
         </motion.div>
       </div>
 
@@ -212,66 +218,89 @@ export const VideoEditing = () => {
 // --- 3. Graphics Design ---
 export const GraphicDesign = () => {
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center p-8 overflow-hidden bg-transparent">
+    <div className="relative w-full h-full flex flex-col items-center justify-center pt-8 md:pt-16 pb-24 md:pb-32 px-4 md:px-8 overflow-hidden bg-transparent">
       {/* Artboard Background with Grid */}
       <div 
-        className="absolute inset-4 rounded-xl border border-zinc-200 bg-zinc-50/50 shadow-inner overflow-hidden"
+        className="absolute inset-x-4 top-4 md:top-8 bottom-16 md:bottom-12 rounded-lg border border-zinc-200 bg-zinc-50/50 shadow-inner overflow-hidden"
         style={{
           backgroundImage: `radial-gradient(circle, #cbd5e1 1px, transparent 1px)`,
-          backgroundSize: '20px 20px'
+          backgroundSize: '24px 24px'
         }}
       >
-        {/* Animated Pen Tool Path */}
-        <svg className="w-full h-full pointer-events-none opacity-40">
+        {/* Vertical Animated Pen Tool Path */}
+        <svg className="w-full h-full pointer-events-none opacity-40 scale-[0.8] md:scale-100 origin-center" preserveAspectRatio="none">
           <motion.path
-            d="M 50 150 Q 150 50 250 150 T 450 150"
+            d="M 100 50 C 50 150, 150 250, 100 350 S 150 550, 100 650"
             fill="transparent"
             stroke="#be4bdb"
             strokeWidth="3"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: [0, 1, 1, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
           />
-          {/* Bezier Nodes */}
-          {[50, 250, 450].map((x, i) => (
+          {/* Bezier Nodes for the vertical path */}
+          {[100, 350, 600].map((y, i) => (
             <motion.rect
               key={i}
-              x={x - 4}
-              y={146}
-              width="8"
-              height="8"
+              x={96}
+              y={y - 4}
+              width="10"
+              height="10"
               fill="white"
               stroke="#be4bdb"
               strokeWidth="2"
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
+              animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+              transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.8 }}
             />
           ))}
         </svg>
       </div>
 
-      {/* Floating Layer Cards (Illustrator Style) */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {/* Floating UI Elements Stacking Vertically */}
+      <div className="absolute inset-0 flex flex-col items-center justify-between py-16 md:py-20 pointer-events-none">
+        {/* Layer Panel (Right-ish) */}
         <motion.div 
-          className="absolute -right-2 top-1/4 w-32 h-40 bg-white rounded-lg border border-zinc-200 shadow-xl p-3 flex flex-col gap-2 opacity-90 scale-90"
-          animate={{ x: [0, -10, 0], rotate: [0, -2, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute right-2 md:right-4 top-[10%] md:top-[15%] w-32 md:w-36 h-48 md:h-56 bg-white rounded-lg border border-zinc-200 shadow-2xl p-3 md:p-4 flex flex-col gap-2 md:gap-3 opacity-95 scale-[0.6] md:scale-100 origin-top-right"
+          animate={{ y: [0, -15, 0], x: [0, -5, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <div className="w-full h-2 rounded-full bg-zinc-100 mb-2" />
-          {[...Array(4)].map((_, i) => (
+          <div className="flex items-center justify-between mb-1">
+            <div className="w-10 md:w-12 h-2 rounded-full bg-zinc-200" />
+            <div className="w-2.5 md:w-3 h-2.5 md:h-3 rounded-sm bg-zinc-100" />
+          </div>
+          {[...Array(5)].map((_, i) => (
             <div key={i} className="flex gap-2 items-center">
-              <div className={`w-4 h-4 rounded ${i === 0 ? 'bg-be4bdb opacity-60' : 'bg-zinc-100'}`} style={i === 0 ? { backgroundColor: '#be4bdb' } : {}} />
-              <div className="flex-1 h-1.5 rounded-full bg-zinc-50" />
+              <div className="w-4 md:w-5 h-4 md:h-5 rounded bg-zinc-50 border border-zinc-100 flex items-center justify-center overflow-hidden">
+                {i === 0 && <div className="w-full h-full bg-be4bdb opacity-40" style={{ backgroundColor: '#be4bdb66' }} />}
+                {i === 2 && <div className="w-2.5 md:w-3 h-2.5 md:h-3 rounded-full bg-blue-400 opacity-40" />}
+              </div>
+              <div className={`h-1.5 rounded-full ${i === 0 ? 'bg-zinc-300 w-12 md:w-16' : 'bg-zinc-100 w-8 md:w-12'}`} />
             </div>
           ))}
         </motion.div>
 
+        {/* Toolbar (Left-ish) */}
         <motion.div 
-          className="absolute -left-4 bottom-1/4 w-28 h-28 bg-white rounded-lg border-2 border-dashed border-zinc-300 flex items-center justify-center opacity-80"
-          animate={{ scale: [0.95, 1, 0.95], rotate: [2, 0, 2] }}
+          className="absolute left-2 md:left-4 top-[8%] md:top-[10%] w-12 md:w-14 h-56 md:h-64 bg-zinc-900 rounded-md border border-zinc-800 shadow-2xl p-1.5 md:p-2 flex flex-col items-center gap-3 md:gap-4 opacity-95 scale-[0.6] md:scale-100 origin-top-left"
+          animate={{ y: [0, 20, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        >
+           {[...Array(6)].map((_, i) => (
+            <div key={i} className={`w-7 md:w-8 h-7 md:h-8 rounded-md flex items-center justify-center ${i === 0 ? 'bg-be4bdb text-white' : 'bg-white/5'}`} style={i === 0 ? { backgroundColor: '#be4bdb' } : {}}>
+               <div className={`w-2.5 md:w-3 h-2.5 md:h-3 ${i === 0 ? 'bg-white' : 'bg-white/20'} rounded-sm`} />
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Color Palette (Floating) */}
+        <motion.div 
+          className="absolute left-4 md:left-10 bottom-[15%] md:bottom-[20%] w-36 md:w-48 h-10 md:h-12 bg-white rounded-full border border-zinc-200 shadow-lg p-1.5 md:p-2 flex gap-1.5 md:gap-2 items-center px-2.5 md:px-4 scale-[0.7] md:scale-100 origin-bottom-left pointer-events-auto"
+          animate={{ x: [0, 10, 0], scale: [1, 1.05, 1] }}
           transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <div className="w-12 h-12 rounded-full border-4 border-be4bdb/30" style={{ borderColor: '#be4bdb33' }} />
+          {['#be4bdb', '#3b5bdb', '#0c8599', '#f59e0b', '#f97316'].map((color, i) => (
+            <div key={i} className="w-5 md:w-6 h-5 md:h-6 rounded-full shadow-sm" style={{ backgroundColor: color }} />
+          ))}
         </motion.div>
       </div>
     </div>
@@ -291,9 +320,9 @@ export const UIUXDesign = () => {
   }, []);
 
   return (
-    <div className="w-full h-full flex items-center justify-center pb-24">
+    <div className="w-full h-full flex items-center justify-center scale-[0.8] md:scale-100 pb-16 md:pb-0">
       <motion.div
-        className="w-full h-full flex items-center justify-center"
+        className="w-full h-full flex items-center justify-center font-bold"
         animate={{
           y: isOpen ? 45 : 0, 
           rotateZ: isOpen ? -1 : 0,
@@ -308,7 +337,7 @@ export const UIUXDesign = () => {
           animate={{ y: [0, -8, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <Folder color="#3b5bdb" size={1.0} items={folderPapers} isOpen={isOpen} />
+          <Folder color="#3b5bdb" size={1.4} items={folderPapers} isOpen={isOpen} />
         </motion.div>
       </motion.div>
     </div>
@@ -323,11 +352,11 @@ export const WebDesign = () => {
 // --- 6. Visual Effects ---
 export const VisualEffects = () => {
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center p-8 overflow-hidden bg-transparent">
+    <div className="relative w-full h-full flex flex-col items-center justify-center p-4 md:p-8 pb-20 md:pb-8 overflow-hidden bg-transparent">
       {/* Node-based Compositing Graph */}
       <div className="w-full h-full relative border border-zinc-100 rounded-2xl bg-zinc-50/20 shadow-inner">
         {/* Animated Connections */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none">
+        <svg className="absolute inset-0 w-full h-full pointer-events-none scale-[0.85] md:scale-100 transform-gpu origin-center">
           <motion.path
             d="M 60 80 L 160 140 M 60 200 L 160 140 M 160 140 L 280 140"
             stroke="rgba(224, 49, 49, 0.2)"
@@ -352,7 +381,7 @@ export const VisualEffects = () => {
         </svg>
 
         {/* Floating Composite Nodes */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 scale-[0.85] md:scale-100 transform-gpu origin-center">
           {[
             { x: '15%', y: '25%', label: 'MASK' },
             { x: '15%', y: '65%', label: 'BG' },
@@ -392,8 +421,8 @@ const Scene = () => {
       <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
         <primitive 
           object={scene} 
-          scale={0.8} 
-          position={[0, -0.5, 0]} 
+          scale={0.9} 
+          position={[0, 0, 0]} 
           rotation={[0.3, 0.5, 0]} 
         />
       </Float>
@@ -404,7 +433,7 @@ const Scene = () => {
 
 export const ThreeDDesigning = () => {
   return (
-    <div className="w-full h-full pb-28">
+    <div className="w-full h-full">
       <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
         <Suspense fallback={null}>
           <Scene />

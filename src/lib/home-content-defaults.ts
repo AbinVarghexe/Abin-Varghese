@@ -7,6 +7,11 @@ export type HomeContent = {
     linkedin: string;
     instagram: string;
   };
+  otherSocialLinks: Array<{
+    id: string;
+    label: string;
+    url: string;
+  }>;
   pageLinks: {
     about: string;
     projects: string;
@@ -18,9 +23,10 @@ export type HomeContent = {
 export const homeContentDefaults: HomeContent = {
   scrollingBannerItems: "Web Developer,Graphic Designer,Video Editor,VFX Artist",
   scrollingLogos: [
-    "/uploads/logos/company-1.png",
-    "/uploads/logos/company-2.png",
-    "/uploads/logos/company-3.png",
+    "/uploads/logos/1775313043262-incial.png",
+    "/uploads/logos/1775314295868-voltant.png",
+    "/uploads/logos/1775314641812-blaupunkt.png",
+    "/uploads/logos/1775314941462-manna.png",
   ],
   socialLinks: {
     github: "https://github.com/AbinVarghexe",
@@ -28,6 +34,7 @@ export const homeContentDefaults: HomeContent = {
     linkedin: "https://www.linkedin.com/in/abinvarghese",
     instagram: "https://www.instagram.com/abinvarghese",
   },
+  otherSocialLinks: [],
   pageLinks: {
     about: "/about",
     projects: "/projects",

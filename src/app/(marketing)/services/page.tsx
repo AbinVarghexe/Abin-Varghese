@@ -10,8 +10,18 @@ import { createPageMetadata } from '@/seo/page-metadata';
 export const metadata: Metadata = createPageMetadata({
   title: "Services | Abin Varghese",
   description:
-    "Explore web development, UI/UX design, mobile development, and consulting services offered by Abin Varghese.",
+    "Hire Abin Varghese for web development, UI/UX design, React & Next.js development, and mobile-first consulting. Premium digital services for startups and agencies.",
   path: "/services",
+  keywords: [
+    "Hire web developer India",
+    "Freelance UI/UX designer",
+    "Next.js development services",
+    "React web development India",
+    "Web design services Kerala",
+    "Frontend development consulting",
+    "Mobile-first web development",
+    "Figma to code services",
+  ],
 });
 
 export default async function ServicesPage() {

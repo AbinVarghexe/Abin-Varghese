@@ -1,7 +1,30 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import AdminSectionWorkspace from "@/components/admin/AdminSectionWorkspace";
+import AdminSectionWorkspace, {
+  SectionPanel,
+  SectionTitle,
+  Field,
+  TextareaField,
+  ActionButton,
+  TinyButton,
+} from "@/components/admin/AdminSectionWorkspace";
+import {
+  FileText,
+  Home,
+  PenTool,
+  Layers,
+  Sparkles,
+  User,
+  Quote,
+  HelpCircle,
+  Plus,
+  Trash2,
+  Globe,
+  Loader2,
+  Check,
+  Zap,
+} from "lucide-react";
 import {
   siteCopyDefaults,
   type SiteCopyComparisonFeature,
@@ -10,7 +33,7 @@ import {
   type SiteCopyFaqItem,
   type SiteCopyReviewItem,
   type SiteCopyTimelineEntry,
-} from "@/lib/site-copy-content";
+} from "@/types/site-copy";
 
 type ArraySectionProps<T> = {
   title: string;
@@ -21,92 +44,6 @@ type ArraySectionProps<T> = {
   renderItem: (item: T, index: number) => ReactNode;
 };
 
-function SectionCard({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="rounded-2xl border border-[var(--color-border-light)] bg-white/90 p-6">
-      <h3 className="text-lg font-medium text-[#0b0b0c]">{title}</h3>
-      {description ? (
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--color-text-body)]">
-          {description}
-        </p>
-      ) : null}
-      <div className="mt-4 space-y-4">{children}</div>
-    </section>
-  );
-}
-
-function FieldLabel({
-  label,
-  hint,
-}: {
-  label: string;
-  hint?: string;
-}) {
-  return (
-    <div className="space-y-1">
-      <span className="block text-sm text-[var(--color-text-body)]">{label}</span>
-      {hint ? <p className="text-xs text-[var(--color-text-body)]/80">{hint}</p> : null}
-    </div>
-  );
-}
-
-function TextInput({
-  label,
-  value,
-  onChange,
-  hint,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  hint?: string;
-}) {
-  return (
-    <label className="space-y-2 text-sm">
-      <FieldLabel label={label} hint={hint} />
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-      />
-    </label>
-  );
-}
-
-function TextAreaInput({
-  label,
-  value,
-  onChange,
-  rows = 4,
-  hint,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  rows?: number;
-  hint?: string;
-}) {
-  return (
-    <label className="space-y-2 text-sm">
-      <FieldLabel label={label} hint={hint} />
-      <textarea
-        rows={rows}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
-      />
-    </label>
-  );
-}
-
 function ArraySection<T>({
   title,
   description,
@@ -116,41 +53,40 @@ function ArraySection<T>({
   renderItem,
 }: ArraySectionProps<T>) {
   return (
-    <div className="rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-semibold text-[#0b0b0c]">{title}</h4>
+          <h4 className="text-[13px] font-bold text-[#1d1d1f]">{title}</h4>
           {description ? (
-            <p className="mt-1 text-xs text-[var(--color-text-body)]">{description}</p>
+            <p className="text-[11px] text-[#86868b] mt-0.5">{description}</p>
           ) : null}
         </div>
-        <button
-          type="button"
-          onClick={onAdd}
-          className="rounded-full border border-[var(--color-border-light)] bg-white px-3 py-1 text-xs text-[var(--color-text-body)]"
-        >
-          Add Item
-        </button>
+        <TinyButton onClick={onAdd} variant="primary">
+          <Plus size={10} className="mr-1.5 inline" />
+          Add Entry
+        </TinyButton>
       </div>
 
-      <div className="mt-4 space-y-4">
+      <div className="grid grid-cols-1 gap-4">
         {items.map((item, index) => (
-          <div key={index} className="rounded-xl border border-[var(--color-border-light)] bg-white p-4">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <span className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-body)]">
-                Item {index + 1}
-              </span>
-              <button
-                type="button"
-                onClick={() => onRemove(index)}
-                className="rounded-full border border-red-300 bg-red-50 px-3 py-1 text-xs text-red-700"
-              >
-                Remove
-              </button>
+          <div key={index} className="relative p-6 rounded-2xl bg-[#f5f5f7]/50 border border-black/5 group">
+            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+              <TinyButton onClick={() => onRemove(index)} variant="danger">
+                <Trash2 size={10} />
+              </TinyButton>
+            </div>
+            <div className="mb-4 inline-flex px-2 py-0.5 rounded-md bg-black/5 text-[9px] font-bold uppercase tracking-widest text-[#86868b]">
+              Index 0{index + 1}
             </div>
             {renderItem(item, index)}
           </div>
         ))}
+        {items.length === 0 && (
+          <div className="py-8 border-2 border-dashed border-black/5 rounded-2xl flex flex-col items-center justify-center text-[#86868b]">
+            <Plus size={20} className="mb-2 opacity-20" />
+            <span className="text-[12px]">No entries added yet</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -165,24 +101,19 @@ export default function AdminContentPage() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-
       try {
         const response = await fetch("/api/admin/site-copy", { cache: "no-store" });
         if (!response.ok) {
           setStatus("Failed to load site copy.");
           return;
         }
-
         const data = await response.json();
         setSiteCopy(data.siteCopy || siteCopyDefaults);
       } finally {
         setLoading(false);
       }
     }
-
-    queueMicrotask(() => {
-      void loadData();
-    });
+    void loadData();
   }, []);
 
   function patch<K extends keyof SiteCopyContent>(key: K, value: SiteCopyContent[K]) {
@@ -229,665 +160,425 @@ export default function AdminContentPage() {
 
   async function saveSiteCopy() {
     setSaving(true);
-    setStatus("Saving site copy...");
-
+    setStatus("Saving changes...");
     try {
       const response = await fetch("/api/admin/site-copy", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ siteCopy }),
       });
-
       if (!response.ok) {
-        setStatus("Save failed.");
+        setStatus("Error persisting changes.");
         return;
       }
-
-      setStatus("Site copy saved.");
+      setStatus("Global content synchronized.");
     } catch {
-      setStatus("Save failed.");
+      setStatus("Failed to sync.");
     } finally {
       setSaving(false);
+      setTimeout(() => setStatus(null), 3000);
     }
   }
 
   if (loading) {
-    return <div className="text-sm text-[var(--color-text-body)]">Loading site copy...</div>;
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="animate-spin text-[#007aff]" />
+      </div>
+    );
   }
 
   return (
     <AdminSectionWorkspace
-      sectionLabel="Site Copy"
+      sectionLabel="Atomic Content"
       sectionTitle="Global Content Editor"
-      sectionDescription="Edit the remaining hardcoded headings, intros, footer text, about timeline, FAQ items, highlights, and other section copy from one place. Use square brackets in a heading to mark the accented word or phrase, for example: My Creative [Toolbox]."
-      previewPath="/"
+      sectionDescription="Refine every hardcoded string across the platform. Use [brackets] to inject thematic accents into headings."
+      icon={FileText}
+      iconColor="#00c7be"
     >
-      <SectionCard
-        title="Hero and Home Intro"
-        description="Controls the extra home section copy that was previously hardcoded."
-      >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextInput
-            label="Hero status line"
-            value={siteCopy.heroStatusLine}
-            onChange={(value) => patch("heroStatusLine", value)}
+      <div className="grid grid-cols-1 gap-8">
+        
+        {/* HERO & HOME INTRO */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="Hero & Home Introduction" 
+            copy="Primary narrative controls for the landing experience." 
+            icon={Home}
           />
-          <TextInput
-            label="Home about heading"
-            value={siteCopy.homeAboutHeading}
-            onChange={(value) => patch("homeAboutHeading", value)}
-            hint="Use [brackets] around the accented word."
-          />
-          <TextAreaInput
-            label="Home about copy"
-            value={siteCopy.homeAboutBody}
-            onChange={(value) => patch("homeAboutBody", value)}
-            rows={4}
-          />
-          <TextInput
-            label="Home about CTA label"
-            value={siteCopy.homeAboutCtaLabel}
-            onChange={(value) => patch("homeAboutCtaLabel", value)}
-          />
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Creative Toolbox">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextInput
-            label="Toolbox heading"
-            value={siteCopy.homeToolboxHeading}
-            onChange={(value) => patch("homeToolboxHeading", value)}
-            hint="Use [brackets] around the accented word."
-          />
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Toolbox intro"
-              value={siteCopy.homeToolboxIntro}
-              onChange={(value) => patch("homeToolboxIntro", value)}
-              rows={3}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Field
+              label="Hero Status Line"
+              value={siteCopy.heroStatusLine}
+              onChange={(value) => patch("heroStatusLine", value)}
+              icon={Zap}
+            />
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Sliding roles strip (comma-separated)"
+                value={siteCopy.homeSlidingRoles}
+                onChange={(value) => patch("homeSlidingRoles", value)}
+                rows={2}
+                icon={Sparkles}
+                placeholder="Creative Director, UI Designer, Frontend Engineer"
+              />
+              <p className="mt-2 text-[12px] text-[#6e6e73] ml-1">
+                Shown on the home page between brands and about. The diagonal scrolling banner phrases are edited under Admin → Home → Hero → Landing marquees.
+              </p>
+            </div>
+            <Field
+              label="Home About Heading"
+              value={siteCopy.homeAboutHeading}
+              onChange={(value) => patch("homeAboutHeading", value)}
+              icon={Home}
+            />
+            <TextareaField
+              label="Home About Copy"
+              value={siteCopy.homeAboutBody}
+              onChange={(value) => patch("homeAboutBody", value)}
+              rows={4}
+              icon={FileText}
+            />
+            <Field
+              label="Home About CTA Label"
+              value={siteCopy.homeAboutCtaLabel}
+              onChange={(value) => patch("homeAboutCtaLabel", value)}
+              icon={Layers}
             />
           </div>
-        </div>
+        </SectionPanel>
 
-        <div className="rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] p-4">
-          <h4 className="text-sm font-semibold text-[#0b0b0c]">Toolbox category labels</h4>
-          <p className="mt-1 text-xs text-[var(--color-text-body)]">
-            The three category ids are fixed so the toolbox interaction keeps working.
-          </p>
-          <div className="mt-4 space-y-4">
-            {siteCopy.homeToolCategories.map((item, index) => (
-              <div
-                key={item.id}
-                className="rounded-xl border border-[var(--color-border-light)] bg-white p-4"
-              >
-                <div className="mb-4 text-xs uppercase tracking-[0.18em] text-[var(--color-text-body)]">
-                  {item.id}
-                </div>
-                
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <TextInput
-                    label={`Category ${index + 1} name`}
+        {/* CREATIVE TOOLBOX */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="Creative Toolbox" 
+            copy="Define your technical arsenal and category descriptions." 
+            icon={PenTool}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Field
+              label="Toolbox Heading"
+              value={siteCopy.homeToolboxHeading}
+              onChange={(value) => patch("homeToolboxHeading", value)}
+              icon={PenTool}
+            />
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Toolbox Intro Description"
+                value={siteCopy.homeToolboxIntro}
+                onChange={(value) => patch("homeToolboxIntro", value)}
+                rows={3}
+                icon={FileText}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-[13px] font-bold text-[#1d1d1f] ml-1 uppercase tracking-wider">Toolbox Categories</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {siteCopy.homeToolCategories.map((item, index) => (
+                <div key={item.id} className="p-6 rounded-2xl bg-[#f5f5f7]/50 border border-black/5 space-y-4">
+                  <span className="text-[10px] font-bold text-[#007aff] uppercase tracking-widest">{item.id}</span>
+                  <Field
+                    label="Name"
                     value={item.name}
-                    onChange={(value) =>
-                      updateArrayItem("homeToolCategories", index, { ...item, name: value })
-                    }
+                    onChange={(value) => updateArrayItem("homeToolCategories", index, { ...item, name: value })}
                   />
-                  <TextInput
+                  <TextareaField
                     label="Description"
                     value={item.description}
-                    onChange={(value) =>
-                      updateArrayItem("homeToolCategories", index, {
-                        ...item,
-                        description: value,
-                      })
-                    }
+                    onChange={(value) => updateArrayItem("homeToolCategories", index, { ...item, description: value })}
+                    rows={3}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </SectionPanel>
+
+        {/* RECENT PROJECTS */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="Project Showcases" 
+            copy="Manage headings and intros for featured work sections." 
+            icon={Layers}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Field
+              label="Recent Projects Heading"
+              value={siteCopy.homeRecentHeading}
+              onChange={(value) => patch("homeRecentHeading", value)}
+              icon={Layers}
+            />
+            <Field
+              label="Web Block Title"
+              value={siteCopy.homeRecentWebTitle}
+              onChange={(value) => patch("homeRecentWebTitle", value)}
+              icon={Globe}
+            />
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Recent Projects Intro"
+                value={siteCopy.homeRecentIntro}
+                onChange={(value) => patch("homeRecentIntro", value)}
+                rows={3}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Web Block Copy"
+                value={siteCopy.homeRecentWebCopy}
+                onChange={(value) => patch("homeRecentWebCopy", value)}
+                rows={4}
+              />
+            </div>
+            <Field
+              label="Web Block CTA Label"
+              value={siteCopy.homeRecentWebCtaLabel}
+              onChange={(value) => patch("homeRecentWebCtaLabel", value)}
+            />
+            <Field
+              label="Creative Work Title"
+              value={siteCopy.homeCreativeTitle}
+              onChange={(value) => patch("homeCreativeTitle", value)}
+              icon={Sparkles}
+            />
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Creative Work Intro"
+                value={siteCopy.homeCreativeCopy}
+                onChange={(value) => patch("homeCreativeCopy", value)}
+                rows={3}
+              />
+            </div>
+            <Field
+              label="Creative Work CTA Label"
+              value={siteCopy.homeCreativeCtaLabel}
+              onChange={(value) => patch("homeCreativeCtaLabel", value)}
+            />
+          </div>
+
+          <ArraySection
+            title="Creative Carousel Modules"
+            items={siteCopy.homeCreativeCategories}
+            onAdd={() => addArrayItem("homeCreativeCategories", { title: "New Module", description: "", image: "" } as SiteCopyCreativeCategory)}
+            onRemove={(index) => removeArrayItem("homeCreativeCategories", index)}
+            renderItem={(item, index) => (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Field
+                  label="Module Title"
+                  value={item.title}
+                  onChange={(value) => updateArrayItem("homeCreativeCategories", index, { ...item, title: value })}
+                />
+                <Field
+                  label="Cover Asset URL"
+                  value={item.image}
+                  onChange={(value) => updateArrayItem("homeCreativeCategories", index, { ...item, image: value })}
+                />
+                <div className="md:col-span-2">
+                  <TextareaField
+                    label="Module Narrative"
+                    value={item.description}
+                    onChange={(value) => updateArrayItem("homeCreativeCategories", index, { ...item, description: value })}
+                    rows={3}
                   />
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </SectionCard>
+            )}
+          />
+        </SectionPanel>
 
-      <SectionCard title="Recent Projects and Creative Work">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextInput
-            label="Recent projects heading"
-            value={siteCopy.homeRecentHeading}
-            onChange={(value) => patch("homeRecentHeading", value)}
-            hint="Use [brackets] around the accented word."
+        {/* HIGHLIGHTS */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="Highlights & Endorsements" 
+            copy="Manage the social proof stack on the homepage." 
+            icon={Quote}
           />
-          <TextInput
-            label="Web block title"
-            value={siteCopy.homeRecentWebTitle}
-            onChange={(value) => patch("homeRecentWebTitle", value)}
-          />
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Recent projects intro"
-              value={siteCopy.homeRecentIntro}
-              onChange={(value) => patch("homeRecentIntro", value)}
-              rows={3}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Field
+              label="Home Services Heading"
+              value={siteCopy.homeServicesHeading}
+              onChange={(value) => patch("homeServicesHeading", value)}
             />
-          </div>
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Web block copy"
-              value={siteCopy.homeRecentWebCopy}
-              onChange={(value) => patch("homeRecentWebCopy", value)}
-              rows={4}
+            <Field
+              label="Highlights Heading"
+              value={siteCopy.homeReviewsHeading}
+              onChange={(value) => patch("homeReviewsHeading", value)}
             />
-          </div>
-          <TextInput
-            label="Web block CTA label"
-            value={siteCopy.homeRecentWebCtaLabel}
-            onChange={(value) => patch("homeRecentWebCtaLabel", value)}
-          />
-          <TextInput
-            label="Creative work title"
-            value={siteCopy.homeCreativeTitle}
-            onChange={(value) => patch("homeCreativeTitle", value)}
-          />
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Creative work intro"
-              value={siteCopy.homeCreativeCopy}
-              onChange={(value) => patch("homeCreativeCopy", value)}
-              rows={3}
-            />
-          </div>
-          <TextInput
-            label="Creative work CTA label"
-            value={siteCopy.homeCreativeCtaLabel}
-            onChange={(value) => patch("homeCreativeCtaLabel", value)}
-          />
-        </div>
-
-        <ArraySection
-          title="Creative carousel cards"
-          items={siteCopy.homeCreativeCategories}
-          onAdd={() =>
-            addArrayItem("homeCreativeCategories", {
-              title: "New category",
-              description: "",
-              image: "",
-            } as SiteCopyCreativeCategory)
-          }
-          onRemove={(index) => removeArrayItem("homeCreativeCategories", index)}
-          renderItem={(item, index) => (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <TextInput
-                label="Title"
-                value={item.title}
-                onChange={(value) =>
-                  updateArrayItem("homeCreativeCategories", index, { ...item, title: value })
-                }
-              />
-              <TextInput
-                label="Image URL"
-                value={item.image}
-                onChange={(value) =>
-                  updateArrayItem("homeCreativeCategories", index, { ...item, image: value })
-                }
-              />
-              <div className="md:col-span-2">
-                <TextAreaInput
-                  label="Description"
-                  value={item.description}
-                  onChange={(value) =>
-                    updateArrayItem("homeCreativeCategories", index, {
-                      ...item,
-                      description: value,
-                    })
-                  }
-                  rows={3}
-                />
-              </div>
-            </div>
-          )}
-        />
-      </SectionCard>
-
-      <SectionCard
-        title="Home Services and Highlights"
-        description="The home services card copy now pulls from the saved services section. These fields control the section header and the editable highlight stack below it."
-      >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextInput
-            label="Home services heading"
-            value={siteCopy.homeServicesHeading}
-            onChange={(value) => patch("homeServicesHeading", value)}
-            hint="Use [brackets] around the accented word."
-          />
-          <TextInput
-            label="Highlights heading"
-            value={siteCopy.homeReviewsHeading}
-            onChange={(value) => patch("homeReviewsHeading", value)}
-            hint="Use [brackets] around the accented word."
-          />
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Home services intro"
+            <TextareaField
+              label="Services Intro"
               value={siteCopy.homeServicesIntro}
               onChange={(value) => patch("homeServicesIntro", value)}
               rows={3}
             />
-          </div>
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Highlights intro"
+            <TextareaField
+              label="Highlights Intro"
               value={siteCopy.homeReviewsIntro}
               onChange={(value) => patch("homeReviewsIntro", value)}
               rows={3}
             />
           </div>
-        </div>
 
-        <ArraySection
-          title="Highlight cards"
-          items={siteCopy.homeReviewsItems}
-          onAdd={() =>
-            addArrayItem("homeReviewsItems", {
-              id: `highlight-${siteCopy.homeReviewsItems.length + 1}`,
-              name: "New highlight",
-              content: "",
-              designation: "",
-              rating: 0,
-            } as SiteCopyReviewItem)
-          }
-          onRemove={(index) => removeArrayItem("homeReviewsItems", index)}
-          renderItem={(item, index) => (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <TextInput
-                label="Name"
-                value={item.name}
-                onChange={(value) =>
-                  updateArrayItem("homeReviewsItems", index, { ...item, name: value })
-                }
-              />
-              <TextInput
-                label="Designation / label"
-                value={item.designation || ""}
-                onChange={(value) =>
-                  updateArrayItem("homeReviewsItems", index, {
-                    ...item,
-                    designation: value,
-                  })
-                }
-              />
-              <label className="space-y-2 text-sm">
-                <FieldLabel label="Rating (0 to 5)" />
-                <input
-                  type="number"
-                  min={0}
-                  max={5}
-                  value={item.rating}
-                  onChange={(event) =>
-                    updateArrayItem("homeReviewsItems", index, {
-                      ...item,
-                      rating: Number(event.target.value),
-                    })
-                  }
-                  className="w-full rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-2 text-sm text-[#0b0b0c]"
+          <ArraySection
+            title="High-Fidelity Highlight Cards"
+            items={siteCopy.homeReviewsItems}
+            onAdd={() => addArrayItem("homeReviewsItems", { id: `H-${Date.now()}`, name: "New Highlight", content: "", designation: "", rating: 5 } as SiteCopyReviewItem)}
+            onRemove={(index) => removeArrayItem("homeReviewsItems", index)}
+            renderItem={(item, index) => (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Field
+                  label="Author / Entity"
+                  value={item.name}
+                  onChange={(value) => updateArrayItem("homeReviewsItems", index, { ...item, name: value })}
                 />
-              </label>
-              <TextInput
-                label="Internal id"
-                value={item.id}
-                onChange={(value) =>
-                  updateArrayItem("homeReviewsItems", index, { ...item, id: value })
-                }
-              />
-              <div className="md:col-span-2">
-                <TextAreaInput
-                  label="Content"
-                  value={item.content}
-                  onChange={(value) =>
-                    updateArrayItem("homeReviewsItems", index, { ...item, content: value })
-                  }
-                  rows={4}
+                <Field
+                  label="Position / Label"
+                  value={item.designation || ""}
+                  onChange={(value) => updateArrayItem("homeReviewsItems", index, { ...item, designation: value })}
                 />
+                <div className="md:col-span-2">
+                  <TextareaField
+                    label="Endorsement Content"
+                    value={item.content}
+                    onChange={(value) => updateArrayItem("homeReviewsItems", index, { ...item, content: value })}
+                    rows={4}
+                  />
+                </div>
               </div>
+            )}
+          />
+        </SectionPanel>
+
+        {/* ABOUT PAGE */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="About Narrative" 
+            copy="Fine-tune your personal brand story and timeline." 
+            icon={User}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <TextareaField
+              label="Scrapbook Sticky Note"
+              value={siteCopy.aboutStickyNote}
+              onChange={(value) => patch("aboutStickyNote", value)}
+              rows={3}
+            />
+            <Field
+              label="Footer Tagline"
+              value={siteCopy.aboutFooterTag}
+              onChange={(value) => patch("aboutFooterTag", value)}
+            />
+            <Field
+              label="Intro Narrative Title"
+              value={siteCopy.aboutIntroTitle}
+              onChange={(value) => patch("aboutIntroTitle", value)}
+            />
+            <Field
+              label="Book Asset URL"
+              value={siteCopy.aboutBookImage}
+              onChange={(value) => patch("aboutBookImage", value)}
+            />
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Primary About Copy"
+                value={siteCopy.aboutIntroBody}
+                onChange={(value) => patch("aboutIntroBody", value)}
+                rows={8}
+              />
             </div>
-          )}
-        />
-      </SectionCard>
+          </div>
 
-      <SectionCard title="About Page Copy">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextAreaInput
-            label="Scrapbook sticky note"
-            value={siteCopy.aboutStickyNote}
-            onChange={(value) => patch("aboutStickyNote", value)}
-            rows={3}
-          />
-          <TextInput
-            label="Footer tag"
-            value={siteCopy.aboutFooterTag}
-            onChange={(value) => patch("aboutFooterTag", value)}
-          />
-          <TextInput
-            label="Book intro title"
-            value={siteCopy.aboutIntroTitle}
-            onChange={(value) => patch("aboutIntroTitle", value)}
-          />
-          <TextInput
-            label="Desk book image"
-            value={siteCopy.aboutBookImage}
-            onChange={(value) => patch("aboutBookImage", value)}
-          />
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Lower right note"
-              value={siteCopy.aboutLowerRightNote}
-              onChange={(value) => patch("aboutLowerRightNote", value)}
-              rows={4}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Book intro body"
-              value={siteCopy.aboutIntroBody}
-              onChange={(value) => patch("aboutIntroBody", value)}
-              rows={9}
-              hint="Use blank lines between paragraphs."
-            />
-          </div>
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Typewriter quote"
-              value={siteCopy.aboutTypewriterQuote}
-              onChange={(value) => patch("aboutTypewriterQuote", value)}
-              rows={4}
-            />
-          </div>
-          <TextInput
-            label="Timeline title"
-            value={siteCopy.aboutTimelineTitle}
-            onChange={(value) => patch("aboutTimelineTitle", value)}
-          />
-        </div>
-
-        <ArraySection
-          title="Timeline entries"
-          items={siteCopy.aboutTimelineEntries}
-          onAdd={() =>
-            addArrayItem("aboutTimelineEntries", {
-              role: "New role",
-              organization: "",
-              duration: "",
-              copy: "",
-            } as SiteCopyTimelineEntry)
-          }
-          onRemove={(index) => removeArrayItem("aboutTimelineEntries", index)}
-          renderItem={(item, index) => (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <TextInput
-                label="Role"
-                value={item.role}
-                onChange={(value) =>
-                  updateArrayItem("aboutTimelineEntries", index, { ...item, role: value })
-                }
-              />
-              <TextInput
-                label="Organization"
-                value={item.organization}
-                onChange={(value) =>
-                  updateArrayItem("aboutTimelineEntries", index, {
-                    ...item,
-                    organization: value,
-                  })
-                }
-              />
-              <TextInput
-                label="Duration"
-                value={item.duration}
-                onChange={(value) =>
-                  updateArrayItem("aboutTimelineEntries", index, { ...item, duration: value })
-                }
-              />
-              <div className="md:col-span-2">
-                <TextAreaInput
-                  label="Copy"
-                  value={item.copy}
-                  onChange={(value) =>
-                    updateArrayItem("aboutTimelineEntries", index, { ...item, copy: value })
-                  }
-                  rows={3}
+          <ArraySection
+            title="Career & Experience Timeline"
+            items={siteCopy.aboutTimelineEntries}
+            onAdd={() => addArrayItem("aboutTimelineEntries", { role: "New Position", organization: "", duration: "", copy: "" } as SiteCopyTimelineEntry)}
+            onRemove={(index) => removeArrayItem("aboutTimelineEntries", index)}
+            renderItem={(item, index) => (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Field
+                  label="Role"
+                  value={item.role}
+                  onChange={(value) => updateArrayItem("aboutTimelineEntries", index, { ...item, role: value })}
                 />
+                <Field
+                  label="Organization"
+                  value={item.organization}
+                  onChange={(value) => updateArrayItem("aboutTimelineEntries", index, { ...item, organization: value })}
+                />
+                <Field
+                  label="Duration"
+                  value={item.duration}
+                  onChange={(value) => updateArrayItem("aboutTimelineEntries", index, { ...item, duration: value })}
+                />
+                <div className="md:col-span-2">
+                  <TextareaField
+                    label="Summary"
+                    value={item.copy}
+                    onChange={(value) => updateArrayItem("aboutTimelineEntries", index, { ...item, copy: value })}
+                    rows={3}
+                  />
+                </div>
               </div>
-            </div>
-          )}
-        />
-      </SectionCard>
+            )}
+          />
+        </SectionPanel>
 
-      <SectionCard title="Services Page Copy">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextInput
-            label="Hero title"
-            value={siteCopy.servicesHeroTitle}
-            onChange={(value) => patch("servicesHeroTitle", value)}
+        {/* FAQ & SERVICES */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="Services & Inquiries" 
+            copy="Configure FAQ items and comparison feature sets." 
+            icon={HelpCircle}
           />
-          <TextInput
-            label="Why section eyebrow"
-            value={siteCopy.servicesWhyEyebrow}
-            onChange={(value) => patch("servicesWhyEyebrow", value)}
-          />
-          <TextInput
-            label="Why section heading"
-            value={siteCopy.servicesWhyHeading}
-            onChange={(value) => patch("servicesWhyHeading", value)}
-            hint="Use [brackets] around the accented word."
-          />
-          <TextInput
-            label="Why section CTA URL"
-            value={siteCopy.servicesWhyCtaUrl}
-            onChange={(value) => patch("servicesWhyCtaUrl", value)}
-          />
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Why section intro"
-              value={siteCopy.servicesWhyIntro}
-              onChange={(value) => patch("servicesWhyIntro", value)}
-              rows={4}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Field
+              label="FAQ Heading"
+              value={siteCopy.servicesFaqHeading}
+              onChange={(value) => patch("servicesFaqHeading", value)}
             />
-          </div>
-          <TextInput
-            label="Why section CTA label"
-            value={siteCopy.servicesWhyCtaLabel}
-            onChange={(value) => patch("servicesWhyCtaLabel", value)}
-          />
-          <TextInput
-            label="FAQ eyebrow"
-            value={siteCopy.servicesFaqEyebrow}
-            onChange={(value) => patch("servicesFaqEyebrow", value)}
-          />
-          <TextInput
-            label="FAQ heading"
-            value={siteCopy.servicesFaqHeading}
-            onChange={(value) => patch("servicesFaqHeading", value)}
-            hint="Use [brackets] around the accented word."
-          />
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="FAQ intro"
+            <TextareaField
+              label="FAQ Intro"
               value={siteCopy.servicesFaqIntro}
               onChange={(value) => patch("servicesFaqIntro", value)}
               rows={3}
             />
           </div>
-          <TextInput
-            label="FAQ CTA helper text"
-            value={siteCopy.servicesFaqCtaText}
-            onChange={(value) => patch("servicesFaqCtaText", value)}
-          />
-          <TextInput
-            label="FAQ CTA button label"
-            value={siteCopy.servicesFaqCtaLabel}
-            onChange={(value) => patch("servicesFaqCtaLabel", value)}
-          />
-        </div>
 
-        <ArraySection
-          title="Why work with me features"
-          items={siteCopy.servicesWhyFeatures}
-          onAdd={() =>
-            addArrayItem("servicesWhyFeatures", {
-              label: "New comparison point",
-              others: false,
-              me: true,
-            } as SiteCopyComparisonFeature)
-          }
-          onRemove={(index) => removeArrayItem("servicesWhyFeatures", index)}
-          renderItem={(item, index) => (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <TextInput
-                label="Label"
-                value={item.label}
-                onChange={(value) =>
-                  updateArrayItem("servicesWhyFeatures", index, { ...item, label: value })
-                }
-              />
-              <label className="flex items-center gap-3 rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={item.others}
-                  onChange={(event) =>
-                    updateArrayItem("servicesWhyFeatures", index, {
-                      ...item,
-                      others: event.target.checked,
-                    })
-                  }
+          <ArraySection
+            title="Active FAQ Inventory"
+            items={siteCopy.servicesFaqItems}
+            onAdd={() => addArrayItem("servicesFaqItems", { question: "New Question", answer: "" } as SiteCopyFaqItem)}
+            onRemove={(index) => removeArrayItem("servicesFaqItems", index)}
+            renderItem={(item, index) => (
+              <div className="grid grid-cols-1 gap-6">
+                <Field
+                  label="Question"
+                  value={item.question}
+                  onChange={(value) => updateArrayItem("servicesFaqItems", index, { ...item, question: value })}
                 />
-                Others column
-              </label>
-              <label className="flex items-center gap-3 rounded-xl border border-[var(--color-border-light)] bg-[#f8f5f2] px-3 py-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={item.me}
-                  onChange={(event) =>
-                    updateArrayItem("servicesWhyFeatures", index, {
-                      ...item,
-                      me: event.target.checked,
-                    })
-                  }
+                <TextareaField
+                  label="Answer"
+                  value={item.answer}
+                  onChange={(value) => updateArrayItem("servicesFaqItems", index, { ...item, answer: value })}
+                  rows={3}
                 />
-                Me column
-              </label>
-            </div>
-          )}
-        />
+              </div>
+            )}
+          />
+        </SectionPanel>
+      </div>
 
-        <ArraySection
-          title="FAQ items"
-          items={siteCopy.servicesFaqItems}
-          onAdd={() =>
-            addArrayItem("servicesFaqItems", {
-              question: "New question",
-              answer: "",
-            } as SiteCopyFaqItem)
-          }
-          onRemove={(index) => removeArrayItem("servicesFaqItems", index)}
-          renderItem={(item, index) => (
-            <div className="grid grid-cols-1 gap-4">
-              <TextInput
-                label="Question"
-                value={item.question}
-                onChange={(value) =>
-                  updateArrayItem("servicesFaqItems", index, { ...item, question: value })
-                }
-              />
-              <TextAreaInput
-                label="Answer"
-                value={item.answer}
-                onChange={(value) =>
-                  updateArrayItem("servicesFaqItems", index, { ...item, answer: value })
-                }
-                rows={3}
-              />
-            </div>
-          )}
-        />
-      </SectionCard>
-
-      <SectionCard title="Contact and Footer">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <TextInput
-            label="Contact eyebrow"
-            value={siteCopy.contactEyebrow}
-            onChange={(value) => patch("contactEyebrow", value)}
-          />
-          <TextInput
-            label="Contact heading"
-            value={siteCopy.contactHeading}
-            onChange={(value) => patch("contactHeading", value)}
-          />
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Contact support line"
-              value={siteCopy.contactSupportLine}
-              onChange={(value) => patch("contactSupportLine", value)}
-              rows={3}
-            />
-          </div>
-          <TextInput
-            label="Contact giant text"
-            value={siteCopy.contactGiantText}
-            onChange={(value) => patch("contactGiantText", value)}
-          />
-          <TextInput
-            label="Footer eyebrow / brand line"
-            value={siteCopy.footerBrandEyebrow}
-            onChange={(value) => patch("footerBrandEyebrow", value)}
-          />
-          <div className="md:col-span-2">
-            <TextAreaInput
-              label="Footer support copy"
-              value={siteCopy.footerSupportCopy}
-              onChange={(value) => patch("footerSupportCopy", value)}
-              rows={3}
-            />
-          </div>
-          <TextInput
-            label="Footer email"
-            value={siteCopy.footerEmail}
-            onChange={(value) => patch("footerEmail", value)}
-          />
-          <TextInput
-            label="Footer CTA heading"
-            value={siteCopy.footerCtaHeading}
-            onChange={(value) => patch("footerCtaHeading", value)}
-          />
-          <TextInput
-            label="Footer CTA copy"
-            value={siteCopy.footerCtaCopy}
-            onChange={(value) => patch("footerCtaCopy", value)}
-          />
-          <TextInput
-            label="Footer copyright"
-            value={siteCopy.footerCopyright}
-            onChange={(value) => patch("footerCopyright", value)}
-          />
-          <TextInput
-            label="Footer credit"
-            value={siteCopy.footerCredit}
-            onChange={(value) => patch("footerCredit", value)}
-            hint="Leave blank to hide."
-          />
+      {/* Floating Save Bar */}
+      <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-white/80 backdrop-blur-xl px-6 py-4 rounded-full border border-black/5 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex items-center gap-3 pr-6 border-r border-black/5">
+          <div className={`h-2 w-2 rounded-full ${status ? 'bg-[#007aff] animate-pulse' : 'bg-[#34c759]'}`} />
+          <span className="text-[13px] font-bold text-[#1d1d1f]">
+            {status || "Sync Engine Optimal"}
+          </span>
         </div>
-      </SectionCard>
-
-      <div className="sticky bottom-4 z-20 flex items-center gap-3 rounded-full border border-[var(--color-border-light)] bg-white/95 px-4 py-3 shadow-[0_18px_42px_rgba(16,24,40,0.12)] backdrop-blur">
-        <button
-          type="button"
-          onClick={saveSiteCopy}
-          disabled={saving}
-          className="rounded-full border-[2px] border-[var(--color-border-dark)] bg-[#dbe7ff] px-5 py-2 text-sm font-medium text-[#0020d7] shadow-[0_8px_18px_rgba(0,32,215,0.14)] disabled:opacity-60"
-        >
-          {saving ? "Saving..." : "Save Site Copy"}
-        </button>
-        {status ? <p className="text-xs text-[var(--color-text-body)]">{status}</p> : null}
+        <ActionButton onClick={saveSiteCopy} disabled={saving} variant="primary">
+          {saving ? "Synchronizing..." : "Push Changes"}
+        </ActionButton>
       </div>
     </AdminSectionWorkspace>
   );

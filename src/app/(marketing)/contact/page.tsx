@@ -10,8 +10,15 @@ import { createPageMetadata } from '@/seo/page-metadata';
 export const metadata: Metadata = createPageMetadata({
   title: "Contact | Abin Varghese",
   description:
-    "Get in touch with Abin Varghese for freelance work, collaborations, or internship opportunities. Front-end developer and UI/UX designer available for projects.",
+    "Get in touch with Abin Varghese for freelance web development, UI/UX design collaborations, or internship opportunities. Based in Kerala, India — available worldwide.",
   path: "/contact",
+  keywords: [
+    "Contact Abin Varghese",
+    "Hire freelance developer India",
+    "Hire UI designer Kerala",
+    "Freelance Next.js developer contact",
+    "Web developer for hire India",
+  ],
 });
 
 export default async function ContactPage() {
@@ -31,31 +38,62 @@ export default async function ContactPage() {
       />
 
       {/* Let's Connect Pill */}
-      <div className="group relative z-10 flex items-center gap-[8.4px] border-[0.8px] border-black/10 rounded-[42px] px-[17px] h-[48px] mb-20 shadow-sm overflow-hidden bg-white/50 backdrop-blur-[24px] hover:scale-105 hover:bg-white/80 transition-all duration-300 cursor-pointer">
+      <div className="group relative z-10 flex items-center gap-[8.4px] border-[0.8px] border-black/10 rounded-[42px] px-[15px] h-[36px] md:h-[48px] mb-4 md:mb-20 shadow-sm overflow-hidden bg-white/50 backdrop-blur-[24px] hover:scale-105 hover:bg-white/80 transition-all duration-300 cursor-pointer">
         <div className="absolute inset-0 z-[-1] opacity-[0.05] pointer-events-none mix-blend-overlay" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%221.5%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E")' }} />
-        <Sparkles className="w-[18px] h-[18px] text-black/60 group-hover:text-black group-hover:animate-pulse transition-colors duration-300" />
-        <span className="text-[13.5px] font-medium tracking-wide">{siteCopy.contactEyebrow}</span>
+        <Sparkles className="w-[14px] h-[14px] text-black/60 group-hover:text-black group-hover:animate-pulse transition-colors duration-300" />
+        <span className="text-[10px] md:text-[13.5px] font-semibold tracking-wide uppercase">{siteCopy.contactEyebrow}</span>
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-screen-xl w-full mx-auto px-6 xl:px-8 flex flex-col lg:flex-row gap-16 lg:gap-8 items-start justify-between">
+      <div className="relative z-10 max-w-screen-xl w-full mx-auto px-6 xl:px-8 flex flex-col lg:flex-row gap-8 lg:gap-8 items-start justify-between">
         
         {/* Left Column */}
-        <div className="flex flex-col gap-14 lg:w-[420px] pt-4">
-          <div className="flex flex-col gap-4 relative group cursor-default">
-            <h1 className="text-5xl md:text-[64px] font-semibold flex flex-wrap items-center gap-3 text-black tracking-tight leading-[0.95]">
-              <span>{siteCopy.contactHeading}</span>
-              <ArrowUpRight className="w-12 h-12 md:w-16 md:h-16 text-black stroke-[2px] transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
-            </h1>
-            <p className="text-black/70 font-medium leading-[1.6] text-base md:text-lg max-w-[380px] transition-colors duration-300 group-hover:text-black/90">
+        <div className="flex flex-col gap-6 lg:gap-14 lg:w-[420px] pt-4">
+          
+          <div className="flex flex-col gap-4 md:gap-6 relative group cursor-default">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl md:text-[84px] font-bold tracking-tighter leading-none text-black">
+                  {siteCopy.contactHeading}
+                </h1>
+                <ArrowUpRight className="hidden md:block w-16 h-16 text-black stroke-[2.5px] transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110" />
+              </div>
+
+              {/* Social Icons for Mobile - Compact & Inline with Heading */}
+              <div className="flex lg:hidden items-center gap-2 shrink-0">
+                <Link 
+                  href={formSettings.instagramUrl} 
+                  className="w-8 h-8 rounded-full bg-white border border-black/5 flex items-center justify-center shadow-sm hover:bg-black hover:text-white transition-all duration-300 active:scale-90"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-4 h-4" />
+                </Link>
+                <Link 
+                  href={`mailto:${formSettings.contactEmail}`}
+                  className="w-8 h-8 rounded-full bg-white border border-black/5 flex items-center justify-center shadow-sm hover:bg-black hover:text-white transition-all duration-300 active:scale-90"
+                  aria-label="Email"
+                >
+                  <Mail className="w-4 h-4" />
+                </Link>
+                <Link 
+                  href={formSettings.linkedinUrl}
+                  className="w-8 h-8 rounded-full bg-white border border-black/5 flex items-center justify-center shadow-sm hover:bg-black hover:text-white transition-all duration-300 active:scale-90"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+            
+            <p className="text-black/70 font-medium leading-[1.6] text-sm md:text-xl max-w-[380px] transition-colors duration-300 group-hover:text-black/90">
               {formSettings.introText}
             </p>
-            <p className="text-black/50 text-sm md:text-base max-w-[420px] leading-[1.7]">
+            <p className="text-black/50 text-xs md:text-base max-w-[420px] leading-relaxed">
               {siteCopy.contactSupportLine}
             </p>
           </div>
 
-          <div className="flex flex-col mt-2">
+          <div className="hidden lg:flex flex-col mt-2">
             <Link href={formSettings.instagramUrl} className="flex items-center justify-between border-b border-black/10 py-5 group hover:border-black/30 transition-all duration-300 relative overflow-hidden">
               <div className="flex items-center gap-5 transition-transform duration-300 group-hover:translate-x-3">
                 <Instagram className="w-5 h-5 text-black/70 group-hover:text-black transition-colors duration-500 group-hover:scale-110" />
@@ -79,7 +117,7 @@ export default async function ContactPage() {
             </Link>
           </div>
 
-          <p className="text-[13px] text-black/60 font-medium transition-colors hover:text-black cursor-pointer w-fit">
+          <p className="hidden lg:block text-[13px] text-black/60 font-medium transition-colors hover:text-black cursor-pointer w-fit">
             {formSettings.contactEmail}
           </p>
         </div>
@@ -90,19 +128,33 @@ export default async function ContactPage() {
         </div>
       </div>
 
-      {/* Giant Background Text */}
-      <div className="absolute bottom-[-10%] w-[110vw] pointer-events-none select-none z-[5] overflow-hidden flex justify-center mix-blend-multiply opacity-[0.15]">
-        <h2 
-          className="contact-giant-text text-[120px] sm:text-[180px] md:text-[330px] lg:text-[390px] font-semibold leading-[0.8] tracking-[-11.85px] text-transparent bg-clip-text whitespace-nowrap drop-shadow-xl"
+      {/* Giant Background Text - Positioned at Top for Mobile */}
+      <div className="absolute top-[-2%] md:top-auto md:bottom-[-10%] w-[110vw] pointer-events-none select-none z-[5] overflow-hidden flex justify-center mix-blend-multiply opacity-[0.18] md:opacity-[0.15]">
+        <svg 
+          viewBox="0 0 1600 500" 
+          className="w-full h-auto drop-shadow-xl"
+          preserveAspectRatio="xMidYMid meet"
         >
-          {siteCopy.contactGiantText}
-        </h2>
-        <style dangerouslySetInnerHTML={{__html: `
-          .contact-giant-text {
-            background-image: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 35%, transparent 100%);
-            -webkit-text-stroke: 4px rgba(0, 0, 0, 0.05);
-          }
-        `}} />
+          <defs>
+            <linearGradient id="giantTextGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgba(0,0,0,0.8)" />
+              <stop offset="35%" stopColor="rgba(0,0,0,0.2)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+            </linearGradient>
+          </defs>
+          <text 
+            x="50%" 
+            y="50%" 
+            dominantBaseline="middle" 
+            textAnchor="middle" 
+            fill="url(#giantTextGradient)" 
+            stroke="rgba(0, 0, 0, 0.15)"
+            strokeWidth="4"
+            className="font-bold text-[280px] md:text-[390px] tracking-[-11.85px] font-['Poppins']"
+          >
+            {siteCopy.contactGiantText}
+          </text>
+        </svg>
       </div>
     </div>
   );

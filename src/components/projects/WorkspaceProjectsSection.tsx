@@ -1,33 +1,29 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowUpRight,
-  Box,
-  Film,
   Github,
   Globe,
   LayoutGrid,
-  Monitor,
-  Palette,
-  Sparkles,
-  Video,
-  MousePointer2,
 } from 'lucide-react';
 import {
   IconBrandBehance,
   IconBrandDribbble,
   IconBrandPinterest,
-  IconChevronLeft,
-  IconChevronRight,
-  IconX,
 } from '@tabler/icons-react';
 import type { WorkspaceProject } from '@/lib/github-projects';
+import type { BehanceShowcaseEmbed } from '@/lib/site-content';
 import { homePageDesignSystem } from '@/lib/home-page-design-system';
 import PinCard from '@/components/pinterest/PinCard';
-import { pinterestPins, type PinterestPin } from '@/lib/pinterest-content';
+import type { PinterestPin } from '@/lib/pinterest-content';
 import ProjectPreviewImage from '@/components/projects/ProjectPreviewImage';
+import { motion, AnimatePresence } from 'framer-motion';
+import ProjectGalleryCard from './ProjectGalleryCard';
+import CodingMarqueeShowcase from './CodingMarqueeShowcase';
+import TechStackMarquee from './TechStackMarquee';
+import { FigmaInteractiveShowcase } from './FigmaInteractiveShowcase';
 
 export type WorkspaceFilter = 'coding' | 'designing';
 
@@ -35,59 +31,236 @@ interface WorkspaceProjectsSectionProps {
   projects: WorkspaceProject[];
   sourceUrl: string;
   workspace: WorkspaceFilter;
+  behanceShowcaseEmbeds?: BehanceShowcaseEmbed[];
 }
 
 const CARD_RATIO = 'h-full w-full';
 
-const CARD_HEIGHTS = [
-  'h-[220px]',
-  'h-[250px]',
-  'h-[210px]',
-  'h-[280px]',
-  'h-[230px]',
-  'h-[260px]',
-];
-
 const PROJECT_PIN_HEIGHTS = [360, 420, 340, 390, 440, 320];
 const DESIGN_RETURN_QUERY = 'from=projects&workspace=designing';
 
+function hasRenderableDesignMedia(project: WorkspaceProject): boolean {
+  const media = project.imageUrl?.trim();
+  const iframe = project.liveUrl?.trim();
+  const link = project.githubUrl?.trim();
+  return Boolean(media || iframe || link);
+}
+
+/** Extracts the src URL if a full `<iframe>` tag was stored instead of a bare URL. */
+function sanitizeBehanceSrc(src: string): string {
+  const trimmed = src.trim();
+  if (!trimmed.startsWith('<')) return trimmed;
+  const match = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+  return match ? match[1] : trimmed;
+}
+
+function extractEmbedHref(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (!trimmed.startsWith("<")) {
+    return trimmed;
+  }
+  const match = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+  return match?.[1] ?? null;
+}
+
+function absoluteUrl(url: string): string {
+  const t = url.trim();
+  if (!t) return t;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+}
+
+/** Pinterest marketing / error hubs — never open these from a portfolio card. */
+function isGarbagePinterestOutbound(url: string): boolean {
+  const lower = url.trim().toLowerCase();
+  if (!/pinterest\.com/i.test(lower)) {
+    return false;
+  }
+  if (lower.includes('/business/')) {
+    return true;
+  }
+  if (lower.includes('show_error=true')) {
+    return true;
+  }
+  return false;
+}
+
+function isPinterestHost(url: string): boolean {
+  try {
+    const host = new URL(absoluteUrl(url)).hostname.toLowerCase();
+    return host === 'pinterest.com' || host.endsWith('.pinterest.com');
+  } catch {
+    return /pinterest\.com/i.test(url);
+  }
+}
+
+/**
+ * Prefer real video/embed hosts for clicks + previews. Pinterest often lives in "Project link"
+ * while Vimeo/YouTube/Behance is in the iframe field — `liveUrl ?? githubUrl` alone favored Pinterest.
+ */
+function prioritizeDesignProjectLinks(
+  liveUrl: string | null | undefined,
+  githubUrl: string | null | undefined
+): string[] {
+  const raw = [liveUrl, githubUrl]
+    .map((u) => (typeof u === 'string' ? u.trim() : ''))
+    .filter(Boolean)
+    .filter((u) => !isGarbagePinterestOutbound(u));
+
+  const seen = new Set<string>();
+  const unique = raw.filter((u) => (seen.has(u) ? false : !!seen.add(u)));
+
+  const score = (url: string) => {
+    const h = url.toLowerCase();
+    if (h.includes('pinterest.com')) {
+      return 0;
+    }
+    if (h.includes('player.vimeo.com')) {
+      return 100;
+    }
+    if (h.includes('vimeo.com')) {
+      return 90;
+    }
+    if (h.includes('youtube.com') || h.includes('youtu.be')) {
+      return 88;
+    }
+    if (h.includes('behance.net')) {
+      return 70;
+    }
+    return 40;
+  };
+
+  return [...unique].sort((a, b) => score(b) - score(a));
+}
+
+/** Motion/VFX cards: never send users to Pinterest; prefer Vimeo/YouTube/Behance/etc. */
+function resolvePlayOverlayHref(pin: PinterestPin, internalProjectHref: string): string {
+  const candidates: string[] = [];
+  const push = (v: string | null | undefined) => {
+    const t = typeof v === 'string' ? v.trim() : '';
+    if (!t || isGarbagePinterestOutbound(t)) {
+      return;
+    }
+    candidates.push(t);
+  };
+
+  push(extractEmbedHref(pin.externalUrl));
+  push(pin.externalUrl);
+  for (const u of pin.embedSourceUrls ?? []) {
+    push(extractEmbedHref(u));
+    push(u);
+  }
+
+  for (const raw of candidates) {
+    const resolved = extractEmbedHref(raw) ?? raw;
+    if (isGarbagePinterestOutbound(resolved)) {
+      continue;
+    }
+    if (!isPinterestHost(resolved)) {
+      return resolved;
+    }
+  }
+
+  return internalProjectHref;
+}
+
 type DesignCategory =
   | 'All'
-  | 'Graphic design projects'
-  | 'Visual effects projects'
-  | 'UI/UX projects'
-  | 'Video editing projects'
-  | '3D design projects'
-  | 'Motion graphics projects';
+  | 'Graphic design'
+  | 'Web Design'
+  | 'Motion Graphics'
+  | 'VFX & 3D Animation';
 
 const DESIGN_CATEGORIES: DesignCategory[] = [
   'All',
-  'Graphic design projects',
-  'Visual effects projects',
-  'UI/UX projects',
-  'Video editing projects',
-  '3D design projects',
-  'Motion graphics projects',
+  'Graphic design',
+  'Web Design',
+  'Motion Graphics',
+  'VFX & 3D Animation',
 ];
 
-const DESIGN_CATEGORY_ICONS = {
-  'All': LayoutGrid,
-  'Graphic design projects': Palette,
-  'Visual effects projects': Sparkles,
-  'UI/UX projects': Monitor,
-  'Video editing projects': Film,
-  '3D design projects': Box,
-  'Motion graphics projects': Video,
-} as const;
+function toConcreteDesignCategory(
+  value: string | null | undefined
+): Exclude<DesignCategory, 'All'> | null {
+  if (!value) {
+    return null;
+  }
 
-// Public demo links used when project-specific env URLs are not provided.
-const DEMO_FIGMA_DESIGN_URL =
-  'https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931/Sample-File?type=design&node-id=0-1&mode=design';
-const DEMO_FIGMA_WEBFLOW_URL =
-  'https://www.figma.com/file/LKQ4FJ4bTnCSjedbRpk931/Sample-File?type=design&node-id=0-1&mode=design';
+  const normalized = value.trim().toLowerCase();
 
-function toEmbedUrl(sourceUrl: string) {
-  return `https://www.figma.com/embed?embed_host=portfolio&url=${encodeURIComponent(sourceUrl)}`;
+  if (normalized === 'graphic design') {
+    return 'Graphic design';
+  }
+
+  if (normalized === 'web design') {
+    return 'Web Design';
+  }
+
+  if (normalized === 'motion graphics') {
+    return 'Motion Graphics';
+  }
+
+  // Admin panel saves this label as `VFX & 3D` (see projects admin Category select).
+  if (normalized === 'vfx & 3d' || normalized === 'vfx & 3d animation') {
+    return 'VFX & 3D Animation';
+  }
+
+  return null;
+}
+
+function isConcreteDesignCategory(value: string | null | undefined): value is Exclude<DesignCategory, 'All'> {
+  return toConcreteDesignCategory(value) !== null;
+}
+
+function normalizeDesignCategory(
+  category: string | null | undefined,
+  type: WorkspaceProject['type'],
+  mediaType: WorkspaceProject['mediaType'],
+  tags: string[] = [],
+  fallbackText = ''
+): DesignCategory {
+  const explicitCategory = toConcreteDesignCategory(category);
+
+  if (explicitCategory) {
+    return explicitCategory;
+  }
+
+  if (type === 'FIGMA') {
+    return 'Web Design';
+  }
+
+  if (type === 'PINTEREST' && mediaType === 'MODEL') {
+    return 'VFX & 3D Animation';
+  }
+
+  if (type === 'PINTEREST' && mediaType === 'VIDEO') {
+    return 'Motion Graphics';
+  }
+
+  const fingerprint = `${category ?? ''} ${tags.join(' ')} ${fallbackText}`.toLowerCase();
+
+  if (/graphic|branding|poster|logo|collage|editorial|print|typography/.test(fingerprint)) {
+    return 'Graphic design';
+  }
+
+  if (/motion|animation|kinetic|after effects|lottie|reel/.test(fingerprint)) {
+    return 'Motion Graphics';
+  }
+
+  if (/3d|vfx|visual effect|render|model|blender|houdini|maya|cinematic/.test(fingerprint)) {
+    return 'VFX & 3D Animation';
+  }
+
+  if (/web design|ui|ux|dashboard|website|landing|interface|design system|prototype|app/.test(fingerprint)) {
+    return 'Web Design';
+  }
+
+  return 'Web Design';
 }
 
 function matchesDesignCategory(pin: PinterestPin, category: DesignCategory) {
@@ -95,24 +268,53 @@ function matchesDesignCategory(pin: PinterestPin, category: DesignCategory) {
     return true;
   }
 
+  if (isConcreteDesignCategory(pin.board)) {
+    return pin.board === category;
+  }
+
   const fingerprint = `${pin.title} ${pin.description} ${pin.board} ${pin.tags.join(' ')}`.toLowerCase();
 
   switch (category) {
-    case 'UI/UX projects':
+    case 'Graphic design':
+      return pin.mediaType === 'image' && /(graphic|branding|logo|collage|poster|typography|visual language)/.test(fingerprint);
+    case 'Web Design':
       return /(ui|ux|dashboard|component|design system|interface|app|prototype|wireframe|web|website|landing|frontend|ecommerce|cms|usability|user flow|journey|interaction)/.test(fingerprint);
-    case 'Visual effects projects':
-      return /(vfx|visual effect|cinematic|compositing|atmosphere|effects)/.test(fingerprint);
-    case 'Video editing projects':
-      return pin.mediaType === 'video' || /(video|editing|reel|loop|alpha|motion)/.test(fingerprint);
-    case 'Graphic design projects':
-      return /(graphic|branding|logo|collage|poster|typography|visual language)/.test(fingerprint);
-    case '3D design projects':
-      return pin.mediaType === 'model' || /(3d|model|render|mech|bot|geometry)/.test(fingerprint);
-    case 'Motion graphics projects':
-      return /(motion|animation|kinetic|transition|graphics|reel|loop)/.test(fingerprint);
+    case 'VFX & 3D Animation':
+      return (pin.mediaType === 'video' || pin.mediaType === 'model') && /(3d|model|render|mech|bot|geometry|blender|c4d|houdini|octane|vfx|visual effect|cinematic|compositing|atmosphere|effects|video|editing|simulation|particle|explosion|smoke|fire|nuke|maya)/.test(fingerprint);
+    case 'Motion Graphics':
+      return pin.mediaType === 'video' && /(motion|animation|kinetic|transition|graphics|reel|loop|after effects|lottie)/.test(fingerprint);
     default:
       return true;
   }
+}
+
+function getInteractiveProjectUrl(project: WorkspaceProject): string | null {
+  const candidate = project.liveUrl?.trim() || project.githubUrl?.trim();
+
+  if (!candidate) {
+    return null;
+  }
+
+  return candidate;
+}
+
+function getDesignPinMediaType(
+  project: WorkspaceProject,
+  normalizedCategory: DesignCategory
+): PinterestPin["mediaType"] {
+  if (normalizedCategory === 'Web Design' || project.type === 'FIGMA') {
+    return 'image';
+  }
+
+  if (project.mediaType === 'VIDEO') {
+    return 'video';
+  }
+
+  if (project.mediaType === 'MODEL') {
+    return 'model';
+  }
+
+  return 'image';
 }
 
 function resolveGithubProfileUrl(sourceUrl: string): string {
@@ -149,7 +351,7 @@ function WorkspaceProjectCard({
   index,
 }: {
   project: WorkspaceProject;
-  index: number;
+  index?: number;
 }) {
   const design = homePageDesignSystem;
   const fallbackSrc = `https://opengraph.githubassets.com/portfolio/${project.owner}/${project.repo}`;
@@ -303,12 +505,32 @@ function WorkspaceProjectCard({
 }
 
 function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
+  const [visibleCount, setVisibleCount] = useState(12);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && visibleCount < projects.length) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [projects.length, visibleCount]);
+
   if (projects.length === 0) {
     return null;
   }
 
   const bentoTileClasses = [
-    'col-span-12 sm:col-span-12 md:col-span-8 row-span-2',
+    'col-span-12 sm:col-span-12 md:col-span-8 row-span-1 md:row-span-2',
     'col-span-12 sm:col-span-6 md:col-span-4 row-span-1',
     'col-span-12 sm:col-span-6 md:col-span-4 row-span-1',
     'col-span-12 sm:col-span-6 md:col-span-4 row-span-1',
@@ -331,33 +553,235 @@ function CodingWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
   };
 
   return (
-    <div className="grid grid-cols-12 gap-4 auto-rows-[210px] md:auto-rows-[220px] xl:auto-rows-[240px]">
-      {projects.map((project, index) => (
-        <div key={project.id} className={`${getTileClass(index)} h-full overflow-hidden`}>
-          <WorkspaceProjectCard project={project} index={index} />
+    <div className="flex flex-col gap-12">
+      {/* Bento Grid */}
+      <div className="px-2 md:px-8 mx-auto max-w-7xl w-full">
+        <div className="mb-6 md:mb-12 text-center">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 text-zinc-600 text-[10px] font-bold uppercase tracking-widest border border-black/10">
+            <LayoutGrid size={14} /> Full Gallery
+          </span>
+          <h3 className="mt-3 md:mt-4 text-2xl md:text-4xl font-bold text-zinc-900">
+            Project Directory
+          </h3>
+          <p className="mt-1.5 md:mt-2 text-sm md:text-base text-zinc-500 max-w-lg mx-auto">
+            A comprehensive library of my development journey, including experiments, 
+            tooling, and production-ready frontend components.
+          </p>
         </div>
-      ))}
+        <div className="grid grid-cols-12 gap-3 md:gap-4 auto-rows-[200px] sm:auto-rows-[210px] md:auto-rows-[220px] xl:auto-rows-[240px]">
+          {projects.slice(0, visibleCount).map((project, index) => (
+            <div key={project.id} className={`${getTileClass(index)} h-full overflow-hidden`}>
+              <WorkspaceProjectCard project={project} index={index} />
+            </div>
+          ))}
+        </div>
+
+        {/* Load More Sentinel */}
+        <div ref={loadMoreRef} className="h-20 w-full flex items-center justify-center">
+          {visibleCount < projects.length && (
+            <div className="w-8 h-8 border-4 border-zinc-200 border-t-zinc-800 rounded-full animate-spin" />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
-function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }) {
-  const design = homePageDesignSystem;
+const ITEM_WIDTH = 144; // px per filter button
+const ITEM_GAP = 8; // mx-1 = 4px each side = 8px total gap
 
-  const [selectedCategories, setSelectedCategories] = useState<DesignCategory[]>(['All']);
-  const [showFilters, setShowFilters] = useState(true);
+function MobileFilterCarousel({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: DesignCategory;
+  onTabChange: (cat: DesignCategory) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const isResetting = useRef(false);
+  const count = DESIGN_CATEGORIES.length;
+  const itemTotal = ITEM_WIDTH + ITEM_GAP;
+
+  // Triple the array: [clone] [real] [clone]
+  const tripled = useMemo(
+    () => [...DESIGN_CATEGORIES, ...DESIGN_CATEGORIES, ...DESIGN_CATEGORIES],
+    []
+  );
+
+  // Initialize scroll to the middle (real) set on mount
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const realStartOffset =
+      count * itemTotal; // first item of middle set
+    el.scrollLeft = realStartOffset;
+  }, [count, itemTotal]);
+
+  // When activeTab changes programmatically, scroll to it in the middle set
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || isResetting.current) return;
+    const realIdx = DESIGN_CATEGORIES.indexOf(activeTab);
+    if (realIdx === -1) return;
+    const middleIdx = count + realIdx;
+    const child = el.children[middleIdx] as HTMLElement | undefined;
+    if (!child) return;
+    isResetting.current = true;
+    el.scrollTo({
+      left: child.offsetLeft - el.offsetWidth / 2 + child.offsetWidth / 2,
+      behavior: 'smooth',
+    });
+    setTimeout(() => {
+      isResetting.current = false;
+    }, 450);
+  }, [activeTab, count]);
+
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || isResetting.current) return;
+
+    const centerX = el.scrollLeft + el.offsetWidth / 2;
+
+    // Find closest child
+    const children = Array.from(el.children) as HTMLElement[];
+    let closestIdx = 0;
+    let closestDist = Infinity;
+    children.forEach((child, idx) => {
+      const childCenter = child.offsetLeft + child.offsetWidth / 2;
+      const dist = Math.abs(childCenter - centerX);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestIdx = idx;
+      }
+    });
+
+    // Map to real category
+    const realIdx = closestIdx % count;
+    const cat = DESIGN_CATEGORIES[realIdx];
+    if (cat && cat !== activeTab) {
+      onTabChange(cat);
+    }
+
+    // If scrolled into clone regions, silently jump to the real set
+    const realStart = count * itemTotal;
+    const realEnd = realStart + count * itemTotal;
+    if (el.scrollLeft < realStart - itemTotal * 0.5) {
+      isResetting.current = true;
+      el.scrollLeft = el.scrollLeft + count * itemTotal;
+      requestAnimationFrame(() => {
+        isResetting.current = false;
+      });
+    } else if (el.scrollLeft > realEnd - itemTotal * 0.5) {
+      isResetting.current = true;
+      el.scrollLeft = el.scrollLeft - count * itemTotal;
+      requestAnimationFrame(() => {
+        isResetting.current = false;
+      });
+    }
+  }, [activeTab, count, itemTotal, onTabChange]);
+
+  return (
+    <div className="mt-6 mb-8 md:hidden">
+      <div
+        ref={scrollRef}
+        className="design-filter-carousel flex overflow-x-auto snap-x snap-mandatory"
+        style={{ paddingLeft: `calc(50vw - ${ITEM_WIDTH / 2}px)`, paddingRight: `calc(50vw - ${ITEM_WIDTH / 2}px)` }}
+        onScroll={handleScroll}
+      >
+        {tripled.map((category, idx) => {
+          const realIdx = idx % count;
+          const isActive = activeTab === category;
+          return (
+            <button
+              key={`filter-${idx}`}
+              onClick={() => onTabChange(DESIGN_CATEGORIES[realIdx])}
+              className={`snap-center shrink-0 py-2.5 text-[13px] font-semibold rounded-full transition-all duration-300 ease-out mx-1 ${
+                isActive
+                  ? 'bg-gradient-to-br from-zinc-900 to-zinc-600 text-white shadow-lg scale-105'
+                  : 'bg-white/80 text-zinc-400 border border-zinc-200'
+              }`}
+              style={{ width: `${ITEM_WIDTH}px` }}
+            >
+              {category === 'All' ? 'All Boards' : category}
+            </button>
+          );
+        })}
+      </div>
+      {/* Dot indicators */}
+      <div className="flex justify-center gap-1.5 mt-3">
+        {DESIGN_CATEGORIES.map((category) => (
+          <span
+            key={category}
+            className={`block rounded-full transition-all duration-300 ${
+              activeTab === category
+                ? 'w-5 h-1.5 bg-zinc-800'
+                : 'w-1.5 h-1.5 bg-zinc-300'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function DesigningWorkspaceLayout({ projects, behanceShowcaseEmbeds = [] }: { projects: WorkspaceProject[]; behanceShowcaseEmbeds?: BehanceShowcaseEmbed[] }) {
+  const [activeTab, setActiveTab] = useState<DesignCategory>('All');
+  const [visibleCount, setVisibleCount] = useState(12);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const design = homePageDesignSystem;
+  const uploadedProjects = useMemo(
+    () => projects.filter((project) => project.isFromDb && hasRenderableDesignMedia(project)),
+    [projects]
+  );
 
   const feedItems = useMemo(() => {
-    const projectPins = projects.map((project, index) => {
+    const overlayBoards: DesignCategory[] = ['Motion Graphics', 'VFX & 3D Animation'];
+
+    const visibleProjects = uploadedProjects.filter((project) => {
+      const raw = [project.liveUrl, project.githubUrl]
+        .map((u) => (typeof u === 'string' ? u.trim() : ''))
+        .filter(Boolean);
+      const usableRaw = raw.filter((u) => !isGarbagePinterestOutbound(u));
+      if (raw.length > 0 && usableRaw.length === 0) {
+        return false;
+      }
+
+      const cat = normalizeDesignCategory(
+        project.category,
+        project.type,
+        project.mediaType,
+        project.tags,
+        `${project.title} ${project.description}`
+      );
+
+      if (overlayBoards.includes(cat) && usableRaw.length > 0 && usableRaw.every(isPinterestHost)) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return visibleProjects.map((project, index) => {
+      const normalizedCategory = normalizeDesignCategory(
+        project.category,
+        project.type,
+        project.mediaType,
+        project.tags,
+        `${project.title} ${project.description}`
+      );
+      const normalizedMediaType = getDesignPinMediaType(project, normalizedCategory);
+      const linkPriority = prioritizeDesignProjectLinks(project.liveUrl, project.githubUrl);
       const pin: PinterestPin = {
         id: `project-${project.id}`,
         title: project.title,
         description: project.description,
-        mediaType: 'image',
+        mediaType: normalizedMediaType,
         mediaPath: project.imageUrl,
-        board: 'Design Repositories',
+        externalUrl: linkPriority[0],
+        embedSourceUrls: linkPriority.length ? linkPriority : undefined,
+        board: normalizedCategory,
         author: project.owner,
-        tags: project.tags.length ? project.tags : ['repository', 'design'],
+        tags: project.tags.length ? [...project.tags, normalizedCategory] : ['repository', 'design', normalizedCategory],
         dominantColor: '#111827',
         previewHeight: PROJECT_PIN_HEIGHTS[index % PROJECT_PIN_HEIGHTS.length],
         likes: Math.max(project.stars * 30, 120),
@@ -369,138 +793,143 @@ function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }
         pin,
       };
     });
-
-    const visualPins = pinterestPins.map((pin) => ({
-      id: `pin-${pin.id}`,
-      href: `/pinterest/${pin.id}?${DESIGN_RETURN_QUERY}`,
-      pin,
-    }));
-
-    const mixed: Array<{ id: string; href: string; pin: PinterestPin }> = [];
-    const limit = Math.max(projectPins.length, visualPins.length);
-
-    for (let index = 0; index < limit; index += 1) {
-      if (visualPins[index]) {
-        mixed.push(visualPins[index]);
-      }
-      if (projectPins[index]) {
-        mixed.push(projectPins[index]);
-      }
-    }
-
-    return mixed;
-  }, [projects]);
+  }, [uploadedProjects]);
 
   const filteredFeedItems = useMemo(() => {
-    if (selectedCategories.length === 0 || selectedCategories.includes('All')) {
-      return feedItems;
+    let items = feedItems;
+    if (activeTab === 'All') {
+      items = feedItems.filter((item) => item.pin.board !== 'Web Design');
+    } else {
+      items = feedItems.filter((item) => matchesDesignCategory(item.pin, activeTab));
     }
 
-    return feedItems.filter((item) =>
-      selectedCategories.some((category) => matchesDesignCategory(item.pin, category))
+    // Drop admin rows that only reference Pinterest with no poster/media (nothing useful to show or open).
+    const masonryTabs: DesignCategory[] = [
+      'All',
+      'Graphic design',
+      'Motion Graphics',
+      'VFX & 3D Animation',
+    ];
+    if (masonryTabs.includes(activeTab)) {
+      items = items.filter((item) => {
+        const hasPreview = Boolean(item.pin.mediaPath?.trim());
+        const urls = item.pin.embedSourceUrls ?? [];
+        const onlyPinterest =
+          urls.length > 0 && urls.every((u) => /pinterest\.com/i.test(u));
+        if (hasPreview) {
+          return true;
+        }
+        if (urls.length === 0) {
+          return false;
+        }
+        return !onlyPinterest;
+      });
+    }
+
+    return items;
+  }, [feedItems, activeTab]);
+
+  const displayedFeedItems = useMemo(() => {
+    return filteredFeedItems.slice(0, visibleCount);
+  }, [filteredFeedItems, visibleCount]);
+
+  // Reset visibleCount when tab changes
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [activeTab]);
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && visibleCount < filteredFeedItems.length) {
+          setVisibleCount((prev) => prev + 12);
+        }
+      },
+      { rootMargin: '200px' }
     );
-  }, [feedItems, selectedCategories]);
 
-  const chipItems = useMemo(
-    () =>
-      DESIGN_CATEGORIES.map((category) => ({
-        category,
-      })),
-    []
-  );
-
-  const selectedFilterPills = useMemo(
-    () => selectedCategories.filter((category) => category !== 'All'),
-    [selectedCategories]
-  );
-
-  const uiUxEmbedCards = useMemo(() => {
-    const primarySource =
-      process.env.NEXT_PUBLIC_UIUX_FIGMA_URL ??
-      process.env.NEXT_PUBLIC_FIGMA_DESIGN_URL ??
-      DEMO_FIGMA_DESIGN_URL;
-    const secondarySource =
-      process.env.NEXT_PUBLIC_WEB_DESIGN_FIGMA_URL ??
-      process.env.NEXT_PUBLIC_UIUX_FIGMA_URL ??
-      process.env.NEXT_PUBLIC_FIGMA_DESIGN_URL ??
-      DEMO_FIGMA_WEBFLOW_URL;
-
-    return [
-      {
-        id: 'uiux-primary',
-        title: 'UI System Preview',
-        description: 'Interactive component and interface structure for UI implementation.',
-        sourceUrl: primarySource,
-        docsUrl: process.env.NEXT_PUBLIC_UIUX_IMPLEMENTATION_DOCS_URL ?? 'https://www.nngroup.com/articles/',
-      },
-      {
-        id: 'uiux-webflow',
-        title: 'Web UX Flow Preview',
-        description: 'Web page and interaction flow references for implementation planning.',
-        sourceUrl: secondarySource,
-        docsUrl: process.env.NEXT_PUBLIC_WEB_IMPLEMENTATION_DOCS_URL ?? 'https://nextjs.org/docs',
-      },
-    ].map((card) => ({
-      ...card,
-      embedUrl: toEmbedUrl(card.sourceUrl),
-    }));
-  }, []);
-
-  const hasUiUxSelected = useMemo(
-    () => selectedCategories.includes('UI/UX projects'),
-    [selectedCategories]
-  );
-
-  const hasNonUiUxSelected = useMemo(
-    () => selectedCategories.some((category) => category !== 'All' && category !== 'UI/UX projects'),
-    [selectedCategories]
-  );
-
-  const showUiUxEmbedSection = useMemo(
-    () => hasUiUxSelected && !selectedCategories.includes('All'),
-    [hasUiUxSelected, selectedCategories]
-  );
-
-  const showUiUxOnlyLayout = useMemo(
-    () => showUiUxEmbedSection && !hasNonUiUxSelected,
-    [showUiUxEmbedSection, hasNonUiUxSelected]
-  );
-
-  const feedItemsBelowUiUx = useMemo(() => {
-    if (showUiUxEmbedSection && hasNonUiUxSelected) {
-      return filteredFeedItems.filter((item) => !matchesDesignCategory(item.pin, 'UI/UX projects'));
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
     }
 
-    return filteredFeedItems;
-  }, [filteredFeedItems, showUiUxEmbedSection, hasNonUiUxSelected]);
+    return () => observer.disconnect();
+  }, [filteredFeedItems.length, visibleCount]);
 
-  function toggleCategory(category: DesignCategory) {
-    setSelectedCategories((previous) => {
-      if (category === 'All') {
-        return ['All'];
-      }
+  const interactiveWebProjects = useMemo(() => {
+    return uploadedProjects
+      .filter((project) => normalizeDesignCategory(
+        project.category,
+        project.type,
+        project.mediaType,
+        project.tags,
+        `${project.title} ${project.description}`
+      ) === 'Web Design')
+      .sort((a, b) => {
+        const featuredDelta = Number(Boolean(b.featured)) - Number(Boolean(a.featured));
+        if (featuredDelta !== 0) {
+          return featuredDelta;
+        }
 
-      const withoutAll = previous.filter((item) => item !== 'All') as DesignCategory[];
+        return +new Date(b.updatedAt) - +new Date(a.updatedAt);
+      })
+      .map((project) => {
+        const url = getInteractiveProjectUrl(project);
 
-      if (withoutAll.includes(category)) {
-        const remaining = withoutAll.filter((item) => item !== category) as DesignCategory[];
-        return remaining.length > 0 ? remaining : ['All'];
-      }
+        if (!url) {
+          return null;
+        }
 
-      return [...withoutAll, category] as DesignCategory[];
-    });
-  }
-
-  function removeCategory(category: DesignCategory) {
-    setSelectedCategories((previous) => {
-      const remaining = previous.filter((item) => item !== 'All' && item !== category) as DesignCategory[];
-      return remaining.length > 0 ? remaining : ['All'];
-    });
-  }
+        return {
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          url,
+          coverImage: project.imageUrl,
+          tags: project.tags.length > 0 ? project.tags : ['Web Design'],
+        };
+      })
+      .filter((project): project is NonNullable<typeof project> => Boolean(project));
+  }, [uploadedProjects]);
+  
+  const isPinterestLayout = [
+    'All',
+    'Graphic design', 
+    'Motion Graphics', 
+    'VFX & 3D Animation'
+  ].includes(activeTab);
+  /** Motion + VFX: linked cards with play overlay; All + Graphic design: masonry is display-only (no navigation). */
+  const usePlayOverlayCards =
+    activeTab === 'Motion Graphics' || activeTab === 'VFX & 3D Animation';
+  const showInteractiveWebDesign = activeTab === 'Web Design' && interactiveWebProjects.length > 0;
 
   return (
-    <div>
+    <div className="relative">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-reverse {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+        .animate-marquee-scroll {
+          animation: marquee 40s linear infinite;
+        }
+        .animate-marquee-scroll:hover {
+          animation-play-state: paused;
+        }
+        .animate-marquee-scroll-reverse {
+          animation: marquee-reverse 40s linear infinite;
+        }
+        .animate-marquee-scroll-reverse:hover {
+          animation-play-state: paused;
+        }
+      `}} />
+
       <div className="relative mt-4">
+        {/* ... existing header logic ... */}
         <div className="absolute right-1 top-1 hidden items-center gap-2 sm:flex">
           <a
             href="https://www.behance.net/toabinvarghese"
@@ -550,274 +979,218 @@ function DesigningWorkspaceLayout({ projects }: { projects: WorkspaceProject[] }
           <p className="mb-3 inline-flex rounded-xl border border-black/10 bg-black/3 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-black/60">
             Design Session
           </p>
-          <h2 className="text-5xl font-extrabold tracking-tight text-[#0b1034] md:text-7xl">
+          <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#0b1034] md:text-7xl">
             Curated <span className="font-serif italic font-medium text-[#1f5fff]">Designs</span>
           </h2>
-          <p className="mx-auto mt-3 max-w-3xl text-base text-zinc-600 md:text-lg">
-            Browse UI/UX, motion, visual effects, video, and 3D references through a curated design feed.
+          <p className="mx-auto mt-2 md:mt-3 max-w-3xl text-sm md:text-base text-zinc-600 lg:text-lg">
+            Browse only the design projects you have uploaded from the admin panel, grouped by category.
           </p>
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col gap-6 lg:h-[calc(100vh-13rem)] lg:flex-row lg:items-start">
-        <aside
-          className={`w-full min-w-0 rounded-xl border p-3 transition-[width] duration-300 sm:p-4 lg:sticky lg:top-24 lg:h-fit ${
-            showFilters ? 'lg:w-[270px] lg:min-w-[270px]' : 'lg:w-[76px] lg:min-w-[76px]'
-          }`}
-          style={{
-            borderColor: design.colors.border.card,
-            background: design.colors.surface,
-            boxShadow: design.shadows.subtle,
-            borderRadius: '14px',
-          }}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <p
-              className={`px-1 text-xs font-semibold uppercase tracking-[0.14em] ${showFilters ? '' : 'lg:hidden'}`}
-              style={{
-                color: design.colors.text.muted,
-                fontFamily: design.typography.families.sans,
-              }}
-            >
-              Filter Boards
-            </p>
+      {/* Filter Tabs */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .design-filter-carousel::-webkit-scrollbar { display: none; }
+        .design-filter-carousel { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
 
+      {/* ── Mobile: Infinite snap-scroll carousel ── */}
+      <MobileFilterCarousel activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* ── Desktop: Wrapped pill bar (unchanged) ── */}
+      <div className="mt-12 mb-16 hidden md:flex justify-center">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 bg-zinc-100/80 p-1.5 rounded-full border border-zinc-200">
+          {DESIGN_CATEGORIES.map((category) => (
             <button
-              type="button"
-              onClick={() => setShowFilters((prev) => !prev)}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition"
-              aria-label={showFilters ? 'Hide filters sidebar' : 'Show filters sidebar'}
-              title={showFilters ? 'Hide filters sidebar' : 'Show filters sidebar'}
-              style={{
-                borderColor: design.colors.border.subtle,
-                background: design.colors.surfaceSoft,
-                color: design.colors.text.primary,
-              }}
+              key={category}
+              onClick={() => setActiveTab(category)}
+              className={`px-7 py-2.5 text-[15px] font-medium rounded-full transition-all duration-300 ease-out ${
+                activeTab === category
+                  ? 'bg-gradient-to-br from-zinc-900 to-zinc-600 text-white shadow-lg'
+                  : 'text-zinc-500 hover:text-zinc-900'
+              }`}
             >
-              {showFilters ? <IconChevronLeft size={20} stroke={1.9} /> : <IconChevronRight size={20} stroke={1.9} />}
+              {category === 'All' ? 'All Boards' : category}
             </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1 px-1 sm:px-2">
+        <div className="pb-16 text-center">
+          {/* Main Feed Container */}
+          <div className="mx-auto max-w-7xl">
+            {showInteractiveWebDesign ? (
+              <FigmaInteractiveShowcase projects={interactiveWebProjects} />
+            ) : filteredFeedItems.length === 0 ? (
+              <div className="rounded-[28px] border border-dashed border-black/15 bg-white/70 px-6 py-14 text-center shadow-[0_16px_36px_rgba(10,10,10,0.04)]">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500">
+                  No Uploaded Projects
+                </p>
+                <p className="mx-auto mt-3 max-w-2xl text-sm text-zinc-600 md:text-base">
+                  This design category is empty right now. Upload a project from the admin panel to have it appear here.
+                </p>
+              </div>
+            ) : (
+              <div className={isPinterestLayout ? "columns-2 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 max-w-[1400px] mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-24 md:gap-y-32"}>
+                <AnimatePresence mode="popLayout">
+                  {filteredFeedItems.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    >
+                      {isPinterestLayout ? (
+                        <PinCard
+                          pin={item.pin}
+                          href={
+                            usePlayOverlayCards
+                              ? resolvePlayOverlayHref(item.pin, item.href)
+                              : item.href
+                          }
+                          index={index}
+                          showPlayOverlay={usePlayOverlayCards}
+                          interactive={usePlayOverlayCards}
+                        />
+                      ) : (
+                        <ProjectGalleryCard
+                          title={item.pin.title}
+                          category={item.pin.board}
+                          image={item.pin.mediaPath}
+                          link={item.href}
+                        />
+                      )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+            
+            {/* Load More Sentinel */}
+            <div ref={loadMoreRef} className="h-20 w-full flex items-center justify-center">
+              {visibleCount < filteredFeedItems.length && (
+                <div className="w-8 h-8 border-4 border-zinc-200 border-t-zinc-800 rounded-full animate-spin" />
+              )}
+            </div>
           </div>
 
-          {showFilters ? (
-            <div className="mt-3 space-y-2 lg:max-h-[calc(100vh-20rem)] lg:overflow-y-auto lg:pr-1">
-              {chipItems.map((chip) => {
-                const isActive = selectedCategories.includes(chip.category);
-                const CategoryIcon = DESIGN_CATEGORY_ICONS[chip.category];
-                return (
-                  <button
-                    key={chip.category}
-                    type="button"
-                    onClick={() => toggleCategory(chip.category)}
-                    className="inline-flex w-full items-center gap-2 rounded-xl border px-2 py-2 pr-3 text-left text-sm font-semibold transition"
-                    style={{
-                      borderColor: isActive ? design.colors.brand.blueSoft : design.colors.border.subtle,
-                      background: design.colors.surfaceSoft,
-                      color: design.colors.text.secondary,
-                      fontFamily: design.typography.families.sans,
-                    }}
-                  >
-                    <span
-                      className="inline-flex h-8 w-10 items-center justify-center rounded-md"
-                      style={{
-                        background: 'transparent',
-                        color: isActive ? design.colors.brand.blue : design.colors.text.secondary,
-                      }}
-                    >
-                      <CategoryIcon className="h-4 w-4" />
-                    </span>
-                    <span className="line-clamp-1">{chip.category}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="mt-3 space-y-2 lg:max-h-[calc(100vh-20rem)] lg:overflow-y-auto lg:pr-1">
-              {chipItems.map((chip) => {
-                const isActive = selectedCategories.includes(chip.category);
-                const CategoryIcon = DESIGN_CATEGORY_ICONS[chip.category];
-                return (
-                  <button
-                    key={chip.category}
-                    type="button"
-                    onClick={() => toggleCategory(chip.category)}
-                    className="inline-flex w-full items-center justify-center rounded-lg border p-1 transition"
-                    aria-label={chip.category}
-                    title={chip.category}
-                    style={{
-                      borderColor: isActive ? design.colors.brand.blueSoft : design.colors.border.subtle,
-                      background: design.colors.surfaceSoft,
-                      color: design.colors.text.secondary,
-                    }}
-                  >
-                    <span
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md"
-                      style={{
-                        background: 'transparent',
-                        color: isActive ? design.colors.brand.blue : design.colors.text.secondary,
-                      }}
-                    >
-                      <CategoryIcon className="h-4 w-4" />
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </aside>
-
-        <div className="min-w-0 flex-1 px-1 sm:px-2 lg:flex lg:h-full lg:flex-col">
-          {selectedFilterPills.length > 0 ? (
-            <div
-              className="z-20 rounded-xl border px-3 py-3 sm:px-4"
-              style={{
-                borderColor: design.colors.border.card,
-                background: design.colors.surface,
-                boxShadow: design.shadows.subtle,
-              }}
+          {/* ── Behance Showcase — only under Graphic Design ── */}
+          {activeTab === 'Graphic design' && behanceShowcaseEmbeds.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.15 }}
+              className="mt-20"
             >
-              <div className="flex flex-wrap items-center gap-2">
-                {selectedFilterPills.map((category) => {
-                  const CategoryIcon = DESIGN_CATEGORY_ICONS[category];
-                  return (
-                    <span
-                      key={`selected-${category}`}
-                      className="inline-flex items-center gap-2 rounded-full border px-2 py-1 pr-1 text-xs font-semibold sm:text-sm"
-                      style={{
-                        borderColor: design.colors.border.subtle,
-                        background: design.colors.surfaceSoft,
-                        color: design.colors.text.secondary,
-                      }}
-                    >
-                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-md" style={{ color: design.colors.brand.blue }}>
-                        <CategoryIcon className="h-3.5 w-3.5" />
-                      </span>
-                      <span>{category}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeCategory(category)}
-                        aria-label={`Remove ${category}`}
-                        className="inline-flex h-6 w-6 items-center justify-center rounded-full border"
+              {/* Section Header */}
+              <div className="mx-auto max-w-5xl text-center mb-10">
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.18em] border"
+                  style={{
+                    background: 'linear-gradient(135deg, #1769ff12 0%, #0057ff08 100%)',
+                    borderColor: 'rgba(23,105,255,0.18)',
+                    color: '#1769ff',
+                  }}
+                >
+                  <IconBrandBehance size={15} stroke={1.8} />
+                  Behance Showcase
+                </span>
+                <h3 className="mt-4 text-2xl md:text-3xl font-bold tracking-tight text-zinc-900">
+                  Featured Case Studies
+                </h3>
+                <p className="mx-auto mt-2 max-w-xl text-sm text-zinc-500 md:text-base">
+                  Explore detailed graphic design case studies and projects on Behance.
+                </p>
+              </div>
+
+              {/* Behance Embeds Container */}
+              {behanceShowcaseEmbeds.length > 2 ? (
+                <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden py-10">
+                   <div className="flex w-fit animate-marquee-scroll gap-6 px-6">
+                    {/* First set of projects */}
+                    {behanceShowcaseEmbeds.map((item) => (
+                      <div
+                        key={item.id}
+                        className="group relative w-[320px] md:w-[480px] shrink-0 overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl"
                         style={{
-                          borderColor: design.colors.border.subtle,
-                          background: design.colors.surface,
-                          color: design.colors.text.secondary,
+                          background: '#ffffff',
+                          border: '1.5px solid rgba(0,0,0,0.08)',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
                         }}
                       >
-                        <IconX size={14} stroke={2} />
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="mt-4 pb-6 lg:flex-1 lg:overflow-y-auto lg:pr-1">
-            {showUiUxEmbedSection ? (
-              <div className="mb-6 grid grid-cols-1 gap-x-4 gap-y-10 xl:grid-cols-2">
-                {uiUxEmbedCards.map((card) => (
-                  <section
-                    key={card.id}
-                    className="rounded-xl border px-3 py-3 sm:px-4"
-                    style={{
-                      borderColor: design.colors.border.card,
-                      background: design.colors.surface,
-                      boxShadow: design.shadows.subtle,
-                    }}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="max-w-2xl">
-                        <h3
-                          className="text-base font-semibold sm:text-lg"
-                          style={{
-                            color: design.colors.text.primary,
-                            fontFamily: design.typography.families.sans,
-                          }}
-                        >
-                          {card.title}
-                        </h3>
-                        <p
-                          className="mt-1 text-xs sm:text-sm"
-                          style={{
-                            color: design.colors.text.body,
-                            fontFamily: design.typography.families.sans,
-                          }}
-                        >
-                          {card.description}
-                        </p>
+                        <div className="relative w-full" style={{ paddingBottom: '78.2%' }}>
+                          <iframe
+                            src={sanitizeBehanceSrc(item.src)}
+                            className="absolute inset-0 w-full h-full rounded-lg"
+                            allowFullScreen
+                            loading="lazy"
+                            style={{ border: 'none' }}
+                            allow="clipboard-write"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            title={item.title}
+                          />
+                        </div>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={card.sourceUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold sm:text-sm"
-                          style={{
-                            borderColor: design.colors.border.subtle,
-                            background: design.colors.surfaceSoft,
-                            color: design.colors.text.secondary,
-                          }}
-                        >
-                          Open Source
-                          <ArrowUpRight className="h-3.5 w-3.5" />
-                        </a>
-
-                        {card.docsUrl ? (
-                          <a
-                            href={card.docsUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold sm:text-sm"
-                            style={{
-                              borderColor: design.colors.border.subtle,
-                              background: design.colors.surfaceSoft,
-                              color: design.colors.text.secondary,
-                            }}
-                          >
-                            Documentation
-                            <ArrowUpRight className="h-3.5 w-3.5" />
-                          </a>
-                        ) : null}
+                    ))}
+                    {/* Duplicate set for seamless loop */}
+                    {behanceShowcaseEmbeds.map((item) => (
+                      <div
+                        key={`${item.id}-loop`}
+                        className="group relative w-[320px] md:w-[480px] shrink-0 overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl"
+                        style={{
+                          background: '#ffffff',
+                          border: '1.5px solid rgba(0,0,0,0.08)',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                        }}
+                      >
+                        <div className="relative w-full" style={{ paddingBottom: '78.2%' }}>
+                          <iframe
+                            src={sanitizeBehanceSrc(item.src)}
+                            className="absolute inset-0 w-full h-full rounded-lg"
+                            allowFullScreen
+                            loading="lazy"
+                            style={{ border: 'none' }}
+                            allow="clipboard-write"
+                            referrerPolicy="strict-origin-when-cross-origin"
+                            title={item.title}
+                          />
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="mt-4 aspect-video w-full overflow-hidden" style={{ borderRadius: '1rem', border: '1px solid rgba(0,0,0,0.1)' }}>
-                      <iframe
-                        title={card.title}
-                        src={card.embedUrl}
-                        className="h-full w-full bg-white"
-                        allowFullScreen
-                        loading="lazy"
-                      />
-                    </div>
-                  </section>
-                ))}
-              </div>
-            ) : null}
-
-            {showUiUxOnlyLayout ? null : (
-              <>
-                {feedItemsBelowUiUx.length > 0 ? (
-                  <div className="columns-2 gap-4 sm:columns-2 lg:columns-3 xl:columns-4">
-                    {feedItemsBelowUiUx.map((item) => (
-                      <PinCard key={item.id} pin={item.pin} href={item.href} />
                     ))}
                   </div>
-                ) : (
-                  <div className="rounded-xl border border-dashed border-black/20 bg-white/80 px-6 py-10 text-center">
-                    <p className="text-sm text-zinc-600 md:text-base">
-                      No pins found for {selectedFilterPills.length > 0 ? selectedFilterPills.join(', ') : 'your current selection'}. Try another filter.
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-
-            <div className="pt-4 text-center text-xs text-zinc-500">
-              End of feed
-            </div>
-          </div>
+                </div>
+              ) : (
+                <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6 px-4">
+                  {behanceShowcaseEmbeds.map((item) => (
+                    <div
+                      key={item.id}
+                      className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl"
+                      style={{
+                        background: '#ffffff',
+                        border: '1.5px solid rgba(0,0,0,0.08)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.06)',
+                      }}
+                    >
+                      <div className="relative w-full" style={{ paddingBottom: '78.2%' }}>
+                        <iframe
+                          src={sanitizeBehanceSrc(item.src)}
+                          className="absolute inset-0 w-full h-full rounded-lg"
+                          allowFullScreen
+                          loading="lazy"
+                          style={{ border: 'none' }}
+                          allow="clipboard-write"
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          title={item.title}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
         </div>
       </div>
     </div>
@@ -828,6 +1201,7 @@ export default function WorkspaceProjectsSection({
   projects,
   sourceUrl,
   workspace,
+  behanceShowcaseEmbeds = [],
 }: WorkspaceProjectsSectionProps) {
   const githubProfileUrl = useMemo(() => resolveGithubProfileUrl(sourceUrl), [sourceUrl]);
 
@@ -838,8 +1212,13 @@ export default function WorkspaceProjectsSection({
 
   const sectionClass =
     workspace === 'coding'
-      ? 'mx-auto w-full max-w-[1480px] px-3 py-14 md:px-5 md:py-20'
-      : 'mx-auto w-full max-w-[1620px] px-2 py-8 sm:px-4 md:px-6 md:py-12';
+      ? 'w-full py-8 md:py-20'
+      : 'w-full py-6 sm:py-12 md:py-16';
+
+  const contentContainerClass =
+    workspace === 'coding'
+      ? 'mx-auto w-full max-w-[1480px] px-3 md:px-5'
+      : 'mx-auto w-full max-w-[1620px] px-2 sm:px-4 md:px-6';
 
   const filteredProjects = useMemo(
     () => projects.filter((project) => project.workspace === workspace),
@@ -867,89 +1246,102 @@ export default function WorkspaceProjectsSection({
         />
       </div>
 
-      <div className="relative z-10">
+      <div className={`relative z-10 ${contentContainerClass}`}>
         {workspace === 'coding' ? (
-          <div className="mb-7 flex flex-col items-center gap-5 text-center">
-            <div className="space-y-2">
-              <p className="inline-flex rounded-xl border border-black/10 bg-black/3 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-black/60">
+          <div className="mb-4 md:mb-7 flex flex-col items-center gap-3 md:gap-5 text-center">
+            <div className="space-y-1.5 md:space-y-2">
+              <p className="inline-flex rounded-xl border border-black/10 bg-black/3 px-3 py-1 text-[10px] md:text-xs font-semibold uppercase tracking-[0.16em] text-black/60">
                 Co Project
               </p>
-              <h2 className="text-5xl font-extrabold tracking-tight text-[#0b1034] md:text-7xl">
+              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#0b1034] md:text-7xl">
                 Curated <span className="font-serif italic font-medium text-[#1f5fff]">Projects</span>
               </h2>
-              <p className="mx-auto max-w-2xl text-base text-zinc-600 md:text-lg">
+              <p className="mx-auto max-w-2xl text-sm md:text-base text-zinc-600 lg:text-lg">
                 Explore projects by workspace. Hover each card to quickly open the live site or repository, and click the card to view full project details.
               </p>
             </div>
           </div>
         ) : null}
 
-        {workspace === 'coding' ? (
-          <div className="mb-4 flex justify-end md:mb-5">
-            <a
-              href={githubProfileUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center no-underline"
-              style={{
-                gap: '10px',
-                background: 'var(--gradient-gray)',
-                border: '1.5px solid var(--color-border-light)',
-                borderRadius: 'var(--radius-full)',
-                padding: '12px 20px',
-                fontFamily: 'var(--font-sans)',
-                fontWeight: 500,
-                fontSize: '14px',
-                color: '#fff',
-                textDecoration: 'none',
-                transition: 'box-shadow 300ms ease, transform 200ms ease',
-              }}
-              onMouseEnter={(event) => {
-                const element = event.currentTarget as HTMLElement;
-                element.style.boxShadow = '0 14px 36px rgba(0,0,0,0.22)';
-                element.style.transform = 'scale(1.02)';
-              }}
-              onMouseLeave={(event) => {
-                const element = event.currentTarget as HTMLElement;
-                element.style.boxShadow = 'none';
-                element.style.transform = 'scale(1)';
-              }}
-            >
-              <Github className="h-5 w-5" />
-              <span>View Github</span>
-            </a>
-          </div>
-        ) : null}
 
-        <div className={containerClass}>
-          {workspace === 'coding' ? (
-            filteredProjects.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-black/20 bg-zinc-50 px-6 py-10 text-center">
-                <p className="text-sm text-zinc-600 md:text-base">
-                  No projects found in this workspace from your GitHub source.
-                </p>
+
+        <div className="flex flex-col gap-5 md:gap-14">
+          {workspace === 'coding' && (
+            <div className="flex flex-col gap-6 md:gap-10">
+              <CodingMarqueeShowcase projects={filteredProjects} />
+              
+              <div className="flex flex-col gap-4 md:gap-6">
+                <TechStackMarquee />
+                
+                {/* GitHub CTA Button - Right Aligned */}
+                <div className="flex justify-end px-4 md:px-8">
+                  <a
+                    href={githubProfileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center no-underline px-4 py-2 md:px-5 md:py-2.5 gap-2 md:gap-2.5"
+                    style={{
+                      background: 'var(--gradient-gray)',
+                      border: '1.5px solid var(--color-border-light)',
+                      borderRadius: 'var(--radius-full)',
+                      fontFamily: 'var(--font-sans)',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      color: '#fff',
+                      textDecoration: 'none',
+                      transition: 'all 300ms ease',
+                    }}
+                    onMouseEnter={(event) => {
+                      const element = event.currentTarget as HTMLElement;
+                      element.style.boxShadow = '0 12px 32px rgba(0,0,0,0.22)';
+                      element.style.transform = 'translateY(-2px)';
+                    }}
+                    onMouseLeave={(event) => {
+                      const element = event.currentTarget as HTMLElement;
+                      element.style.boxShadow = 'none';
+                      element.style.transform = 'translateY(0)';
+                    }}
+                  >
+                    <Github className="h-4 w-4" />
+                    <span className="hidden md:inline">View GitHub Profile</span>
+                    <span className="md:hidden">GitHub</span>
+                  </a>
+                </div>
               </div>
-            ) : (
-              <CodingWorkspaceLayout projects={filteredProjects} />
-            )
-          ) : (
-            <DesigningWorkspaceLayout projects={filteredProjects} />
+            </div>
           )}
 
-          {workspace === 'coding' ? (
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-black/10 pt-6 text-xs text-zinc-500 md:text-sm">
-              <span>Data source: {sourceUrl}</span>
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 rounded-xl border border-black/20 px-3 py-1.5 font-medium text-zinc-700 transition hover:bg-zinc-100"
-              >
-                Open GitHub source
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          ) : null}
+          <div className={containerClass}>
+            {workspace === 'coding' ? (
+              filteredProjects.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-black/20 bg-zinc-50 px-6 py-10 text-center">
+                  <p className="text-sm text-zinc-600 md:text-base">
+                    No projects found in this workspace from your GitHub source.
+                  </p>
+                </div>
+              ) : (
+                <CodingWorkspaceLayout projects={filteredProjects.filter((p) => !p.isFromDb)} />
+              )
+            ) : (
+              <DesigningWorkspaceLayout projects={filteredProjects} behanceShowcaseEmbeds={behanceShowcaseEmbeds} />
+            )}
+
+            {workspace === 'coding' && false ? (
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-black/10 pt-6 text-xs text-zinc-500 md:text-sm">
+                <span>Data source: {sourceUrl}</span>
+                <a
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-xl border border-black/20 px-3 py-1.5 font-medium text-zinc-700 transition hover:bg-zinc-100"
+                >
+                  Open GitHub source
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            ) : null}
+          </div>
+
         </div>
       </div>
     </section>

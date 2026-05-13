@@ -1,0 +1,49 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+import { requireAdminSession } from "@/lib/admin-auth";
+import { NextResponse } from "next/server";
+
+function sanitizeBaseName(name: string) {
+  return name
+    .replace(/\.[^/.]+$/, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50) || "resume";
+}
+
+export async function POST(request: Request) {
+  const { session, response } = await requireAdminSession();
+  if (response) return response;
+
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file");
+
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: "Missing file" }, { status: 400 });
+    }
+
+    if (file.type !== "application/pdf") {
+      return NextResponse.json({ error: "Only PDF uploads are supported" }, { status: 400 });
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    const extension = ".pdf";
+    const fileName = `${Date.now()}-${sanitizeBaseName(file.name)}${extension}`;
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "resumes");
+
+    await mkdir(uploadDir, { recursive: true });
+    await writeFile(path.join(uploadDir, fileName), buffer);
+
+    return NextResponse.json({
+      url: `/uploads/resumes/${fileName}`,
+      name: file.name,
+    });
+  } catch (error) {
+    console.error("Resume upload error:", error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
+}

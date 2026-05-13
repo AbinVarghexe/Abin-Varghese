@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { z } from "zod";
-
-import { authOptions } from "@/lib/auth-options";
+import { requireAdminSession } from "@/lib/admin-auth";
 import { getInstagramMediaUrl, isInstagramUrl, resolveInstagramPreview } from "@/lib/instagram";
-import { getAboutContent, upsertAboutContent, getHeroContent, upsertHeroContent, getHomeContent, upsertHomeContent } from "@/lib/site-content";
+import { getAboutContent, upsertAboutContent, getHeroContent, upsertHeroContent, getHomeContent, upsertHomeContent, getBehanceShowcaseEmbeds, upsertBehanceShowcaseEmbeds, getPinterestShowcaseItems, upsertPinterestShowcaseItems } from "@/lib/site-content";
+import type { BehanceShowcaseEmbed, PinterestShowcaseItem } from "@/lib/site-content";
 
 const aboutContentSchema = z.object({
   aboutImage: z.string(),
+  homeAboutImage1: z.string(),
+  homeAboutImage2: z.string(),
+  homeAboutImage3: z.string(),
   aboutInstagramImage1: z.string(),
   aboutInstagramImage2: z.string(),
   aboutInstagramImage3: z.string(),
@@ -39,6 +41,15 @@ const homeContentSchema = z.object({
     linkedin: z.string(),
     instagram: z.string(),
   }),
+  otherSocialLinks: z
+    .array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        url: z.string(),
+      })
+    )
+    .default([]),
   pageLinks: z.object({
     about: z.string(),
     projects: z.string(),
@@ -48,21 +59,23 @@ const homeContentSchema = z.object({
 });
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireAdminSession();
+  if (response) {
+    return response;
   }
 
   const about = await getAboutContent();
   const hero = await getHeroContent();
   const home = await getHomeContent();
-  return NextResponse.json({ about, hero, home });
+  const behanceShowcase = await getBehanceShowcaseEmbeds();
+  const pinterestShowcase = await getPinterestShowcaseItems();
+  return NextResponse.json({ about, hero, home, behanceShowcase, pinterestShowcase });
 }
 
 export async function PUT(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { response } = await requireAdminSession();
+  if (response) {
+    return response;
   }
 
   try {
@@ -119,6 +132,28 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ home });
     }
 
+    if (type === 'behanceShowcase') {
+      const parsed = z.array(z.object({
+        id: z.string(),
+        src: z.string(),
+        title: z.string(),
+      })).parse(data);
+      const embeds = parsed.filter((e) => e.src.trim().length > 0);
+      await upsertBehanceShowcaseEmbeds(embeds as BehanceShowcaseEmbed[]);
+      return NextResponse.json({ behanceShowcase: embeds });
+    }
+
+    if (type === 'pinterestShowcase') {
+      const parsed = z.array(z.object({
+        id: z.string(),
+        src: z.string(),
+        title: z.string(),
+      })).parse(data);
+      const items = parsed.filter((e) => e.src.trim().length > 0);
+      await upsertPinterestShowcaseItems(items as PinterestShowcaseItem[]);
+      return NextResponse.json({ pinterestShowcase: items });
+    }
+
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -129,6 +164,9 @@ export async function PUT(request: NextRequest) {
     }
 
     console.error("Update site content error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error", message: error instanceof Error ? error.message : String(error) }, 
+      { status: 500 }
+    );
   }
 }

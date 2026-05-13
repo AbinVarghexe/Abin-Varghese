@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import Image from 'next/image';
 
@@ -11,13 +11,22 @@ const ServicesHero = ({ title }: { title: string }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const checkIsDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkIsDesktop();
+    window.addEventListener('resize', checkIsDesktop);
+    return () => window.removeEventListener('resize', checkIsDesktop);
+  }, []);
+
   // Smooth mouse movement with springs
   const springConfig = { damping: 25, stiffness: 150 };
   const smoothMouseX = useSpring(mouseX, springConfig);
   const smoothMouseY = useSpring(mouseY, springConfig);
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !isDesktop) return;
     const { clientX, clientY } = e;
     const { left, top, width, height } = containerRef.current.getBoundingClientRect();
     
@@ -77,7 +86,7 @@ const ServicesHero = ({ title }: { title: string }) => {
       ref={containerRef} 
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative h-screen w-full bg-transparent cursor-default"
+      className="relative h-[45svh] md:h-[100svh] w-full bg-transparent cursor-default overflow-hidden md:overflow-visible"
       style={{ 
         perspective: "1000px"
       }}
@@ -112,9 +121,9 @@ const ServicesHero = ({ title }: { title: string }) => {
       {/* ── Layer 1: Sky Background (z-0) ────────────────────────── */}
       <motion.div 
         style={{ 
-          y: skyScrollY,
-          x: skyMouseX,
-          translateY: skyMouseY,
+          y: isDesktop ? skyScrollY : 0,
+          x: isDesktop ? skyMouseX : 0,
+          translateY: isDesktop ? skyMouseY : 0,
           scale: 1.1, // Slight overscale to hide edges during mouse move
           WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
           maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)'
@@ -143,15 +152,15 @@ const ServicesHero = ({ title }: { title: string }) => {
       {/* ── Layer 1.5: Butterfly Video (z-5) ──────────────────────── */}
       <motion.div
         style={{
-          y: butterflyScrollY,
-          x: butterflyMouseX,
-          translateY: butterflyMouseY,
+          y: isDesktop ? butterflyScrollY : 0,
+          x: isDesktop ? butterflyMouseX : 0,
+          translateY: isDesktop ? butterflyMouseY : 0,
           z: 25 // Position between Sky and Text
         }}
         className="absolute inset-0 z-5 flex items-center justify-center pointer-events-none"
       >
         <div 
-          className="relative w-full max-w-4xl aspect-video overflow-hidden"
+          className="relative w-[60%] md:w-full max-w-4xl aspect-video overflow-hidden"
           style={{
             WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 95%)',
             maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 95%)'
@@ -173,11 +182,11 @@ const ServicesHero = ({ title }: { title: string }) => {
       {/* ── Layer 2: Black Services Text (z-10) ───────────────────── */}
       <motion.div 
         style={{ 
-          y: textScrollY,
-          x: textMouseX,
-          translateY: textMouseY,
-          rotateX: textRotateX,
-          rotateY: textRotateY,
+          y: isDesktop ? textScrollY : 0,
+          x: isDesktop ? textMouseX : 0,
+          translateY: isDesktop ? textMouseY : 0,
+          rotateX: isDesktop ? textRotateX : 0,
+          rotateY: isDesktop ? textRotateY : 0,
           z: 50 // Pull forward in 3D space
         }}
         className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
@@ -186,7 +195,7 @@ const ServicesHero = ({ title }: { title: string }) => {
           initial={{ opacity: 0, scale: 0.8, y: 100 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-          className="text-[10vw] md:text-[11rem] font-bold text-black uppercase tracking-tighter leading-none select-none text-center px-6"
+          className="text-[11.5vw] sm:text-[10vw] md:text-[11rem] font-bold text-black uppercase tracking-tighter leading-none select-none text-center px-4 md:px-6"
         >
           {title}
         </motion.h1>
@@ -195,14 +204,14 @@ const ServicesHero = ({ title }: { title: string }) => {
       {/* ── Layer 3: Grass Hill Foreground (z-20) ─────────────────── */}
       <motion.div 
         style={{ 
-          x: grassMouseX,
-          y: grassMouseY,
-          scale: grassScale,
+          x: isDesktop ? grassMouseX : 0,
+          y: isDesktop ? grassMouseY : 0,
+          scale: isDesktop ? grassScale : 1,
           z: 150, // Pull further forward for strong 2.5D effect
           WebkitMaskImage: 'linear-gradient(to bottom, black 80%, rgba(0,0,0,0.5) 90%, transparent 100%)',
           maskImage: 'linear-gradient(to bottom, black 80%, rgba(0,0,0,0.5) 90%, transparent 100%)'
         }}
-        className="absolute bottom-0 left-[-5%] right-[-5%] z-20 h-[70vh] md:h-[85vh] pointer-events-none"
+        className="absolute bottom-0 left-[-5%] right-[-5%] z-20 h-[25vh] md:h-[85vh] pointer-events-none"
       >
         <Image
           src="/services/GrassFade.png"

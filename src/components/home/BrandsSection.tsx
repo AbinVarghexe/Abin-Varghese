@@ -4,19 +4,16 @@ import { memo } from "react";
 import Image from "next/image";
 import LogoCarousel from "./LogoCarousel";
 
-const partnerLogos = [
-  "/uploads/logos/1775313043262-incial.png",
-  "/uploads/logos/1775314295868-voltant.png",
-  "/uploads/logos/1775314641812-blaupunkt.png",
-  "/uploads/logos/1775314941462-manna.png",
-];
+import { homeContentDefaults } from "@/lib/home-content-defaults";
 
 interface BrandsSectionProps {
   logos?: string[];
 }
 
 const BrandsSection = ({ logos }: BrandsSectionProps) => {
-  const displayLogos = logos && logos.length > 0 ? logos : partnerLogos;
+  // Filter out any default placeholder company-x.png images
+  const validLogos = logos?.filter(logo => !logo.includes('company-'));
+  const displayLogos = validLogos && validLogos.length > 0 ? validLogos : homeContentDefaults.scrollingLogos;
 
   return (
     <section className="relative z-20 w-full px-4 md:px-8 lg:px-16 py-8">

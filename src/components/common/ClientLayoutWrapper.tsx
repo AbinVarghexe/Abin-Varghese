@@ -7,6 +7,7 @@ import Footer from "@/components/layout/Footer";
 import MouseTrail from "@/components/ui/MouseTrail";
 import { MobileDock } from "@/components/common/MobileDock";
 import Preloader from "@/components/layout/Preloader";
+import CalEmbed from "@/components/common/CalEmbed";
 import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
@@ -160,6 +161,7 @@ export default function ClientLayoutWrapper({
 
   return (
     <>
+      <CalEmbed />
       <Preloader />
       <MouseTrail baseThickness={4} enableCustomCursor={true} enableFade={true} />
       
@@ -188,7 +190,7 @@ export default function ClientLayoutWrapper({
           {/* Layer 2: 3D Interaction Layer (z-10) */}
           <div className="fixed inset-0 z-10 pointer-events-none overflow-hidden h-screen w-screen">
             <JarvisAssistant />
-            <div className="hidden lg:block h-full w-full">
+            <div className="hidden md:block h-full w-full">
               <Hero3DLayer />
             </div>
           </div>
