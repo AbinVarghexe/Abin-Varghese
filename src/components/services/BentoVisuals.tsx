@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import Folder from '@/components/ui/Folder';
 import { OrbitingCircles } from '@/components/ui/orbiting-circles';
 import { extractUrlFromEmbed } from '@/lib/utils';
+import { getCachedLottieData, loadLottieData } from '@/lib/lottie-cache';
 
 // --- Folder Content ---
 const folderPapers: React.ReactNode[] = [
@@ -29,18 +30,19 @@ const folderPapers: React.ReactNode[] = [
 ];
 // --- Lottie JSON Fetch Hook ---
 function useLottieData(url: string) {
-  const [animationData, setAnimationData] = React.useState<any>(null);
+  const [animationData, setAnimationData] = React.useState<unknown>(() => getCachedLottieData(url) ?? null);
   const [error, setError] = React.useState(false);
 
   React.useEffect(() => {
     if (!url) return;
     let cancelled = false;
-    fetch(url)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.json();
+    loadLottieData(url)
+      .then(data => {
+        if (!cancelled) {
+          setAnimationData(data);
+          setError(false);
+        }
       })
-      .then(data => { if (!cancelled) setAnimationData(data); })
       .catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };
   }, [url]);
