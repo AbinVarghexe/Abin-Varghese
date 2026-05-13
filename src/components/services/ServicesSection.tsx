@@ -8,6 +8,7 @@ import Folder from '@/components/ui/Folder';
 import { OrbitingCircles } from '@/components/ui/orbiting-circles';
 import { splitAccentHeading } from '@/lib/accent-heading';
 import { loadLottieData } from '@/lib/lottie-cache';
+import type { LottieData } from '@/lib/lottie-cache';
 import type { Service } from '@/constants/services';
 
 // ─── Services Data ─────────────────────────────────────────────────────────
@@ -86,7 +87,7 @@ function resolveServiceContent(
 
 // ─── Lottie fetch hook ──────────────────────────────────────────────────────
 function useLottieData(url?: string) {
-  const [animationData, setAnimationData] = useState<unknown>(null);
+  const [animationData, setAnimationData] = useState<LottieData | null>(null);
   useEffect(() => {
     if (!url) return;
     let cancelled = false;

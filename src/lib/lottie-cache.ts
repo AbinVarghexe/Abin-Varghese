@@ -1,4 +1,4 @@
-type LottieData = Record<string, unknown>;
+export type LottieData = Record<string, unknown>;
 
 const lottieDataCache = new Map<string, LottieData>();
 const lottieRequestCache = new Map<string, Promise<LottieData>>();
@@ -41,7 +41,7 @@ export function getCachedLottieData(url: string) {
 
 export function loadLottieData(url: string): Promise<LottieData> {
   if (!validateLottieUrl(url)) {
-    return Promise.reject(new Error(`Invalid lottie url: ${url}`));
+    return Promise.reject(new Error(`Invalid Lottie URL: ${url}`));
   }
 
   const cachedData = touchCachedLottieData(url);
@@ -57,7 +57,7 @@ export function loadLottieData(url: string): Promise<LottieData> {
   const request = fetch(url)
     .then((res) => {
       if (!res.ok) {
-        throw new Error(`Failed to fetch lottie data from ${url}: ${res.status}`);
+        throw new Error(`Failed to fetch Lottie data from ${url}: ${res.status}`);
       }
       return res.json() as Promise<LottieData>;
     })
