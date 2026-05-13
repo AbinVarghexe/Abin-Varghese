@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import Folder from '@/components/ui/Folder';
 import { OrbitingCircles } from '@/components/ui/orbiting-circles';
 import { extractUrlFromEmbed } from '@/lib/utils';
-import { getCachedLottieData, loadLottieData } from '@/lib/lottie-cache';
+import { loadLottieData } from '@/lib/lottie-cache';
 
 // --- Folder Content ---
 const folderPapers: React.ReactNode[] = [
@@ -30,7 +30,7 @@ const folderPapers: React.ReactNode[] = [
 ];
 // --- Lottie JSON Fetch Hook ---
 function useLottieData(url: string) {
-  const [animationData, setAnimationData] = React.useState<unknown>(() => getCachedLottieData(url) ?? null);
+  const [animationData, setAnimationData] = React.useState<unknown>(null);
   const [error, setError] = React.useState(false);
 
   React.useEffect(() => {

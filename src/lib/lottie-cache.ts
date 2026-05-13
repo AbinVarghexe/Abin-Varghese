@@ -23,7 +23,10 @@ function touchCachedLottieData(url: string) {
 }
 
 function setCachedLottieData(url: string, data: LottieData) {
-  if (!lottieDataCache.has(url) && lottieDataCache.size >= MAX_LOTTIE_CACHE_ENTRIES) {
+  if (lottieDataCache.has(url)) {
+    lottieDataCache.delete(url);
+  }
+  while (lottieDataCache.size >= MAX_LOTTIE_CACHE_ENTRIES) {
     const firstKey = lottieDataCache.keys().next().value;
     if (firstKey !== undefined) {
       lottieDataCache.delete(firstKey);

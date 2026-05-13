@@ -7,7 +7,7 @@ import { ArrowUpRight, Sparkles } from 'lucide-react';
 import Folder from '@/components/ui/Folder';
 import { OrbitingCircles } from '@/components/ui/orbiting-circles';
 import { splitAccentHeading } from '@/lib/accent-heading';
-import { getCachedLottieData, loadLottieData } from '@/lib/lottie-cache';
+import { loadLottieData } from '@/lib/lottie-cache';
 import type { Service } from '@/constants/services';
 
 // ─── Services Data ─────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ function resolveServiceContent(
 
 // ─── Lottie fetch hook ──────────────────────────────────────────────────────
 function useLottieData(url?: string) {
-  const [animationData, setAnimationData] = useState<unknown>(() => (url ? getCachedLottieData(url) ?? null : null));
+  const [animationData, setAnimationData] = useState<unknown>(null);
   useEffect(() => {
     if (!url) return;
     let cancelled = false;
