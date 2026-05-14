@@ -270,7 +270,7 @@ const Herosection = ({
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="pointer-events-auto max-w-4xl text-[40px] md:text-5xl lg:text-7xl font-semibold leading-[0.9] tracking-tighter text-[#0f1020]"
             >
-              {greetingParts.map((part, i) => 
+              {greetingParts.map((part: string, i: number) => 
                 part === '👋' ? (
                   <motion.span
                     key={i}
@@ -293,7 +293,7 @@ const Herosection = ({
                 className="inline-block cursor-default bg-clip-text text-[40px] md:text-6xl lg:text-7xl leading-tight tracking-[-0.04em] text-transparent overflow-visible py-2"
                 style={{ backgroundImage: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)' }}
               >
-                {nameLetters.map((letter, i) => (
+                {nameLetters.map((letter: string, i: number) => (
                   <motion.span
                     key={i}
                     initial={{ opacity: 0, y: 10 }}
