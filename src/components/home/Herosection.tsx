@@ -1,8 +1,9 @@
 'use client';
 
-import { memo, useRef, type ComponentType, useState, useEffect } from 'react';
-import { ArrowUpRight, Calendar, Github, Instagram, Linkedin, ChevronDown } from 'lucide-react';
+import { memo, type ComponentType, useState, useEffect } from 'react';
+import { ArrowUpRight, Calendar, Github, Instagram, Linkedin } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
 
 const Hero3DLayer = dynamic(() => import('@/components/ui/Hero3DLayer'), {
   ssr: false,
@@ -184,6 +185,10 @@ const Herosection = ({
   const [availabilityText, setAvailabilityText] = useState(data.heroAvailabilityText);
   const [isAvailable, setIsAvailable] = useState(true);
 
+  // Split greeting to isolate the emoji for animation
+  const greetingParts = data.heroGreeting.split(/(👋)/);
+  const nameLetters = data.heroName.split('');
+
   // Fetch real-time availability from Cal.com via our API route
   useEffect(() => {
     fetch('/api/cal/availability')
@@ -259,31 +264,88 @@ const Herosection = ({
             </div>
 
             {/* headline */}
-            <h1 className="pointer-events-auto max-w-4xl text-[40px] md:text-5xl lg:text-7xl font-semibold leading-[0.9] tracking-tighter text-[#0f1020]">
-              {data.heroGreeting}
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="pointer-events-auto max-w-4xl text-[40px] md:text-5xl lg:text-7xl font-semibold leading-[0.9] tracking-tighter text-[#0f1020]"
+            >
+              {greetingParts.map((part, i) => 
+                part === '👋' ? (
+                  <motion.span
+                    key={i}
+                    style={{ display: 'inline-block' }}
+                    animate={{ rotate: [0, 14, -8, 14, -4, 10, 0] }}
+                    transition={{
+                      duration: 2.5,
+                      repeat: Infinity,
+                      repeatDelay: 1,
+                      ease: "easeInOut"
+                    }}
+                    className="origin-bottom-right ml-2"
+                  >
+                    👋
+                  </motion.span>
+                ) : part
+              )}
               <br />
               <span
-                className="mt-2 inline-block cursor-default bg-clip-text text-[40px] md:text-6xl lg:text-7xl leading-[0.9] tracking-[-0.08em] text-transparent"
+                className="inline-block cursor-default bg-clip-text text-[40px] md:text-6xl lg:text-7xl leading-tight tracking-[-0.04em] text-transparent overflow-visible py-2"
                 style={{ backgroundImage: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)' }}
               >
-                {data.heroName}
+                {nameLetters.map((letter, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ 
+                      delay: 0.5 + i * 0.03,
+                      type: "spring",
+                      stiffness: 100,
+                      damping: 10
+                    }}
+                    whileHover={{ 
+                      y: -15,
+                      scale: 1.15,
+                      transition: { type: "spring", stiffness: 400, damping: 10 }
+                    }}
+                    className="inline-block relative z-10"
+                  >
+                    {letter === ' ' ? '\u00A0' : letter}
+                  </motion.span>
+                ))}
               </span>
-            </h1>
+            </motion.h1>
 
           {/* sub-copy */}
-          <p className="pointer-events-auto mt-4 md:mt-8 max-w-[340px] md:max-w-4xl text-[14px] md:text-lg lg:text-xl text-center leading-snug tracking-tight text-slate-600 sm:text-justify lg:text-center [text-align-last:center] lg:[text-align-last:auto]">
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="pointer-events-auto mt-4 md:mt-8 max-w-[340px] md:max-w-4xl text-[14px] md:text-lg lg:text-xl text-center leading-snug tracking-tight text-slate-600 sm:text-justify lg:text-center [text-align-last:center] lg:[text-align-last:auto]"
+          >
             {data.heroSubcopy}
-          </p>
+          </motion.p>
 
           {/* audience pill */}
-          <div className="pointer-events-auto mt-6 md:mt-10 flex w-[300px] md:w-[380px] cursor-default items-center justify-center rounded-full border border-slate-200 bg-white/70 py-2 shadow-sm backdrop-blur-md">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+            className="pointer-events-auto mt-6 md:mt-10 flex w-[300px] md:w-[380px] cursor-default items-center justify-center rounded-full border border-slate-200 bg-white/70 py-2 shadow-sm backdrop-blur-md"
+          >
             <p className={`text-[12px] md:text-[14px] font-medium tracking-wide ${isAvailable ? 'text-[#0020d7]' : 'text-orange-600'}`}>
               {availabilityText}
             </p>
-          </div>
+          </motion.div>
 
           {/* CTA buttons — Figma pill style */}
-          <div className="pointer-events-auto relative z-20 mt-6 md:mt-8 flex flex-col items-center gap-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: "easeOut" }}
+            className="pointer-events-auto relative z-20 mt-6 md:mt-8 flex flex-col items-center gap-4"
+          >
             {/* Desktop Buttons */}
             <div className="hidden md:flex flex-row gap-4">
               <MagneticButton
@@ -320,10 +382,15 @@ const Herosection = ({
               <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
               {statusLine}
             </p>
-          </div>
+          </motion.div>
 
           {/* social icon tiles */}
-          <div className="pointer-events-auto relative z-10 mt-8 md:mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="pointer-events-auto relative z-10 mt-8 md:mt-16 flex flex-wrap items-center justify-center gap-4 md:gap-6"
+          >
             {[
               ...(Object.keys(homeLinks.socialLinks) as Array<keyof HomeContent['socialLinks']>).map((key) => ({
                 key,
@@ -340,15 +407,26 @@ const Herosection = ({
             ]
               .filter((item) => item.href)
               .map((item, index) => (
-                <SocialTile
+                <motion.div
                   key={item.key}
-                  icon={item.icon}
-                  label={item.label}
-                  href={item.href}
-                  rotate={index % 2 === 0 ? -10 : 10}
-                />
+                  initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ 
+                    delay: 0.8 + index * 0.1,
+                    type: "spring",
+                    stiffness: 200,
+                    damping: 15
+                  }}
+                >
+                  <SocialTile
+                    icon={item.icon}
+                    label={item.label}
+                    href={item.href}
+                    rotate={index % 2 === 0 ? -10 : 10}
+                  />
+                </motion.div>
               ))}
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

@@ -7,7 +7,6 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SiteCopyContent, SiteCopyTimelineEntry } from "@/types/site-copy";
-import { resumeOptions } from "@/lib/resume-data";
 
 const PDFViewer = dynamic(() => import("@/components/ui/PDFViewer"), {
   ssr: false,

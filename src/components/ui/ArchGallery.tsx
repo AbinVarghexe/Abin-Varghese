@@ -39,19 +39,14 @@ function useLottieData(url?: string) {
 }
 
 const LottieCardPlayer = ({ url, fallbackImage }: { url?: string, fallbackImage?: string }) => {
-  const urlLower = url?.toLowerCase() || '';
-  const fallbackLower = fallbackImage?.toLowerCase() || '';
+  // Priority 1: Direct Video check
+  const isUrlVideo = url?.toLowerCase().endsWith('.mp4');
+  const isFallbackVideo = fallbackImage?.toLowerCase().endsWith('.mp4');
   
-  const isVideo = urlLower.endsWith('.mp4') || fallbackLower.endsWith('.mp4');
-  const isGif = urlLower.includes('pinimg') || urlLower.includes('pinterest') || urlLower.endsWith('.gif') || 
-                fallbackLower.includes('pinimg') || fallbackLower.includes('pinterest') || fallbackLower.endsWith('.gif');
-  const isOtherImage = urlLower.endsWith('.png') || urlLower.endsWith('.jpg') || urlLower.endsWith('.jpeg') || urlLower.endsWith('.webp') ||
-                       fallbackLower.endsWith('.png') || fallbackLower.endsWith('.jpg') || fallbackLower.endsWith('.jpeg') || fallbackLower.endsWith('.webp');
-
-  if (isVideo) {
-    const videoSrc = urlLower.endsWith('.mp4') ? url : fallbackImage;
+  if (isUrlVideo || isFallbackVideo) {
+    const videoSrc = isUrlVideo ? url : fallbackImage;
     return (
-      <div className="w-full h-full relative bg-black">
+      <div className="w-full h-full relative bg-zinc-900">
         <video 
           src={videoSrc} 
           autoPlay 
@@ -64,28 +59,40 @@ const LottieCardPlayer = ({ url, fallbackImage }: { url?: string, fallbackImage?
     );
   }
 
-  if (isGif || isOtherImage) {
-    const imgSrc = (isGif && urlLower.includes('pin')) || (isGif && urlLower.endsWith('.gif')) ? url : fallbackImage;
+  // Priority 2: GIF or Static Image check
+  const checkIsImage = (src?: string) => {
+    if (!src) return false;
+    const s = src.toLowerCase();
+    return s.includes('pinimg') || s.includes('pinterest') || 
+           s.endsWith('.gif') || s.endsWith('.png') || 
+           s.endsWith('.jpg') || s.endsWith('.jpeg') || s.endsWith('.webp');
+  };
+
+  const isUrlImage = checkIsImage(url);
+  const isFallbackImage = checkIsImage(fallbackImage);
+
+  if (isUrlImage || isFallbackImage) {
+    const imgSrc = isUrlImage ? url : fallbackImage;
     return (
       <img 
-        src={imgSrc || fallbackImage} 
+        src={imgSrc} 
         alt="Creative content" 
         className="w-full h-full object-cover"
+        referrerPolicy="no-referrer"
+        onError={(e) => {
+          // If image fails, try fallback if it's different
+          if (isUrlImage && isFallbackImage && url !== fallbackImage) {
+            (e.target as HTMLImageElement).src = fallbackImage!;
+          }
+        }}
       />
     );
   }
 
+  // Priority 3: Lottie Animation fetch
   const { animationData, error } = useLottieData(url);
 
-  if (error || (!url && !fallbackImage)) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-zinc-300">
-        <Zap className="w-12 h-12" />
-      </div>
-    );
-  }
-
-  if (url && !animationData) {
+  if (url && !animationData && !error) {
     return <div className="w-full h-full bg-zinc-100 animate-pulse" />;
   }
 
@@ -102,17 +109,7 @@ const LottieCardPlayer = ({ url, fallbackImage }: { url?: string, fallbackImage?
     );
   }
 
-  // Final fallback: Show the image if it exists, otherwise the Zap icon
-  if (fallbackImage) {
-    return (
-      <img 
-        src={fallbackImage} 
-        alt="Card graphic" 
-        className="w-full h-full object-cover"
-      />
-    );
-  }
-
+  // Final Fallback: Icon
   return (
     <div className="w-full h-full flex items-center justify-center bg-zinc-100 text-zinc-300">
       <Zap className="w-12 h-12" />

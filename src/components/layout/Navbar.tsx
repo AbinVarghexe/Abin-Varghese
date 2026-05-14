@@ -2,12 +2,13 @@
 // Mobile uses MobileNav (top) and MobileDock (bottom) components instead
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Download, Palette, Code2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ChevronDown, Download } from 'lucide-react';
+import { siteCopyDefaults, type SiteCopyContent } from '@/types/site-copy';
 
 /* ─────────────────── NavLink ─────────────────────── */
 interface NavLinkProps {
@@ -63,8 +64,24 @@ function NavLink({ href, label, isActive }: NavLinkProps) {
 import { ResumeDropdown } from '@/components/common/ResumeDropdown';
 
 function ResumeButton() {
+  const [siteCopy, setSiteCopy] = useState<SiteCopyContent>(siteCopyDefaults);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const res = await fetch('/api/site-shell', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted) setSiteCopy(data.siteCopy || siteCopyDefaults);
+      } catch { /* keep defaults */ }
+    }
+    void load();
+    return () => { mounted = false; };
+  }, []);
+
   return (
-    <ResumeDropdown align="right">
+    <ResumeDropdown align="right" resumeUrl={siteCopy.aboutResumeUrl} designResumeUrl={siteCopy.aboutDesignResumeUrl}>
       <motion.div
         whileHover={{ scale: 1.04, boxShadow: '0 8px 24px rgba(0,32,215,0.35)' }}
         whileTap={{ scale: 0.97 }}

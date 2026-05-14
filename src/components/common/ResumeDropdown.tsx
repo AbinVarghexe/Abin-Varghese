@@ -3,23 +3,61 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, ChevronDown } from 'lucide-react';
-import { resumeOptions } from '@/lib/resume-data';
+
+const defaultResumeOptions = [
+  {
+    label: 'Designer Portfolio',
+    description: 'UI/UX & visual design work',
+    icon: Download,
+    file: '/resume-designer.pdf',
+    filename: 'Abin_Varghese_Designer_Portfolio.pdf',
+  },
+  {
+    label: 'Developer Portfolio',
+    description: 'Engineering & code projects',
+    icon: Download,
+    file: '/resume/Abin_Varghese_Resume.pdf',
+    filename: 'Abin_Varghese_Resume.pdf',
+  },
+];
 
 interface ResumeDropdownProps {
   children: React.ReactNode;
   align?: 'left' | 'right' | 'center';
   className?: string;
+  resumeUrl?: string;
+  designResumeUrl?: string;
 }
 
 export const ResumeDropdown: React.FC<ResumeDropdownProps> = ({ 
   children, 
   align = 'right',
-  className = "" 
+  className = "",
+  resumeUrl,
+  designResumeUrl,
 }) => {
   const [open, setOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const ref = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+
+  // Build options with dynamic URLs if provided, fall back to defaults
+  const options = [
+    {
+      label: 'Designer Portfolio',
+      description: 'UI/UX & visual design work',
+      icon: Download,
+      file: designResumeUrl || defaultResumeOptions[0].file,
+      filename: 'Abin_Varghese_Designer_Portfolio.pdf',
+    },
+    {
+      label: 'Developer Portfolio',
+      description: 'Engineering & code projects',
+      icon: Download,
+      file: resumeUrl || defaultResumeOptions[1].file,
+      filename: 'Abin_Varghese_Resume.pdf',
+    },
+  ];
 
   // Close on outside click
   useEffect(() => {
@@ -45,7 +83,7 @@ export const ResumeDropdown: React.FC<ResumeDropdownProps> = ({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setFocusedIndex((prev) => Math.min(prev + 1, resumeOptions.length - 1));
+        setFocusedIndex((prev) => Math.min(prev + 1, options.length - 1));
         break;
       case 'ArrowUp':
         e.preventDefault();
@@ -55,7 +93,7 @@ export const ResumeDropdown: React.FC<ResumeDropdownProps> = ({
       case ' ':
         e.preventDefault();
         if (focusedIndex >= 0) {
-          const option = resumeOptions[focusedIndex];
+          const option = options[focusedIndex];
           const link = document.createElement('a');
           link.href = option.file;
           link.download = option.filename;
@@ -139,7 +177,7 @@ export const ResumeDropdown: React.FC<ResumeDropdownProps> = ({
             </p>
 
             <ul ref={listRef} role="listbox" className="list-none m-0 p-0">
-              {resumeOptions.map(({ label, description, icon: Icon, file, filename }, idx) => (
+              {options.map(({ label, description, icon: Icon, file, filename }, idx) => (
                 <li
                   key={label}
                   role="option"

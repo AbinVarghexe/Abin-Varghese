@@ -123,17 +123,15 @@ function SwipeCard({ item, index, total, onSwipe }: {
     >
       <div className="w-full h-full relative bg-zinc-900">
                 {(() => {
-                  const urlLower = item.lottieUrl?.toLowerCase() || '';
-                  const imgLower = item.image?.toLowerCase() || '';
+                  const url = item.lottieUrl;
+                  const fallbackImage = item.image;
                   
-                  const isVideo = urlLower.endsWith('.mp4') || imgLower.endsWith('.mp4');
-                  const isGif = urlLower.includes('pinimg') || urlLower.includes('pinterest') || urlLower.endsWith('.gif') || 
-                                imgLower.includes('pinimg') || imgLower.includes('pinterest') || imgLower.endsWith('.gif');
-                  const isOtherImage = urlLower.endsWith('.png') || urlLower.endsWith('.jpg') || urlLower.endsWith('.jpeg') || urlLower.endsWith('.webp') ||
-                                       imgLower.endsWith('.png') || imgLower.endsWith('.jpg') || imgLower.endsWith('.jpeg') || imgLower.endsWith('.webp');
+                  // Priority 1: Direct Video check
+                  const isUrlVideo = url?.toLowerCase().endsWith('.mp4');
+                  const isFallbackVideo = fallbackImage?.toLowerCase().endsWith('.mp4');
                   
-                  if (isVideo) {
-                    const videoSrc = urlLower.endsWith('.mp4') ? item.lottieUrl : item.image;
+                  if (isUrlVideo || isFallbackVideo) {
+                    const videoSrc = isUrlVideo ? url : fallbackImage;
                     return (
                       <video 
                         src={videoSrc} 
@@ -146,13 +144,26 @@ function SwipeCard({ item, index, total, onSwipe }: {
                     );
                   }
 
-                  if (isGif || isOtherImage) {
-                    const imgSrc = (isGif && urlLower.includes('pin')) || (isGif && urlLower.endsWith('.gif')) ? item.lottieUrl : item.image;
+                  // Priority 2: GIF or Static Image check
+                  const checkIsImage = (src?: string) => {
+                    if (!src) return false;
+                    const s = src.toLowerCase();
+                    return s.includes('pinimg') || s.includes('pinterest') || 
+                           s.endsWith('.gif') || s.endsWith('.png') || 
+                           s.endsWith('.jpg') || s.endsWith('.jpeg') || s.endsWith('.webp');
+                  };
+
+                  const isUrlImage = checkIsImage(url);
+                  const isFallbackImage = checkIsImage(fallbackImage);
+
+                  if (isUrlImage || isFallbackImage) {
+                    const imgSrc = isUrlImage ? url : fallbackImage;
                     return (
                       <img 
-                        src={imgSrc || item.image} 
+                        src={imgSrc} 
                         alt={item.title} 
                         className="w-full h-full object-cover pointer-events-none" 
+                        referrerPolicy="no-referrer"
                       />
                     );
                   }
