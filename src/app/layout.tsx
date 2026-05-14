@@ -6,6 +6,7 @@ import { PersonSchema, WebSiteSchema } from "@/seo/schema";
 import { metadata as seoMetadata, viewport } from "@/seo/metadata";
 import { Toaster } from "sonner";
 import ClientLayoutWrapper from "@/components/common/ClientLayoutWrapper";
+import { Analytics } from "@vercel/analytics/next";
 
 // ── Typography ────────────────────────────────────────────────────
 const poppins = Poppins({
@@ -69,10 +70,10 @@ export default function RootLayout({
         {/* Structured data injected at root for all pages */}
         <WebSiteSchema />
         <PersonSchema />
-
         <Toaster position="top-right" richColors closeButton />
 
         <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+        <Analytics />
       </body>
     </html>
   );
