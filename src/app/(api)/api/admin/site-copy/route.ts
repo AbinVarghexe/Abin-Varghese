@@ -129,7 +129,35 @@ export async function GET() {
   return NextResponse.json({ siteCopy });
 }
 
+import { LRUCache } from "lru-cache";
+
+// LRU cache-based rate limiting to prevent spam and accidental infinite loops
+const RATE_LIMIT_WINDOW_MS = 1000 * 60; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 30; // Max 30 updates per minute
+
+const ipRequestCache = new LRUCache<string, { count: number; timestamp: number }>({
+  max: 1000,
+  ttl: RATE_LIMIT_WINDOW_MS,
+});
+
 export async function PUT(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for") || "unknown";
+  const now = Date.now();
+  const record = ipRequestCache.get(ip);
+
+  if (record) {
+    if (now - record.timestamp < RATE_LIMIT_WINDOW_MS) {
+      record.count += 1;
+      if (record.count > MAX_REQUESTS_PER_WINDOW) {
+        return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+      }
+    } else {
+      ipRequestCache.set(ip, { count: 1, timestamp: now });
+    }
+  } else {
+    ipRequestCache.set(ip, { count: 1, timestamp: now });
+  }
+
   const { response } = await requireAdminSession();
   if (response) {
     return response;
