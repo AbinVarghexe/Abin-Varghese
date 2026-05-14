@@ -14,9 +14,13 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const [saveAction, setSaveAction] = useState<(() => Promise<void>) | null>(null);
+  const [saveAction, setSaveActionState] = useState<(() => Promise<void>) | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [statusText, setStatusText] = useState("System Standby");
+
+  const setSaveAction = useCallback((action: (() => Promise<void>) | null) => {
+    setSaveActionState(() => action);
+  }, []);
 
   return (
     <AdminContext.Provider
