@@ -27,6 +27,11 @@ interface ResumeDropdownProps {
   className?: string;
   resumeUrl?: string;
   designResumeUrl?: string;
+  designerResumeLabel?: string;
+  designerResumeDesc?: string;
+  developerResumeLabel?: string;
+  developerResumeDesc?: string;
+  dropdownTitle?: string;
 }
 
 export const ResumeDropdown: React.FC<ResumeDropdownProps> = ({ 
@@ -35,6 +40,11 @@ export const ResumeDropdown: React.FC<ResumeDropdownProps> = ({
   className = "",
   resumeUrl,
   designResumeUrl,
+  designerResumeLabel = defaultResumeOptions[0].label,
+  designerResumeDesc = defaultResumeOptions[0].description,
+  developerResumeLabel = defaultResumeOptions[1].label,
+  developerResumeDesc = defaultResumeOptions[1].description,
+  dropdownTitle = "Download as",
 }) => {
   const [open, setOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -44,15 +54,15 @@ export const ResumeDropdown: React.FC<ResumeDropdownProps> = ({
   // Build options with dynamic URLs if provided, fall back to defaults
   const options = [
     {
-      label: 'Designer Portfolio',
-      description: 'UI/UX & visual design work',
+      label: designerResumeLabel,
+      description: designerResumeDesc,
       icon: Download,
       file: designResumeUrl || defaultResumeOptions[0].file,
       filename: 'Abin_Varghese_Designer_Portfolio.pdf',
     },
     {
-      label: 'Developer Portfolio',
-      description: 'Engineering & code projects',
+      label: developerResumeLabel,
+      description: developerResumeDesc,
       icon: Download,
       file: resumeUrl || defaultResumeOptions[1].file,
       filename: 'Abin_Varghese_Resume.pdf',
@@ -173,7 +183,7 @@ export const ResumeDropdown: React.FC<ResumeDropdownProps> = ({
               className="px-4 pt-3 pb-2 text-[11px] font-semibold uppercase tracking-widest"
               style={{ color: '#9ca3af' }}
             >
-              Download as
+              {dropdownTitle}
             </p>
 
             <ul ref={listRef} role="listbox" className="list-none m-0 p-0">

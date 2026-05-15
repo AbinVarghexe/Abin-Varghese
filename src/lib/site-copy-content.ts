@@ -273,8 +273,49 @@ export function normalizeSiteCopyContent(value: unknown): SiteCopyContent {
     footerCtaCopy: normalizeString(target.footerCtaCopy, siteCopyDefaults.footerCtaCopy),
     footerCopyright: normalizeString(target.footerCopyright, siteCopyDefaults.footerCopyright),
     footerCredit: normalizeString(target.footerCredit, siteCopyDefaults.footerCredit),
+    footerLocation: normalizeString(target.footerLocation, siteCopyDefaults.footerLocation),
+    footerLargeText: normalizeString(target.footerLargeText, siteCopyDefaults.footerLargeText),
     aboutResumeUrl: normalizeString(target.aboutResumeUrl, siteCopyDefaults.aboutResumeUrl),
     aboutDesignResumeUrl: normalizeString(target.aboutDesignResumeUrl, siteCopyDefaults.aboutDesignResumeUrl),
+    navLinks: Array.isArray(target.navLinks) && target.navLinks.length > 0
+      ? target.navLinks.map((item: any) => ({
+          name: normalizeString(item.name, ""),
+          path: normalizeString(item.path, "/"),
+        })).filter((item: any) => item.name && item.path)
+      : siteCopyDefaults.navLinks,
+    preloaderText: normalizeString(target.preloaderText, siteCopyDefaults.preloaderText),
+    homeBackgroundImage: normalizeString(target.homeBackgroundImage, siteCopyDefaults.homeBackgroundImage),
+    contactBackgroundImage: normalizeString(target.contactBackgroundImage, siteCopyDefaults.contactBackgroundImage),
+    contactInstagramLabel: normalizeString(target.contactInstagramLabel, siteCopyDefaults.contactInstagramLabel),
+    contactLinkedinLabel: normalizeString(target.contactLinkedinLabel, siteCopyDefaults.contactLinkedinLabel),
+    contactEmailLabel: normalizeString(target.contactEmailLabel, siteCopyDefaults.contactEmailLabel),
+    designerResumeLabel: normalizeString(target.designerResumeLabel, siteCopyDefaults.designerResumeLabel),
+    designerResumeDesc: normalizeString(target.designerResumeDesc, siteCopyDefaults.designerResumeDesc),
+    developerResumeLabel: normalizeString(target.developerResumeLabel, siteCopyDefaults.developerResumeLabel),
+    developerResumeDesc: normalizeString(target.developerResumeDesc, siteCopyDefaults.developerResumeDesc),
+    resumeDropdownTitle: normalizeString(target.resumeDropdownTitle, siteCopyDefaults.resumeDropdownTitle),
+    resumeButtonLabel: normalizeString(target.resumeButtonLabel, siteCopyDefaults.resumeButtonLabel),
+    heroMobileCtaLabel: normalizeString(target.heroMobileCtaLabel, siteCopyDefaults.heroMobileCtaLabel),
+    heroMobileResumeLabel: normalizeString(target.heroMobileResumeLabel, siteCopyDefaults.heroMobileResumeLabel),
+    seoSiteName: normalizeString(target.seoSiteName, siteCopyDefaults.seoSiteName),
+    seoDefaultTitle: normalizeString(target.seoDefaultTitle, siteCopyDefaults.seoDefaultTitle),
+    seoDescription: normalizeString(target.seoDescription, siteCopyDefaults.seoDescription),
+    seoTwitterHandle: normalizeString(target.seoTwitterHandle, siteCopyDefaults.seoTwitterHandle),
+    seoKeywords: Array.isArray(target.seoKeywords) && target.seoKeywords.length > 0
+      ? target.seoKeywords.map((k: any) => normalizeString(k, ""))
+      : siteCopyDefaults.seoKeywords,
+    seoOgImageAlt: normalizeString(target.seoOgImageAlt, siteCopyDefaults.seoOgImageAlt),
+    seoJobTitle: normalizeString(target.seoJobTitle, siteCopyDefaults.seoJobTitle),
+    seoEmployer: normalizeString(target.seoEmployer, siteCopyDefaults.seoEmployer),
+    seoEducation: normalizeString(target.seoEducation, siteCopyDefaults.seoEducation),
+    seoPhone: normalizeString(target.seoPhone, siteCopyDefaults.seoPhone),
+    seoKnowsAbout: Array.isArray(target.seoKnowsAbout) && target.seoKnowsAbout.length > 0
+      ? target.seoKnowsAbout.map((k: any) => normalizeString(k, ""))
+      : siteCopyDefaults.seoKnowsAbout,
+    seoKnowsLanguage: Array.isArray(target.seoKnowsLanguage) && target.seoKnowsLanguage.length > 0
+      ? target.seoKnowsLanguage.map((k: any) => normalizeString(k, ""))
+      : siteCopyDefaults.seoKnowsLanguage,
+    seoProfileImage: normalizeString(target.seoProfileImage, siteCopyDefaults.seoProfileImage),
   };
 }
 

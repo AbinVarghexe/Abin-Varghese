@@ -43,6 +43,11 @@ export interface SiteCopyFaqItem {
   answer: string;
 }
 
+export interface SiteCopyNavLink {
+  name: string;
+  path: string;
+}
+
 export interface SiteCopyContent {
   heroStatusLine: string;
   homeAboutHeading: string;
@@ -106,8 +111,38 @@ export interface SiteCopyContent {
   footerCtaCopy: string;
   footerCopyright: string;
   footerCredit: string;
+  footerLocation: string;
+  footerLargeText: string;
   aboutResumeUrl: string;
   aboutDesignResumeUrl: string;
+  navLinks: SiteCopyNavLink[];
+  preloaderText: string;
+  homeBackgroundImage: string;
+  contactBackgroundImage: string;
+  contactInstagramLabel: string;
+  contactLinkedinLabel: string;
+  contactEmailLabel: string;
+  designerResumeLabel: string;
+  designerResumeDesc: string;
+  developerResumeLabel: string;
+  developerResumeDesc: string;
+  resumeDropdownTitle: string;
+  resumeButtonLabel: string;
+  heroMobileCtaLabel: string;
+  heroMobileResumeLabel: string;
+  seoSiteName: string;
+  seoDefaultTitle: string;
+  seoDescription: string;
+  seoTwitterHandle: string;
+  seoKeywords: string[];
+  seoOgImageAlt: string;
+  seoJobTitle: string;
+  seoEmployer: string;
+  seoEducation: string;
+  seoPhone: string;
+  seoKnowsAbout: string[];
+  seoKnowsLanguage: string[];
+  seoProfileImage: string;
 }
 
 export const siteCopyDefaults: SiteCopyContent = {
@@ -345,8 +380,77 @@ export const siteCopyDefaults: SiteCopyContent = {
   footerCtaCopy: "Let's talk.",
   footerCopyright: "ABIN VARGHESE 2026 ©",
   footerCredit: "",
+  footerLocation: "Idukki, Kerala, India",
+  footerLargeText: "Abin Varghese",
   aboutResumeUrl: "/resume/Abin_Varghese_Resume.pdf",
   aboutDesignResumeUrl: "/resume/Abin-Varghese-Portfolio.pdf",
+  navLinks: [
+    { name: "Home", path: "/" },
+    { name: "About", path: "/about" },
+    { name: "Projects", path: "/projects" },
+    { name: "Services", path: "/services" },
+    { name: "Contact", path: "/contact" },
+  ],
+  preloaderText: "Abin Varghese",
+  homeBackgroundImage: "/Home/cloud.jpg",
+  contactBackgroundImage: "https://static.vecteezy.com/system/resources/thumbnails/013/396/404/small/crumpled-paper-texture-realisric-crease-sheet-free-vector.jpg",
+  contactInstagramLabel: "Instagram",
+  contactLinkedinLabel: "LinkedIn",
+  contactEmailLabel: "Gmail",
+  designerResumeLabel: "Designer Portfolio",
+  designerResumeDesc: "UI/UX & visual design work",
+  developerResumeLabel: "Developer Portfolio",
+  developerResumeDesc: "Engineering & code projects",
+  resumeDropdownTitle: "Download as",
+  resumeButtonLabel: "Resume",
+  heroMobileCtaLabel: "Projects",
+  heroMobileResumeLabel: "Resume",
+  seoSiteName: "Abin Varghese Portfolio",
+  seoDefaultTitle: "Abin Varghese | Front-End Developer & UI/UX Designer",
+  seoDescription:
+    "Portfolio of Abin Varghese, a front-end developer and UI/UX designer building performant Next.js experiences, modern interfaces, and conversion-focused digital products.",
+  seoTwitterHandle: "@abin_varghese",
+  seoKeywords: [
+    "Abin Varghese",
+    "Abin Varghese portfolio",
+    "Front-End Developer",
+    "UI/UX Designer",
+    "Next.js Developer",
+    "React Developer",
+    "Tailwind CSS Developer",
+    "Figma Designer",
+    "TypeScript Developer",
+    "Web Developer India",
+    "Front-End Developer Kerala",
+    "Web Developer Kottayam",
+    "Freelance Web Developer India",
+    "UI/UX Designer Portfolio",
+    "Next.js Developer Portfolio",
+    "React Developer Portfolio",
+    "Hire Front-End Developer India",
+    "Web Design Services Kerala",
+    "Smart India Hackathon",
+    "Amal Jyothi College of Engineering",
+  ],
+  seoOgImageAlt: "Abin Varghese — Front-End Developer & UI/UX Designer",
+  seoJobTitle: "Front-End Developer & UI/UX Designer",
+  seoEmployer: "INCIAL",
+  seoEducation: "Amal Jyothi College of Engineering",
+  seoPhone: "+916282824259",
+  seoKnowsAbout: [
+    "React",
+    "Next.js",
+    "Tailwind CSS",
+    "UI/UX Design",
+    "Figma",
+    "JavaScript",
+    "TypeScript",
+    "Python",
+    "Framer Motion",
+    "Hugging Face Models",
+  ],
+  seoKnowsLanguage: ["en", "ml"],
+  seoProfileImage: "/profile.jpg",
 };
 
 export interface PublicSiteShellContent {

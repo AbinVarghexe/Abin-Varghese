@@ -30,7 +30,7 @@ export default async function ContactPage() {
       <div 
         className="absolute inset-0 z-0 w-full h-full pointer-events-none opacity-[0.5]"
         style={{ 
-          backgroundImage: 'url("https://static.vecteezy.com/system/resources/thumbnails/013/396/404/small/crumpled-paper-texture-realisric-crease-sheet-free-vector.jpg")',
+          backgroundImage: `url("${siteCopy.contactBackgroundImage}")`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           mixBlendMode: 'multiply'
@@ -97,21 +97,21 @@ export default async function ContactPage() {
             <Link href={formSettings.instagramUrl} className="flex items-center justify-between border-b border-black/10 py-5 group hover:border-black/30 transition-all duration-300 relative overflow-hidden">
               <div className="flex items-center gap-5 transition-transform duration-300 group-hover:translate-x-3">
                 <Instagram className="w-5 h-5 text-black/70 group-hover:text-black transition-colors duration-500 group-hover:scale-110" />
-                <span className="font-semibold text-[15px] group-hover:text-black transition-colors duration-300">Instagram</span>
+                <span className="font-semibold text-[15px] group-hover:text-black transition-colors duration-300">{siteCopy.contactInstagramLabel}</span>
               </div>
               <ArrowUpRight className="w-4 h-4 text-black/40 opacity-0 transition-all duration-300 -translate-x-4 translate-y-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:text-black" />
             </Link>
             <Link href={formSettings.linkedinUrl} className="flex items-center justify-between border-b border-black/10 py-5 group hover:border-black/30 transition-all duration-300 relative overflow-hidden">
               <div className="flex items-center gap-5 transition-transform duration-300 group-hover:translate-x-3">
                 <Linkedin className="w-5 h-5 text-black/70 group-hover:text-black transition-colors duration-500 group-hover:scale-110" />
-                <span className="font-semibold text-[15px] group-hover:text-black transition-colors duration-300">LinkedIn</span>
+                <span className="font-semibold text-[15px] group-hover:text-black transition-colors duration-300">{siteCopy.contactLinkedinLabel}</span>
               </div>
               <ArrowUpRight className="w-4 h-4 text-black/40 opacity-0 transition-all duration-300 -translate-x-4 translate-y-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:text-black" />
             </Link>
             <Link href={`mailto:${formSettings.contactEmail}`} className="flex items-center justify-between border-b border-black/10 py-5 group hover:border-black/30 transition-all duration-300 relative overflow-hidden">
               <div className="flex items-center gap-5 transition-transform duration-300 group-hover:translate-x-3">
                 <Mail className="w-5 h-5 text-black/70 group-hover:text-black transition-colors duration-500 group-hover:scale-110" />
-                <span className="font-semibold text-[15px] group-hover:text-black transition-colors duration-300">Gmail</span>
+                <span className="font-semibold text-[15px] group-hover:text-black transition-colors duration-300">{siteCopy.contactEmailLabel}</span>
               </div>
               <ArrowUpRight className="w-4 h-4 text-black/40 opacity-0 transition-all duration-300 -translate-x-4 translate-y-4 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:text-black" />
             </Link>

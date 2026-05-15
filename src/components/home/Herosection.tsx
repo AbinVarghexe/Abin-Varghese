@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, type ComponentType, useState, useEffect } from 'react';
+import { memo, type ComponentType } from 'react';
 import { ArrowUpRight, Calendar, Github, Instagram, Linkedin } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
@@ -12,6 +12,7 @@ import { HeroContent } from '@/lib/hero-content-defaults';
 import { usePreview } from '@/lib/contexts/PreviewContext';
 import type { HomeContent } from '@/lib/home-content-defaults';
 import { ResumeDropdown } from '@/components/common/ResumeDropdown';
+import type { SiteCopyContent } from '@/types/site-copy';
 
 /* ─────────────────────────────── data ──────────────────────────── */
 const dotPositions = [
@@ -172,38 +173,24 @@ const Herosection = ({
   data: initialData,
   homeLinks,
   statusLine,
+  siteCopy,
 }: {
   data: HeroContent;
   homeLinks: Pick<HomeContent, 'socialLinks' | 'otherSocialLinks' | 'pageLinks'>;
   statusLine: string;
+  siteCopy: Pick<
+    SiteCopyContent,
+    'heroMobileCtaLabel' | 'heroMobileResumeLabel' | 'designerResumeLabel' | 'designerResumeDesc' | 'developerResumeLabel' | 'developerResumeDesc' | 'resumeDropdownTitle'
+  >;
 }) => {
   const { previewData, isPreviewing } = usePreview();
 
   // Real-time override from admin panel
   const data = isPreviewing ? { ...initialData, ...previewData } : initialData;
-  
-  const [availabilityText, setAvailabilityText] = useState(data.heroAvailabilityText);
-  const [isAvailable, setIsAvailable] = useState(true);
 
   // Split greeting to isolate the emoji for animation
   const greetingParts = data.heroGreeting.split(/(👋)/);
   const nameLetters = data.heroName.split('');
-
-  // Fetch real-time availability from Cal.com via our API route
-  useEffect(() => {
-    fetch('/api/cal/availability')
-      .then(res => res.json())
-      .then(json => {
-        if (json.available && json.message) {
-          setAvailabilityText(`✦ ${json.message}`);
-          setIsAvailable(true);
-        } else if (json.available === false) {
-          setAvailabilityText('✦ Fully booked right now');
-          setIsAvailable(false);
-        }
-      })
-      .catch(err => console.error("Could not fetch Cal.com availability:", err));
-  }, []);
 
   return (
     <section
@@ -334,8 +321,8 @@ const Herosection = ({
             transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
             className="pointer-events-auto mt-6 md:mt-10 flex w-[300px] md:w-[380px] cursor-default items-center justify-center rounded-full border border-slate-200 bg-white/70 py-2 shadow-sm backdrop-blur-md"
           >
-            <p className={`text-[12px] md:text-[14px] font-medium tracking-wide ${isAvailable ? 'text-[#0020d7]' : 'text-orange-600'}`}>
-              {availabilityText}
+            <p className="text-[12px] md:text-[14px] font-medium tracking-wide text-[#0020d7]">
+              {data.heroAvailabilityText}
             </p>
           </motion.div>
 
@@ -365,13 +352,20 @@ const Herosection = ({
             <div className="flex md:hidden flex-row gap-3">
               <MagneticButton
                 href={homeLinks.pageLinks.projects || data.heroCtaPrimaryUrl}
-                label="Projects"
+                label={siteCopy.heroMobileCtaLabel}
                 icon={ArrowUpRight}
               />
-              <ResumeDropdown align="center">
+              <ResumeDropdown 
+                align="center"
+                designerResumeLabel={siteCopy.designerResumeLabel}
+                designerResumeDesc={siteCopy.designerResumeDesc}
+                developerResumeLabel={siteCopy.developerResumeLabel}
+                developerResumeDesc={siteCopy.developerResumeDesc}
+                dropdownTitle={siteCopy.resumeDropdownTitle}
+              >
                 <MagneticButton
                   href="#"
-                  label="Resume"
+                  label={siteCopy.heroMobileResumeLabel}
                   icon={ArrowUpRight}
                   secondary
                 />

@@ -24,6 +24,13 @@ import {
   Loader2,
   Check,
   Zap,
+  Search,
+  Link,
+  Image as ImageIcon,
+  Phone,
+  Download,
+  Navigation,
+  Settings,
 } from "lucide-react";
 import {
   siteCopyDefaults,
@@ -566,9 +573,232 @@ export default function AdminContentPage() {
             )}
           />
         </SectionPanel>
-      </div>
 
-      {/* Floating Save Bar */}
+        {/* NAVIGATION */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="Navigation" 
+            copy="Configure menu links across Navbar, Footer, and MobileDock." 
+            icon={Navigation}
+          />
+          <ArraySection
+            title="Menu Links"
+            items={siteCopy.navLinks}
+            onAdd={() => addArrayItem("navLinks", { name: "New Page", path: "/" } as { name: string; path: string })}
+            onRemove={(index) => removeArrayItem("navLinks", index)}
+            renderItem={(item, index) => (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <Field
+                  label="Label"
+                  value={item.name}
+                  onChange={(value) => updateArrayItem("navLinks", index, { ...item, name: value })}
+                />
+                <Field
+                  label="Path"
+                  value={item.path}
+                  onChange={(value) => updateArrayItem("navLinks", index, { ...item, path: value })}
+                />
+              </div>
+            )}
+          />
+        </SectionPanel>
+
+        {/* SEO & METADATA */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="SEO & Metadata" 
+            copy="Control search engine titles, descriptions, keywords, and social sharing." 
+            icon={Search}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Field
+              label="Site Name"
+              value={siteCopy.seoSiteName}
+              onChange={(value) => patch("seoSiteName", value)}
+              icon={Globe}
+            />
+            <Field
+              label="Default Page Title"
+              value={siteCopy.seoDefaultTitle}
+              onChange={(value) => patch("seoDefaultTitle", value)}
+              icon={Search}
+            />
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Site Description"
+                value={siteCopy.seoDescription}
+                onChange={(value) => patch("seoDescription", value)}
+                rows={3}
+              />
+            </div>
+            <Field
+              label="Twitter Handle"
+              value={siteCopy.seoTwitterHandle}
+              onChange={(value) => patch("seoTwitterHandle", value)}
+            />
+            <Field
+              label="OG Image Alt Text"
+              value={siteCopy.seoOgImageAlt}
+              onChange={(value) => patch("seoOgImageAlt", value)}
+            />
+            <Field
+              label="Job Title (JSON-LD)"
+              value={siteCopy.seoJobTitle}
+              onChange={(value) => patch("seoJobTitle", value)}
+            />
+            <Field
+              label="Employer (JSON-LD)"
+              value={siteCopy.seoEmployer}
+              onChange={(value) => patch("seoEmployer", value)}
+            />
+            <Field
+              label="Education (JSON-LD)"
+              value={siteCopy.seoEducation}
+              onChange={(value) => patch("seoEducation", value)}
+            />
+            <Field
+              label="Phone (JSON-LD)"
+              value={siteCopy.seoPhone}
+              onChange={(value) => patch("seoPhone", value)}
+              icon={Phone}
+            />
+            <Field
+              label="Profile Image URL"
+              value={siteCopy.seoProfileImage}
+              onChange={(value) => patch("seoProfileImage", value)}
+              icon={ImageIcon}
+            />
+            <div className="md:col-span-2">
+              <TextareaField
+                label="SEO Keywords (one per line)"
+                value={siteCopy.seoKeywords.join("\n")}
+                onChange={(value) => patch("seoKeywords", value.split("\n").filter(Boolean))}
+                rows={6}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Knows About (JSON-LD, one per line)"
+                value={siteCopy.seoKnowsAbout.join("\n")}
+                onChange={(value) => patch("seoKnowsAbout", value.split("\n").filter(Boolean))}
+                rows={4}
+              />
+            </div>
+            <div className="md:col-span-2">
+              <TextareaField
+                label="Knows Language (JSON-LD, one per line)"
+                value={siteCopy.seoKnowsLanguage.join("\n")}
+                onChange={(value) => patch("seoKnowsLanguage", value.split("\n").filter(Boolean))}
+                rows={2}
+              />
+            </div>
+          </div>
+        </SectionPanel>
+
+        {/* RESUME & DOWNLOAD */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="Resume & Download" 
+            copy="Configure resume labels, download button text, and dropdown options." 
+            icon={Download}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Field
+              label="Resume Button Label"
+              value={siteCopy.resumeButtonLabel}
+              onChange={(value) => patch("resumeButtonLabel", value)}
+            />
+            <Field
+              label="Resume Dropdown Title"
+              value={siteCopy.resumeDropdownTitle}
+              onChange={(value) => patch("resumeDropdownTitle", value)}
+            />
+            <Field
+              label="Designer Resume Label"
+              value={siteCopy.designerResumeLabel}
+              onChange={(value) => patch("designerResumeLabel", value)}
+            />
+            <Field
+              label="Designer Resume Description"
+              value={siteCopy.designerResumeDesc}
+              onChange={(value) => patch("designerResumeDesc", value)}
+            />
+            <Field
+              label="Developer Resume Label"
+              value={siteCopy.developerResumeLabel}
+              onChange={(value) => patch("developerResumeLabel", value)}
+            />
+            <Field
+              label="Developer Resume Description"
+              value={siteCopy.developerResumeDesc}
+              onChange={(value) => patch("developerResumeDesc", value)}
+            />
+            <Field
+              label="Hero Mobile CTA Label"
+              value={siteCopy.heroMobileCtaLabel}
+              onChange={(value) => patch("heroMobileCtaLabel", value)}
+            />
+            <Field
+              label="Hero Mobile Resume Label"
+              value={siteCopy.heroMobileResumeLabel}
+              onChange={(value) => patch("heroMobileResumeLabel", value)}
+            />
+          </div>
+        </SectionPanel>
+
+        {/* UI / UX */}
+        <SectionPanel className="space-y-8">
+          <SectionTitle 
+            title="UI & Visual" 
+            copy="Configure background images, preloader text, and contact page visuals." 
+            icon={Settings}
+          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Field
+              label="Preloader Text"
+              value={siteCopy.preloaderText}
+              onChange={(value) => patch("preloaderText", value)}
+            />
+            <Field
+              label="Footer Large Text"
+              value={siteCopy.footerLargeText}
+              onChange={(value) => patch("footerLargeText", value)}
+            />
+            <Field
+              label="Footer Location"
+              value={siteCopy.footerLocation}
+              onChange={(value) => patch("footerLocation", value)}
+            />
+            <Field
+              label="Home Background Image URL"
+              value={siteCopy.homeBackgroundImage}
+              onChange={(value) => patch("homeBackgroundImage", value)}
+              icon={ImageIcon}
+            />
+            <Field
+              label="Contact Background Image URL"
+              value={siteCopy.contactBackgroundImage}
+              onChange={(value) => patch("contactBackgroundImage", value)}
+              icon={ImageIcon}
+            />
+            <Field
+              label="Contact Instagram Label"
+              value={siteCopy.contactInstagramLabel}
+              onChange={(value) => patch("contactInstagramLabel", value)}
+            />
+            <Field
+              label="Contact LinkedIn Label"
+              value={siteCopy.contactLinkedinLabel}
+              onChange={(value) => patch("contactLinkedinLabel", value)}
+            />
+            <Field
+              label="Contact Email Label"
+              value={siteCopy.contactEmailLabel}
+              onChange={(value) => patch("contactEmailLabel", value)}
+            />
+          </div>
+        </SectionPanel>
+      </div>
       <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-white/80 backdrop-blur-xl px-6 py-4 rounded-full border border-black/5 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex items-center gap-3 pr-6 border-r border-black/5">
           <div className={`h-2 w-2 rounded-full ${status ? 'bg-[#007aff] animate-pulse' : 'bg-[#34c759]'}`} />

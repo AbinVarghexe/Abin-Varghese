@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { siteCopyDefaults, type SiteCopyContent } from "@/types/site-copy";
 
 const LOGO_PATH =
   "M193.92,184.68c-.48.05-.98.07-1.49.07h-38.56c-30.04-.82-47.29-55.05-47.57-78.89v-.06c.51-3.5,2.07-7.41,4.68-11.71,1.71-2.81,3.91-5.49,6.6-8.04,2.7-2.56,5.62-4.78,8.76-6.69,3.19-1.9,6.32-3.18,9.37-3.82l-.05-3.45c-4.55-.91-9.01-2.87-13.37-5.87-2.87-2.03-5.5-4.31-7.88-6.85-2.39-2.58-4.37-5.29-5.94-8.11-1.52-2.82-2.54-5.61-3.08-8.39l-3.44.05c-.75,4.38-2.57,8.69-5.46,12.94-2.89,4.2-6.45,7.83-10.66,10.9-4.22,3.06-8.59,5.15-13.11,6.25l.05,3.45c4.5.8,9.17,3,14.03,6.59,4.81,3.54,8.53,7.34,11.15,11.4,2.68,4.06,4.33,7.86,4.92,11.4h0c-.3,23.86-18.29,78.08-48.31,78.9H16c-.51,0-1.01-.02-1.49-.07-11.42-1.02-18.24-13.69-12.34-23.91l1.33-2.29,2.53-4.38,61.54-106.6,3.97-6.88,18.83-32.61c3.08-5.32,8.46-8.01,13.84-8.01s10.77,2.69,13.85,8.01l18.83,32.61,3.97,6.88,61.54,106.6,2.53,4.38,1.32,2.29c5.91,10.22-.91,22.89-12.33,23.91Z";
@@ -24,7 +25,22 @@ import { useJarvisStore } from "@/store/useJarvisStore";
 
 export default function Preloader() {
   const [isVisible, setIsVisible] = useState(true);
+  const [siteCopy, setSiteCopy] = useState<SiteCopyContent>(siteCopyDefaults);
   const { isModelLoaded } = useJarvisStore();
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const res = await fetch('/api/site-shell', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted) setSiteCopy(data.siteCopy || siteCopyDefaults);
+      } catch { /* keep defaults */ }
+    }
+    void load();
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     let hideTimer: number;
@@ -168,7 +184,7 @@ export default function Preloader() {
                 className="space-y-4 text-center"
               >
                 <p className="text-xs font-medium uppercase tracking-[0.6em] text-black/70">
-                  Abin Varghese
+                  {siteCopy.preloaderText}
                 </p>
                 <div className="flex items-center justify-center gap-2">
                   {[0, 1, 2].map((index) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type React from "react";
 import {
   ExternalLink,
@@ -124,16 +124,6 @@ export default function AdminHomePage() {
   const [activeTab, setActiveTab] = useState<HomeAdminTab>("hero");
 
   const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
-
-  useEffect(() => {
-    setSaveAction(saveHome);
-    setStatusText(saving ? "Deploying..." : "System Standby");
-    setIsSaving(saving);
-    
-    return () => {
-      setSaveAction(null);
-    };
-  }, [saveHome, saving, setSaveAction, setIsSaving, setStatusText]);
 
   useEffect(() => {
     async function load() {
@@ -265,7 +255,7 @@ export default function AdminHomePage() {
     setAchievements(achievements.filter((a) => a.localId !== localId));
   }
 
-  async function saveHome() {
+  const saveHome = useCallback(async () => {
     setSaving(true);
     const toastId = toast.loading("Deploying homepage updates...");
     try {
@@ -335,7 +325,17 @@ export default function AdminHomePage() {
     } finally {
       setSaving(false);
     }
-  }
+  }, [about, achievements, deletedAchievementIds, hero, home, services, siteCopy]);
+
+  useEffect(() => {
+    setSaveAction(saveHome);
+    setStatusText(saving ? "Deploying..." : "System Standby");
+    setIsSaving(saving);
+
+    return () => {
+      setSaveAction(null);
+    };
+  }, [saveHome, saving, setSaveAction, setIsSaving, setStatusText]);
 
   if (loading) {
     return (

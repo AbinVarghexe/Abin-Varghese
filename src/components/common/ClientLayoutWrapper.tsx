@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import MouseTrail from "@/components/ui/MouseTrail";
@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { PreviewProvider } from "@/lib/contexts/PreviewContext";
+import { siteCopyDefaults, type SiteCopyContent } from "@/types/site-copy";
 
 const Hero3DLayer = dynamic(() => import("@/components/ui/Hero3DLayer"), {
   ssr: false,
@@ -50,6 +51,21 @@ export default function ClientLayoutWrapper({
   const isAdminPath = pathname?.startsWith("/admin");
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 5000], [0, -200]);
+  const [siteCopy, setSiteCopy] = useState<SiteCopyContent>(siteCopyDefaults);
+
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const res = await fetch('/api/site-shell', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted) setSiteCopy(data.siteCopy || siteCopyDefaults);
+      } catch { /* keep defaults */ }
+    }
+    void load();
+    return () => { mounted = false; };
+  }, []);
 
   useEffect(() => {
     if (isAdminPath) {
@@ -177,7 +193,7 @@ export default function ClientLayoutWrapper({
               }}
             >
               <Image
-                src="/Home/cloud.jpg"
+                src={siteCopy.homeBackgroundImage}
                 alt="Atmospheric background"
                 fill
                 priority

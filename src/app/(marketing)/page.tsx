@@ -112,6 +112,7 @@ export default async function Home() {
           pageLinks: homeData.pageLinks,
         }}
         statusLine={siteCopy.heroStatusLine}
+        siteCopy={siteCopy}
       />
 
       <div className="relative w-full overflow-hidden pointer-events-auto">

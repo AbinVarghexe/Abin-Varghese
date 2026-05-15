@@ -81,33 +81,49 @@ function ResumeButton() {
   }, []);
 
   return (
-    <ResumeDropdown align="right" resumeUrl={siteCopy.aboutResumeUrl} designResumeUrl={siteCopy.aboutDesignResumeUrl}>
-      <motion.div
-        whileHover={{ scale: 1.04, boxShadow: '0 8px 24px rgba(0,32,215,0.35)' }}
-        whileTap={{ scale: 0.97 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-        className="inline-flex appearance-none items-center gap-1.5 rounded-full border-none px-4 py-2.5 font-['Poppins',sans-serif] text-[13px] font-medium text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-        style={{ background: 'linear-gradient(180deg, #5B74FF 0%, #001BB0 100%)' }}
-      >
-        <Download className="h-5 w-5" strokeWidth={2} />
-        Resume
-        <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.4} />
-      </motion.div>
-    </ResumeDropdown>
+    <ResumeDropdown 
+      align="right" 
+      resumeUrl={siteCopy.aboutResumeUrl} 
+      designResumeUrl={siteCopy.aboutDesignResumeUrl}
+      designerResumeLabel={siteCopy.designerResumeLabel}
+      designerResumeDesc={siteCopy.designerResumeDesc}
+      developerResumeLabel={siteCopy.developerResumeLabel}
+      developerResumeDesc={siteCopy.developerResumeDesc}
+      dropdownTitle={siteCopy.resumeDropdownTitle}
+    >
+          <motion.div
+            whileHover={{ scale: 1.04, boxShadow: '0 8px 24px rgba(0,32,215,0.35)' }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="inline-flex appearance-none items-center gap-1.5 rounded-full border-none px-4 py-2.5 font-['Poppins',sans-serif] text-[13px] font-medium text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+            style={{ background: 'linear-gradient(180deg, #5B74FF 0%, #001BB0 100%)' }}
+          >
+            <Download className="h-5 w-5" strokeWidth={2} />
+            {siteCopy.resumeButtonLabel}
+            <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </motion.div>
+        </ResumeDropdown>
   );
 }
 
 /* ═══════════════════════ Navbar ═══════════════════════ */
 export default function Navbar() {
   const pathname = usePathname();
+  const [siteCopy, setSiteCopy] = useState<SiteCopyContent>(siteCopyDefaults);
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/about', label: 'About' },
-    { href: '/projects', label: 'Projects' },
-    { href: '/services', label: 'Services' },
-    { href: '/contact', label: 'Contact' },
-  ];
+  useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const res = await fetch('/api/site-shell', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (mounted) setSiteCopy(data.siteCopy || siteCopyDefaults);
+      } catch { /* keep defaults */ }
+    }
+    void load();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <>
@@ -154,12 +170,12 @@ export default function Navbar() {
 
               {/* Centered nav links */}
               <ul className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
-                {navLinks.map((link) => (
+                {siteCopy.navLinks.map((link) => (
                   <NavLink
-                    key={link.href}
-                    href={link.href}
-                    label={link.label}
-                    isActive={pathname === link.href}
+                    key={link.path}
+                    href={link.path}
+                    label={link.name}
+                    isActive={pathname === link.path}
                   />
                 ))}
               </ul>

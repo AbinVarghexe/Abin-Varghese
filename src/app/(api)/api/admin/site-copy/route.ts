@@ -41,6 +41,11 @@ const faqSchema = z.object({
   answer: z.string(),
 });
 
+const navLinkSchema = z.object({
+  name: z.string(),
+  path: z.string(),
+});
+
 const siteCopySchema = z.object({
   heroStatusLine: z.string(),
   homeAboutHeading: z.string(),
@@ -117,6 +122,36 @@ const siteCopySchema = z.object({
   footerCtaCopy: z.string(),
   footerCopyright: z.string(),
   footerCredit: z.string(),
+  footerLocation: z.string(),
+  footerLargeText: z.string(),
+  navLinks: z.array(navLinkSchema),
+  preloaderText: z.string(),
+  homeBackgroundImage: z.string(),
+  contactBackgroundImage: z.string(),
+  contactInstagramLabel: z.string(),
+  contactLinkedinLabel: z.string(),
+  contactEmailLabel: z.string(),
+  designerResumeLabel: z.string(),
+  designerResumeDesc: z.string(),
+  developerResumeLabel: z.string(),
+  developerResumeDesc: z.string(),
+  resumeDropdownTitle: z.string(),
+  resumeButtonLabel: z.string(),
+  heroMobileCtaLabel: z.string(),
+  heroMobileResumeLabel: z.string(),
+  seoSiteName: z.string(),
+  seoDefaultTitle: z.string(),
+  seoDescription: z.string(),
+  seoTwitterHandle: z.string(),
+  seoKeywords: z.array(z.string()),
+  seoOgImageAlt: z.string(),
+  seoJobTitle: z.string(),
+  seoEmployer: z.string(),
+  seoEducation: z.string(),
+  seoPhone: z.string(),
+  seoKnowsAbout: z.array(z.string()),
+  seoKnowsLanguage: z.array(z.string()),
+  seoProfileImage: z.string(),
 });
 
 export async function GET() {

@@ -1,4 +1,4 @@
-import { getAbsoluteUrl, siteConfig, siteUrl } from "@/seo/config";
+import { getAbsoluteUrl, siteUrl } from "@/seo/config";
 
 type JsonLdProps = {
   data: Record<string, unknown> | Array<Record<string, unknown>>;
@@ -13,22 +13,48 @@ function JsonLd({ data }: JsonLdProps) {
   );
 }
 
-export function PersonSchema() {
+type PersonSchemaProps = {
+  name: string;
+  jobTitle: string;
+  description: string;
+  employer: string;
+  education: string;
+  phone: string;
+  email: string;
+  knowsAbout: string[];
+  knowsLanguage: string[];
+  profileImage: string;
+  socialProfiles: string[];
+};
+
+export function PersonSchema({
+  name,
+  jobTitle,
+  description,
+  employer,
+  education,
+  phone,
+  email,
+  knowsAbout,
+  knowsLanguage,
+  profileImage,
+  socialProfiles,
+}: PersonSchemaProps) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: siteConfig.name,
+    name,
     url: siteUrl,
-    sameAs: siteConfig.socialProfiles,
-    jobTitle: "Front-End Developer & UI/UX Designer",
-    description: siteConfig.description,
+    sameAs: socialProfiles,
+    jobTitle,
+    description,
     worksFor: {
       "@type": "Organization",
-      name: "INCIAL",
+      name: employer,
     },
     alumniOf: {
       "@type": "CollegeOrUniversity",
-      name: "Amal Jyothi College of Engineering",
+      name: education,
       address: {
         "@type": "PostalAddress",
         addressRegion: "Kerala",
@@ -40,26 +66,15 @@ export function PersonSchema() {
       addressRegion: "Kerala",
       addressCountry: "IN",
     },
-    knowsAbout: [
-      "React",
-      "Next.js",
-      "Tailwind CSS",
-      "UI/UX Design",
-      "Figma",
-      "JavaScript",
-      "TypeScript",
-      "Python",
-      "Framer Motion",
-      "Hugging Face Models",
-    ],
-    knowsLanguage: ["en", "ml"],
-    email: `mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL || "toabinvarghese@gmail.com"}`,
-    telephone: "+916282824259",
+    knowsAbout,
+    knowsLanguage,
+    email: `mailto:${email}`,
+    telephone: phone,
     image: {
       "@type": "ImageObject",
-      url: getAbsoluteUrl("/profile.jpg"),
-      contentUrl: getAbsoluteUrl("/profile.jpg"),
-      description: "Portrait of Abin Varghese, Front-End Developer",
+      url: getAbsoluteUrl(profileImage),
+      contentUrl: getAbsoluteUrl(profileImage),
+      description: `Portrait of ${name}`,
     },
     mainEntityOfPage: siteUrl,
   };
@@ -67,14 +82,20 @@ export function PersonSchema() {
   return <JsonLd data={schema} />;
 }
 
-export function WebSiteSchema() {
+type WebSiteSchemaProps = {
+  name: string;
+  alternateName: string[];
+  description: string;
+};
+
+export function WebSiteSchema({ name, alternateName, description }: WebSiteSchemaProps) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: siteConfig.siteName,
-    alternateName: [siteConfig.name, "Abin Varghese Dev"],
+    name,
+    alternateName,
     url: siteUrl,
-    description: siteConfig.description,
+    description,
     inLanguage: "en-IN",
     potentialAction: {
       "@type": "SearchAction",
@@ -86,7 +107,7 @@ export function WebSiteSchema() {
     },
     publisher: {
       "@type": "Person",
-      name: siteConfig.name,
+      name,
       url: siteUrl,
     },
   };
@@ -121,9 +142,10 @@ type ServiceSchemaProps = {
   description: string;
   path: string;
   serviceType: string[];
+  providerName: string;
 };
 
-export function ServiceSchema({ name, description, path, serviceType }: ServiceSchemaProps) {
+export function ServiceSchema({ name, description, path, serviceType, providerName }: ServiceSchemaProps) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -131,7 +153,7 @@ export function ServiceSchema({ name, description, path, serviceType }: ServiceS
     description,
     provider: {
       "@type": "Person",
-      name: siteConfig.name,
+      name: providerName,
       url: siteUrl,
     },
     areaServed: {
@@ -159,6 +181,7 @@ type SoftwareProjectSchemaProps = {
   codeRepository: string;
   liveUrl?: string | null;
   dateModified?: string;
+  creatorName: string;
 };
 
 export function SoftwareProjectSchema({
@@ -170,6 +193,7 @@ export function SoftwareProjectSchema({
   codeRepository,
   liveUrl,
   dateModified,
+  creatorName,
 }: SoftwareProjectSchemaProps) {
   const schema = {
     "@context": "https://schema.org",
@@ -193,7 +217,7 @@ export function SoftwareProjectSchema({
     keywords: keywords?.join(", "),
     creator: {
       "@type": "Person",
-      name: siteConfig.name,
+      name: creatorName,
       url: siteUrl,
     },
     license: "https://opensource.org/licenses/MIT",

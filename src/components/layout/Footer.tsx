@@ -53,13 +53,10 @@ export default function Footer() {
     };
   }, []);
 
-  const navLinks = [
-    { name: 'HOME', href: '/' },
-    { name: 'ABOUT', href: '/about' },
-    { name: 'PROJECTS', href: '/projects' },
-    { name: 'SERVICES', href: '/services' },
-    { name: 'CONTACT', href: '/contact' },
-  ];
+  const navLinks = shellContent.siteCopy.navLinks.map(link => ({
+    name: link.name.toUpperCase(),
+    href: link.path,
+  }));
 
   const socialLinks = [
     { icon: <Instagram className="w-5 h-5" />, href: shellContent.socialLinks.instagram },
@@ -95,7 +92,7 @@ export default function Footer() {
             </p>
 
             <div className="space-y-4 pt-4">
-              <p className="text-black/80 text-sm">Idukki, Kerala, India</p>
+              <p className="text-black/80 text-sm">{shellContent.siteCopy.footerLocation}</p>
               <p className="text-black/80 text-sm">{shellContent.siteCopy.footerEmail || shellContent.contactSettings.contactEmail}</p>
               <div className="flex space-x-4 pt-2">
                 {socialLinks.map((link, idx) => (
@@ -170,7 +167,7 @@ export default function Footer() {
           </div>
           <div className="relative flex items-center justify-center">
             <h1 className="flex text-[13vw] font-bold tracking-tighter leading-none select-none font-vina uppercase pointer-events-none">
-              {"Abin Varghese".split("").map((char, i) => (
+              {shellContent.siteCopy.footerLargeText.split("").map((char, i) => (
                 <span key={i} className="relative inline-block" style={{ minWidth: char === " " ? "0.3em" : "auto" }}>
                   {/* Stroke Layer */}
                   <motion.span
