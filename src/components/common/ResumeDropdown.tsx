@@ -9,7 +9,7 @@ const defaultResumeOptions = [
     label: 'Designer Portfolio',
     description: 'UI/UX & visual design work',
     icon: Download,
-    file: '/resume-designer.pdf',
+    file: '/resume/Abin-Varghese-Portfolio.pdf',
     filename: 'Abin_Varghese_Designer_Portfolio.pdf',
   },
   {

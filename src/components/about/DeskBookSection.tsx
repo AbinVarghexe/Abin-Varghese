@@ -25,6 +25,10 @@ type DeskBookSectionProps = {
   >;
 };
 
+function getCompressedPdfUrl(url: string): string {
+  return url.replace(/\.pdf$/i, '-compressed.pdf');
+}
+
 type PageContent = {
   type: "text" | "timeline" | "certificates";
   title?: string;
@@ -644,7 +648,7 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
                   {/* Dynamic PDF Viewer using react-pdf for robust mobile support */}
                   <div className="w-full h-full relative">
                     <PDFViewer 
-                      url={activePdfModal === "resume" ? copy.aboutResumeUrl : copy.aboutDesignResumeUrl} 
+                      url={activePdfModal === "resume" ? copy.aboutResumeUrl : getCompressedPdfUrl(copy.aboutDesignResumeUrl)} 
                       title={activePdfModal === "resume" ? "Resume Preview" : "Design Resume Preview"}
                     />
                   </div>

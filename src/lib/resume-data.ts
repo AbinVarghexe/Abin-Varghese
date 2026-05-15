@@ -5,7 +5,7 @@ export const resumeOptions = [
     label: 'Designer Portfolio',
     description: 'UI/UX & visual design work',
     icon: Palette,
-    file: '/resume-designer.pdf',
+    file: '/resume/Abin-Varghese-Portfolio.pdf',
     filename: 'Abin_Varghese_Designer_Portfolio.pdf',
   },
   {

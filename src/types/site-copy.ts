@@ -346,7 +346,7 @@ export const siteCopyDefaults: SiteCopyContent = {
   footerCopyright: "ABIN VARGHESE 2026 ©",
   footerCredit: "",
   aboutResumeUrl: "/resume/Abin_Varghese_Resume.pdf",
-  aboutDesignResumeUrl: "/resume-designer.pdf",
+  aboutDesignResumeUrl: "/resume/Abin-Varghese-Portfolio.pdf",
 };
 
 export interface PublicSiteShellContent {
