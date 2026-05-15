@@ -228,7 +228,9 @@ export default function AdminHomePage() {
   }
 
   function addAchievement() {
+    const achievementId = crypto.randomUUID();
     const newAchievement: DraftAchievement = {
+      id: achievementId,
       localId: uid("achievement"),
       title: "New Achievement",
       description: "Description",
@@ -293,10 +295,11 @@ export default function AdminHomePage() {
 
       for (const item of achievements) {
         const payload = {
+          id: item.id || undefined,
           title: item.title,
           description: item.description,
-          date: item.date,
-          category: item.category,
+          date: item.date?.trim() ? item.date.trim() : null,
+          category: item.category?.trim() || "Achievement",
           imageUrl: item.imageUrl || "",
           externalLink: item.externalLink || "",
           featured: item.featured,

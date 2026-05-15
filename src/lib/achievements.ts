@@ -43,6 +43,7 @@ export async function upsertAchievement(achievement: Achievement): Promise<void>
   const supabase = createAdminClient();
   
   const payload = {
+    ...(achievement.id ? { id: achievement.id } : {}),
     title: achievement.title,
     description: achievement.description,
     date: achievement.date,
@@ -56,8 +57,7 @@ export async function upsertAchievement(achievement: Achievement): Promise<void>
   if (achievement.id) {
     const { error } = await supabase
       .from("achievements")
-      .update(payload)
-      .eq("id", achievement.id);
+      .upsert(payload, { onConflict: "id" });
     if (error) throw error;
   } else {
     const { error } = await supabase

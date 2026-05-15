@@ -4,10 +4,17 @@ import { requireAdminSession } from "@/lib/admin-auth";
 import { deleteAchievement, upsertAchievement } from "@/lib/achievements";
 
 const schema = z.object({
+  id: z.string().optional(),
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
-  date: z.string().nullable(),
-  category: z.string().min(1, "Category is required"),
+  date: z
+    .union([z.string(), z.null()])
+    .optional()
+    .transform((value) => {
+      const normalized = typeof value === "string" ? value.trim() : "";
+      return normalized.length > 0 ? normalized : null;
+    }),
+  category: z.string().trim().min(1, "Category is required").default("Achievement"),
   imageUrl: z.string().optional().default(""),
   externalLink: z.string().optional().default(""),
   featured: z.boolean().optional().default(false),
@@ -25,8 +32,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const data = schema.parse(body);
 
     await upsertAchievement({
-      ...data,
       id,
+      title: data.title,
+      description: data.description,
+      date: data.date ?? null,
+      category: data.category,
+      imageUrl: data.imageUrl,
+      externalLink: data.externalLink,
+      featured: data.featured,
+      orderIndex: data.orderIndex,
     });
 
     return NextResponse.json({ success: true });
