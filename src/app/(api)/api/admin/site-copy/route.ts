@@ -202,7 +202,11 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const siteCopy = siteCopySchema.parse(normalizeSiteCopyContent(body.siteCopy ?? body));
     await upsertSiteCopyContent(siteCopy);
+    revalidatePath("/", "layout");
     revalidatePath("/");
+    revalidatePath("/about");
+    revalidatePath("/contact");
+    revalidatePath("/services");
     return NextResponse.json({ siteCopy });
   } catch (error) {
     if (error instanceof z.ZodError) {

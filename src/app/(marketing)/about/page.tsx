@@ -6,6 +6,8 @@ import { getAboutContent } from "@/lib/site-content";
 import { getSiteCopyContent } from "@/lib/site-copy-content";
 import { createPageMetadata } from "@/seo/page-metadata";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = createPageMetadata({
   title: "About Abin Varghese | Front-End Developer & UI/UX Designer",
   description:

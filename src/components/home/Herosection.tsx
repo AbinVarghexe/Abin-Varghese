@@ -277,7 +277,7 @@ const Herosection = ({
               )}
               <br />
               <span
-                className="inline-block cursor-default bg-clip-text text-[40px] md:text-6xl lg:text-7xl leading-tight tracking-[-0.04em] text-transparent overflow-visible py-2"
+                className="inline-block cursor-default text-[40px] md:text-6xl lg:text-7xl leading-tight tracking-[-0.04em] text-[#0020d7] md:bg-clip-text md:text-transparent overflow-visible py-2"
                 style={{ backgroundImage: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)' }}
               >
                 {nameLetters.map((letter: string, i: number) => (

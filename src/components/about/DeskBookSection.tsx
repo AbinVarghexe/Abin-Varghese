@@ -147,8 +147,8 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
             let consumed = 0;
 
             for (const cert of remaining) {
-                // Ensure max 2 certifications per page
-                if (currentList.length >= 2) break;
+              // Ensure max 3 certifications per page
+              if (currentList.length >= 3) break;
 
                 // Approximate weight for a certificate entry (+250 for layout overhead)
                 const weight = cert.name.length + cert.content.length + 250;
@@ -172,6 +172,11 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
         }
     };
 
+    const nativeKeywords = /native|android|ios|mobile|react native|flutter/i;
+    const nativeEntries = copy.aboutTimelineEntries.filter((entry) =>
+      nativeKeywords.test(`${entry.role} ${entry.organization} ${entry.copy}`)
+    );
+
     // 1. ABOUT ME
     flowText(copy.aboutIntroBody, "About me", copy.aboutBookImage);
 
@@ -186,7 +191,10 @@ const [activePdfModal, setActivePdfModal] = useState<"resume" | "design" | null>
     const exp = copy.aboutTimelineEntries.filter(e => !edu.includes(e));
     if (exp.length) flowTimeline(exp, "Professional Journey");
 
-    // 4. CERTIFICATIONS
+    // 4. NATIVE
+    if (nativeEntries.length) flowTimeline(nativeEntries, "Native Experience");
+
+    // 5. CERTIFICATIONS
     const certs = copy.homeReviewsItems || [];
     if (certs.length) flowCertifications(certs, "Certifications");
 
