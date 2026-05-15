@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import {
   ExternalLink,
@@ -122,6 +122,7 @@ export default function AdminHomePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<HomeAdminTab>("hero");
+  const saveInFlightRef = useRef(false);
 
   const { setSaveAction, setIsSaving, setStatusText } = useAdmin();
 
@@ -258,9 +259,18 @@ export default function AdminHomePage() {
   }
 
   const saveHome = useCallback(async () => {
+    if (saveInFlightRef.current) {
+      return;
+    }
+
+    saveInFlightRef.current = true;
     setSaving(true);
     const toastId = toast.loading("Deploying homepage updates...");
     try {
+      const uniqueAchievements = Array.from(
+        new Map(achievements.map((item) => [item.id || item.localId, item] as const)).values()
+      );
+
       const requests = [
         fetch("/api/admin/site-content", {
           method: "PUT",
@@ -293,7 +303,7 @@ export default function AdminHomePage() {
         requests.push(fetch(`/api/admin/achievements/${id}`, { method: "DELETE" }));
       }
 
-      for (const item of achievements) {
+      for (const item of uniqueAchievements) {
         const payload = {
           id: item.id || undefined,
           title: item.title,
@@ -321,12 +331,19 @@ export default function AdminHomePage() {
         throw new Error("One or more requests failed.");
       }
 
+      setAchievements((current) =>
+        current.map((item) => ({
+          ...item,
+          persisted: Boolean(item.id) || item.persisted,
+        }))
+      );
       setDeletedAchievementIds([]);
       toast.success("Homepage successfully synchronized.", { id: toastId });
     } catch (error) {
       toast.error("Deployment failed. Check integrity logs.", { id: toastId });
     } finally {
       setSaving(false);
+      saveInFlightRef.current = false;
     }
   }, [about, achievements, deletedAchievementIds, hero, home, services, siteCopy]);
 

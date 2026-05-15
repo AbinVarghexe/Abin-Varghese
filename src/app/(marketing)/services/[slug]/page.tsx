@@ -68,6 +68,7 @@ export default async function ServicePage({ params }: PageProps) {
         description={service.description}
         path={`/services/${service.id}`}
         serviceType={service.providedServices}
+        providerName="Abin Varghese"
       />
       <ServicePageLayout service={service} behanceShowcaseEmbeds={behanceShowcaseEmbeds} />
     </main>

@@ -140,6 +140,7 @@ export default async function ProjectDetailPage({ params, searchParams }: PagePr
         codeRepository={project.githubUrl}
         liveUrl={project.liveUrl}
         dateModified={project.updatedAt}
+        creatorName="Abin Varghese"
       />
       <div className="mx-auto w-[min(100%,1360px)]">
         <Link
