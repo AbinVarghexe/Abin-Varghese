@@ -278,7 +278,11 @@ const Herosection = ({
               <br />
               <span
                 className="inline-block cursor-default text-[40px] md:text-6xl lg:text-7xl leading-tight tracking-[-0.04em] text-[#0020d7] bg-clip-text text-transparent overflow-visible py-2"
-                style={{ backgroundImage: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)' }}
+                style={{ 
+                  backgroundImage: 'linear-gradient(180deg, #7da3f6 0%, #0020d7 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}
               >
                 {nameLetters.map((letter: string, i: number) => (
                   <motion.span
@@ -296,7 +300,7 @@ const Herosection = ({
                       scale: 1.15,
                       transition: { type: "spring", stiffness: 400, damping: 10 }
                     }}
-                    className="inline-block relative z-10"
+                    className="inline-block"
                   >
                     {letter === ' ' ? '\u00A0' : letter}
                   </motion.span>
