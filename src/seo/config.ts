@@ -27,7 +27,7 @@ const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 export const siteUrl = (
   configuredSiteUrl && configuredSiteUrl.length > 0
     ? configuredSiteUrl
-    : "https://abinvarghese.me"
+    : "https://abinvarghese.app"
 ).replace(/\/+$/, "");
 
 export const defaultOgImage = `${siteUrl}/og-image.jpg`;

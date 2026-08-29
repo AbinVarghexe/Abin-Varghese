@@ -30,9 +30,9 @@ export const homeContentDefaults: HomeContent = {
   ],
   socialLinks: {
     github: "https://github.com/AbinVarghexe",
-    behance: "https://www.behance.net/abinvarghese",
-    linkedin: "https://www.linkedin.com/in/abinvarghese",
-    instagram: "https://www.instagram.com/abinvarghese",
+    behance: "https://www.behance.net/toabinvarghese",
+    linkedin: "https://www.linkedin.com/in/toabinvarghese/",
+    instagram: "https://www.instagram.com/abeeeein/",
   },
   otherSocialLinks: [],
   pageLinks: {
