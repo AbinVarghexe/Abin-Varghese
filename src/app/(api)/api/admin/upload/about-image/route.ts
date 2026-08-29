@@ -1,20 +1,21 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-
 import { requireAdminSession } from "@/lib/admin-auth";
+import { createAdminClient } from "@/utils/supabase/admin";
+import path from "node:path";
 import { NextResponse } from "next/server";
 
 function sanitizeBaseName(name: string) {
-  return name
-    .replace(/\.[^/.]+$/, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 50) || "image";
+  return (
+    name
+      .replace(/\.[^/.]+$/, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 50) || "image"
+  );
 }
 
 export async function POST(request: Request) {
-  const { session, response } = await requireAdminSession();
+  const { response } = await requireAdminSession();
   if (response) return response;
 
   try {
@@ -26,24 +27,47 @@ export async function POST(request: Request) {
     }
 
     if (!file.type.startsWith("image/")) {
-      return NextResponse.json({ error: "Only image uploads are supported" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Only image uploads are supported" },
+        { status: 400 }
+      );
     }
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const extension = path.extname(file.name) || ".png";
-    const fileName = `${Date.now()}-${sanitizeBaseName(file.name)}${extension}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "about");
+    const fileName = `about/${Date.now()}-${sanitizeBaseName(file.name)}${extension}`;
 
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, fileName), buffer);
+    const supabase = createAdminClient();
+
+    const { error: uploadError } = await supabase.storage
+      .from("uploads")
+      .upload(fileName, buffer, {
+        contentType: file.type || "image/png",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error("Supabase Storage about image upload error:", uploadError);
+      return NextResponse.json(
+        { error: uploadError.message || "Upload failed" },
+        { status: 500 }
+      );
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("uploads")
+      .getPublicUrl(fileName);
 
     return NextResponse.json({
-      url: `/uploads/about/${fileName}`,
+      url: urlData.publicUrl,
       name: file.name,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("About image upload error:", error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "Upload failed" },
+      { status: 500 }
+    );
   }
 }
