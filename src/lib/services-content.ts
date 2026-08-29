@@ -136,48 +136,55 @@ async function enrichGraphicsDesignBehanceEmbeds(services: Service[]): Promise<S
 }
 
 export async function getServicesContent(): Promise<Service[]> {
-  const supabase = createStaticClient();
-  const { data: record, error } = await supabase
-    .from("site_content")
-    .select("value")
-    .eq("key", SERVICES_CONTENT_KEY)
-    .single();
-
-  if (error || !record?.value) {
-    if (error && error.code !== "PGRST116") {
-      console.error("Error fetching services content:", error);
-    }
-    return enrichGraphicsDesignBehanceEmbeds(servicesDefaults.map(sanitizeMotionGraphicsService));
-  }
-
   try {
-    const parsed = JSON.parse(record.value);
+    const supabase = createStaticClient();
+    const { data: record, error } = await supabase
+      .from("site_content")
+      .select("value")
+      .eq("key", SERVICES_CONTENT_KEY)
+      .single();
 
-    if (!Array.isArray(parsed)) {
+    if (error || !record?.value) {
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching services content:", error);
+      }
       return enrichGraphicsDesignBehanceEmbeds(servicesDefaults.map(sanitizeMotionGraphicsService));
     }
 
-    const defaultsById = new Map(servicesDefaults.map((service) => [service.id, service]));
+    try {
+      const parsed = JSON.parse(record.value);
 
-    const normalized = parsed
-      .map((item) => {
-        if (!isRecord(item) || typeof item.id !== "string") {
-          return null;
-        }
+      if (!Array.isArray(parsed)) {
+        return enrichGraphicsDesignBehanceEmbeds(servicesDefaults.map(sanitizeMotionGraphicsService));
+      }
 
-        const fallback = defaultsById.get(item.id);
-        if (!fallback) {
-          return null;
-        }
+      const defaultsById = new Map(servicesDefaults.map((service) => [service.id, service]));
 
-        return normalizeService(item, fallback);
-      })
-      .filter((service): service is Service => Boolean(service));
+      const normalized = parsed
+        .map((item) => {
+          if (!isRecord(item) || typeof item.id !== "string") {
+            return null;
+          }
 
-    const merged =
-      normalized.length > 0 ? normalized : servicesDefaults.map(sanitizeMotionGraphicsService);
-    return enrichGraphicsDesignBehanceEmbeds(merged);
-  } catch {
+          const fallback = defaultsById.get(item.id);
+          if (!fallback) {
+            return null;
+          }
+
+          return normalizeService(item, fallback);
+        })
+        .filter((service): service is Service => Boolean(service));
+
+      return enrichGraphicsDesignBehanceEmbeds(
+        normalized.length > 0
+          ? normalized
+          : servicesDefaults.map(sanitizeMotionGraphicsService)
+      );
+    } catch {
+      return enrichGraphicsDesignBehanceEmbeds(servicesDefaults.map(sanitizeMotionGraphicsService));
+    }
+  } catch (error) {
+    console.error("Critical error in getServicesContent:", error);
     return enrichGraphicsDesignBehanceEmbeds(servicesDefaults.map(sanitizeMotionGraphicsService));
   }
 }

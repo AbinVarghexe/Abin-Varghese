@@ -320,21 +320,26 @@ export function normalizeSiteCopyContent(value: unknown): SiteCopyContent {
 }
 
 export async function getSiteCopyContent(): Promise<SiteCopyContent> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("site_content")
-    .select("value")
-    .eq("key", SITE_COPY_CONTENT_KEY)
-    .single();
-
-  if (error || !data?.value) {
-    return siteCopyDefaults;
-  }
-
   try {
-    const parsed = JSON.parse(data.value);
-    return normalizeSiteCopyContent(parsed);
-  } catch {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("site_content")
+      .select("value")
+      .eq("key", SITE_COPY_CONTENT_KEY)
+      .single();
+
+    if (error || !data?.value) {
+      return siteCopyDefaults;
+    }
+
+    try {
+      const parsed = JSON.parse(data.value);
+      return normalizeSiteCopyContent(parsed);
+    } catch {
+      return siteCopyDefaults;
+    }
+  } catch (err) {
+    console.error("Failed to load site copy content, using defaults:", err);
     return siteCopyDefaults;
   }
 }

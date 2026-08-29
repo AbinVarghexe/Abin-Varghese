@@ -55,89 +55,100 @@ const homeKeyMap = {
 } as const;
 
 export async function getAboutContent(): Promise<AboutContent> {
-  const supabase = await createClient();
-  const keys = Object.values(aboutKeyMap);
-  
-  const { data: records, error } = await supabase
-    .from("site_content")
-    .select("key, value")
-    .in("key", keys);
+  try {
+    const supabase = await createClient();
+    const keys = Object.values(aboutKeyMap);
+    
+    const { data: records, error } = await supabase
+      .from("site_content")
+      .select("key, value")
+      .in("key", keys);
 
-  if (error) {
-    console.error("Error fetching about content:", error);
+    if (error) {
+      console.error("Error fetching about content:", error);
+      return siteContentDefaults;
+    }
+
+    const values = new Map(records?.map((record) => [record.key, record.value]));
+
+    return {
+      aboutImage: values.get(aboutKeyMap.aboutImage) || siteContentDefaults.aboutImage,
+      homeAboutImage1: values.get(aboutKeyMap.homeAboutImage1) || siteContentDefaults.homeAboutImage1,
+      homeAboutImage2: values.get(aboutKeyMap.homeAboutImage2) || siteContentDefaults.homeAboutImage2,
+      homeAboutImage3: values.get(aboutKeyMap.homeAboutImage3) || siteContentDefaults.homeAboutImage3,
+      aboutInstagramImage1: values.get(aboutKeyMap.aboutInstagramImage1) || siteContentDefaults.aboutInstagramImage1,
+      aboutInstagramImage2: values.get(aboutKeyMap.aboutInstagramImage2) || siteContentDefaults.aboutInstagramImage2,
+      aboutInstagramImage3: values.get(aboutKeyMap.aboutInstagramImage3) || siteContentDefaults.aboutInstagramImage3,
+      aboutInstagramImage4: values.get(aboutKeyMap.aboutInstagramImage4) || siteContentDefaults.aboutInstagramImage4,
+      aboutInstagramLink1: values.get(aboutKeyMap.aboutInstagramLink1) || siteContentDefaults.aboutInstagramLink1,
+      aboutInstagramLink2: values.get(aboutKeyMap.aboutInstagramLink2) || siteContentDefaults.aboutInstagramLink2,
+      aboutInstagramLink3: values.get(aboutKeyMap.aboutInstagramLink3) || siteContentDefaults.aboutInstagramLink3,
+      aboutInstagramLink4: values.get(aboutKeyMap.aboutInstagramLink4) || siteContentDefaults.aboutInstagramLink4,
+    };
+  } catch (err) {
+    console.error("Failed to load about content, using defaults:", err);
     return siteContentDefaults;
   }
-
-  const values = new Map(records?.map((record) => [record.key, record.value]));
-
-  return {
-    aboutImage: values.get(aboutKeyMap.aboutImage) || siteContentDefaults.aboutImage,
-    homeAboutImage1: values.get(aboutKeyMap.homeAboutImage1) || siteContentDefaults.homeAboutImage1,
-    homeAboutImage2: values.get(aboutKeyMap.homeAboutImage2) || siteContentDefaults.homeAboutImage2,
-    homeAboutImage3: values.get(aboutKeyMap.homeAboutImage3) || siteContentDefaults.homeAboutImage3,
-    aboutInstagramImage1: values.get(aboutKeyMap.aboutInstagramImage1) || siteContentDefaults.aboutInstagramImage1,
-    aboutInstagramImage2: values.get(aboutKeyMap.aboutInstagramImage2) || siteContentDefaults.aboutInstagramImage2,
-    aboutInstagramImage3: values.get(aboutKeyMap.aboutInstagramImage3) || siteContentDefaults.aboutInstagramImage3,
-    aboutInstagramImage4: values.get(aboutKeyMap.aboutInstagramImage4) || siteContentDefaults.aboutInstagramImage4,
-    aboutInstagramLink1: values.get(aboutKeyMap.aboutInstagramLink1) || siteContentDefaults.aboutInstagramLink1,
-    aboutInstagramLink2: values.get(aboutKeyMap.aboutInstagramLink2) || siteContentDefaults.aboutInstagramLink2,
-    aboutInstagramLink3: values.get(aboutKeyMap.aboutInstagramLink3) || siteContentDefaults.aboutInstagramLink3,
-    aboutInstagramLink4: values.get(aboutKeyMap.aboutInstagramLink4) || siteContentDefaults.aboutInstagramLink4,
-  };
 }
 
 export async function getHeroContent(): Promise<HeroContent> {
-  const supabase = await createClient();
-  const keys = Object.values(heroKeyMap);
-  
-  const { data: records, error } = await supabase
-    .from("site_content")
-    .select("key, value")
-    .in("key", keys);
+  try {
+    const supabase = await createClient();
+    const keys = Object.values(heroKeyMap);
+    
+    const { data: records, error } = await supabase
+      .from("site_content")
+      .select("key, value")
+      .in("key", keys);
 
-  if (error) {
-    console.error("Error fetching hero content:", error);
+    if (error) {
+      console.error("Error fetching hero content:", error);
+      return siteContentDefaults;
+    }
+
+    const values = new Map(records?.map((record) => [record.key, record.value]));
+
+    return {
+      heroGreeting: values.get(heroKeyMap.heroGreeting) || siteContentDefaults.heroGreeting,
+      heroName: values.get(heroKeyMap.heroName) || siteContentDefaults.heroName,
+      heroSubcopy: values.get(heroKeyMap.heroSubcopy) || siteContentDefaults.heroSubcopy,
+      heroAudienceTags: values.get(heroKeyMap.heroAudienceTags) || siteContentDefaults.heroAudienceTags,
+      heroAvailabilityText: values.get(heroKeyMap.heroAvailabilityText) || siteContentDefaults.heroAvailabilityText,
+      heroCtaPrimaryLabel: values.get(heroKeyMap.heroCtaPrimaryLabel) || siteContentDefaults.heroCtaPrimaryLabel,
+      heroCtaPrimaryUrl: values.get(heroKeyMap.heroCtaPrimaryUrl) || siteContentDefaults.heroCtaPrimaryUrl,
+      heroCtaSecondaryLabel: values.get(heroKeyMap.heroCtaSecondaryLabel) || siteContentDefaults.heroCtaSecondaryLabel,
+      heroCtaSecondaryUrl: values.get(heroKeyMap.heroCtaSecondaryUrl) || siteContentDefaults.heroCtaSecondaryUrl,
+    };
+  } catch (err) {
+    console.error("Failed to load hero content, using defaults:", err);
     return siteContentDefaults;
   }
-
-  const values = new Map(records?.map((record) => [record.key, record.value]));
-
-  return {
-    heroGreeting: values.get(heroKeyMap.heroGreeting) || siteContentDefaults.heroGreeting,
-    heroName: values.get(heroKeyMap.heroName) || siteContentDefaults.heroName,
-    heroSubcopy: values.get(heroKeyMap.heroSubcopy) || siteContentDefaults.heroSubcopy,
-    heroAudienceTags: values.get(heroKeyMap.heroAudienceTags) || siteContentDefaults.heroAudienceTags,
-    heroAvailabilityText: values.get(heroKeyMap.heroAvailabilityText) || siteContentDefaults.heroAvailabilityText,
-    heroCtaPrimaryLabel: values.get(heroKeyMap.heroCtaPrimaryLabel) || siteContentDefaults.heroCtaPrimaryLabel,
-    heroCtaPrimaryUrl: values.get(heroKeyMap.heroCtaPrimaryUrl) || siteContentDefaults.heroCtaPrimaryUrl,
-    heroCtaSecondaryLabel: values.get(heroKeyMap.heroCtaSecondaryLabel) || siteContentDefaults.heroCtaSecondaryLabel,
-    heroCtaSecondaryUrl: values.get(heroKeyMap.heroCtaSecondaryUrl) || siteContentDefaults.heroCtaSecondaryUrl,
-  };
 }
 
 export async function getHomeContent(): Promise<HomeContent> {
-  const supabase = await createClient();
-  const keys = Object.values(homeKeyMap);
-  
-  const { data: records, error } = await supabase
-    .from("site_content")
-    .select("key, value")
-    .in("key", keys);
+  try {
+    const supabase = await createClient();
+    const keys = Object.values(homeKeyMap);
+    
+    const { data: records, error } = await supabase
+      .from("site_content")
+      .select("key, value")
+      .in("key", keys);
 
-  if (error) {
-    console.error("Error fetching home content:", error);
-    return siteContentDefaults;
-  }
+    if (error) {
+      console.error("Error fetching home content:", error);
+      return siteContentDefaults;
+    }
 
-  const values = new Map(records?.map((record) => [record.key, record.value]));
+    const values = new Map(records?.map((record) => [record.key, record.value]));
 
-  return {
-    scrollingBannerItems: values.get(homeKeyMap.scrollingBannerItems) || siteContentDefaults.scrollingBannerItems,
-    scrollingLogos: (() => {
-      const val = values.get(homeKeyMap.scrollingLogos);
-      if (!val) return siteContentDefaults.scrollingLogos;
-      try { return JSON.parse(val); } catch { return siteContentDefaults.scrollingLogos; }
-    })(),
+    return {
+      scrollingBannerItems: values.get(homeKeyMap.scrollingBannerItems) || siteContentDefaults.scrollingBannerItems,
+      scrollingLogos: (() => {
+        const val = values.get(homeKeyMap.scrollingLogos);
+        if (!val) return siteContentDefaults.scrollingLogos;
+        try { return JSON.parse(val); } catch { return siteContentDefaults.scrollingLogos; }
+      })(),
     socialLinks: (() => {
       const val = values.get(homeKeyMap.socialLinks);
       if (!val) return siteContentDefaults.socialLinks;

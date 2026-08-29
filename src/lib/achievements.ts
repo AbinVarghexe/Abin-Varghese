@@ -14,29 +14,34 @@ export interface Achievement {
 }
 
 export async function getAchievements(): Promise<Achievement[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("achievements")
-    .select("*")
-    .order("order_index", { ascending: true })
-    .order("date", { ascending: false });
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("achievements")
+      .select("*")
+      .order("order_index", { ascending: true })
+      .order("date", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching achievements:", error);
+    if (error) {
+      console.error("Error fetching achievements:", error);
+      return [];
+    }
+
+    return (data || []).map((item) => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      date: item.date,
+      category: item.category,
+      imageUrl: item.image_url,
+      externalLink: item.external_link,
+      featured: item.featured,
+      orderIndex: item.order_index,
+    }));
+  } catch (err) {
+    console.error("Failed to load achievements, returning empty list:", err);
     return [];
   }
-
-  return data.map((item) => ({
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    date: item.date,
-    category: item.category,
-    imageUrl: item.image_url,
-    externalLink: item.external_link,
-    featured: item.featured,
-    orderIndex: item.order_index,
-  }));
 }
 
 export async function upsertAchievement(achievement: Achievement): Promise<void> {
