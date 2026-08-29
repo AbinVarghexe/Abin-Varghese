@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createStaticClient } from "@/utils/supabase/static";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 import { aboutContentDefaults, type AboutContent } from "@/lib/about-content-defaults";
@@ -56,7 +56,7 @@ const homeKeyMap = {
 
 export async function getAboutContent(): Promise<AboutContent> {
   try {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const keys = Object.values(aboutKeyMap);
     
     const { data: records, error } = await supabase
@@ -93,7 +93,7 @@ export async function getAboutContent(): Promise<AboutContent> {
 
 export async function getHeroContent(): Promise<HeroContent> {
   try {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const keys = Object.values(heroKeyMap);
     
     const { data: records, error } = await supabase
@@ -127,7 +127,7 @@ export async function getHeroContent(): Promise<HeroContent> {
 
 export async function getHomeContent(): Promise<HomeContent> {
   try {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const keys = Object.values(homeKeyMap);
     
     const { data: records, error } = await supabase
@@ -149,54 +149,58 @@ export async function getHomeContent(): Promise<HomeContent> {
         if (!val) return siteContentDefaults.scrollingLogos;
         try { return JSON.parse(val); } catch { return siteContentDefaults.scrollingLogos; }
       })(),
-    socialLinks: (() => {
-      const val = values.get(homeKeyMap.socialLinks);
-      if (!val) return siteContentDefaults.socialLinks;
-      try {
-        const parsed = JSON.parse(val) as Partial<HomeContent["socialLinks"]>;
-        return {
-          github: parsed.github || siteContentDefaults.socialLinks.github,
-          behance: parsed.behance || siteContentDefaults.socialLinks.behance,
-          linkedin: parsed.linkedin || siteContentDefaults.socialLinks.linkedin,
-          instagram: parsed.instagram || siteContentDefaults.socialLinks.instagram,
-        };
-      } catch {
-        return siteContentDefaults.socialLinks;
-      }
-    })(),
-    otherSocialLinks: (() => {
-      const val = values.get(homeKeyMap.otherSocialLinks);
-      if (!val) return siteContentDefaults.otherSocialLinks;
-      try {
-        const parsed = JSON.parse(val);
-        if (!Array.isArray(parsed)) return siteContentDefaults.otherSocialLinks;
-        return parsed
-          .map((item) => ({
-            id: typeof item?.id === "string" ? item.id : "",
-            label: typeof item?.label === "string" ? item.label : "",
-            url: typeof item?.url === "string" ? item.url : "",
-          }))
-          .filter((item) => item.id && item.label);
-      } catch {
-        return siteContentDefaults.otherSocialLinks;
-      }
-    })(),
-    pageLinks: (() => {
-      const val = values.get(homeKeyMap.pageLinks);
-      if (!val) return siteContentDefaults.pageLinks;
-      try {
-        const parsed = JSON.parse(val) as Partial<HomeContent["pageLinks"]>;
-        return {
-          about: parsed.about || siteContentDefaults.pageLinks.about,
-          projects: parsed.projects || siteContentDefaults.pageLinks.projects,
-          services: parsed.services || siteContentDefaults.pageLinks.services,
-          contact: parsed.contact || siteContentDefaults.pageLinks.contact,
-        };
-      } catch {
-        return siteContentDefaults.pageLinks;
-      }
-    })(),
-  };
+      socialLinks: (() => {
+        const val = values.get(homeKeyMap.socialLinks);
+        if (!val) return siteContentDefaults.socialLinks;
+        try {
+          const parsed = JSON.parse(val) as Partial<HomeContent["socialLinks"]>;
+          return {
+            github: parsed.github || siteContentDefaults.socialLinks.github,
+            behance: parsed.behance || siteContentDefaults.socialLinks.behance,
+            linkedin: parsed.linkedin || siteContentDefaults.socialLinks.linkedin,
+            instagram: parsed.instagram || siteContentDefaults.socialLinks.instagram,
+          };
+        } catch {
+          return siteContentDefaults.socialLinks;
+        }
+      })(),
+      otherSocialLinks: (() => {
+        const val = values.get(homeKeyMap.otherSocialLinks);
+        if (!val) return siteContentDefaults.otherSocialLinks;
+        try {
+          const parsed = JSON.parse(val);
+          if (!Array.isArray(parsed)) return siteContentDefaults.otherSocialLinks;
+          return parsed
+            .map((item) => ({
+              id: typeof item?.id === "string" ? item.id : "",
+              label: typeof item?.label === "string" ? item.label : "",
+              url: typeof item?.url === "string" ? item.url : "",
+            }))
+            .filter((item) => item.id && item.label);
+        } catch {
+          return siteContentDefaults.otherSocialLinks;
+        }
+      })(),
+      pageLinks: (() => {
+        const val = values.get(homeKeyMap.pageLinks);
+        if (!val) return siteContentDefaults.pageLinks;
+        try {
+          const parsed = JSON.parse(val) as Partial<HomeContent["pageLinks"]>;
+          return {
+            about: parsed.about || siteContentDefaults.pageLinks.about,
+            projects: parsed.projects || siteContentDefaults.pageLinks.projects,
+            services: parsed.services || siteContentDefaults.pageLinks.services,
+            contact: parsed.contact || siteContentDefaults.pageLinks.contact,
+          };
+        } catch {
+          return siteContentDefaults.pageLinks;
+        }
+      })(),
+    };
+  } catch (err) {
+    console.error("Failed to load home content, using defaults:", err);
+    return siteContentDefaults;
+  }
 }
 
 export async function upsertAboutContent(content: AboutContent) {
@@ -250,37 +254,42 @@ export async function upsertHomeContent(content: HomeContent) {
 }
 
 export async function getBehanceShowcaseEmbeds(): Promise<BehanceShowcaseEmbed[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("site_content")
-    .select("value")
-    .eq("key", BEHANCE_SHOWCASE_KEY)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Error fetching Behance showcase embeds:", error);
-    return [];
-  }
-
-  if (!data?.value) return [];
-
   try {
-    const parsed = JSON.parse(data.value);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (item: any) =>
-          typeof item?.id === "string" &&
-          typeof item?.src === "string" &&
-          typeof item?.title === "string"
-      )
-      .map((item: any) => ({
-        id: item.id,
-        src: item.src,
-        title: item.title,
-      }));
-  } catch {
+    const supabase = createStaticClient();
+
+    const { data, error } = await supabase
+      .from("site_content")
+      .select("value")
+      .eq("key", BEHANCE_SHOWCASE_KEY)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching Behance showcase embeds:", error);
+      return [];
+    }
+
+    if (!data?.value) return [];
+
+    try {
+      const parsed = JSON.parse(data.value);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter(
+          (item: any) =>
+            typeof item?.id === "string" &&
+            typeof item?.src === "string" &&
+            typeof item?.title === "string"
+        )
+        .map((item: any) => ({
+          id: item.id,
+          src: item.src,
+          title: item.title,
+        }));
+    } catch {
+      return [];
+    }
+  } catch (err) {
+    console.error("Failed to load Behance showcase embeds:", err);
     return [];
   }
 }
@@ -309,37 +318,42 @@ export type PinterestShowcaseItem = {
 const PINTEREST_SHOWCASE_KEY = "pinterest_showcase_links";
 
 export async function getPinterestShowcaseItems(): Promise<PinterestShowcaseItem[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("site_content")
-    .select("value")
-    .eq("key", PINTEREST_SHOWCASE_KEY)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Error fetching Pinterest showcase items:", error);
-    return [];
-  }
-
-  if (!data?.value) return [];
-
   try {
-    const parsed = JSON.parse(data.value);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (item: any) =>
-          typeof item?.id === "string" &&
-          typeof item?.src === "string" &&
-          typeof item?.title === "string"
-      )
-      .map((item: any) => ({
-        id: item.id,
-        src: item.src,
-        title: item.title,
-      }));
-  } catch {
+    const supabase = createStaticClient();
+
+    const { data, error } = await supabase
+      .from("site_content")
+      .select("value")
+      .eq("key", PINTEREST_SHOWCASE_KEY)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching Pinterest showcase items:", error);
+      return [];
+    }
+
+    if (!data?.value) return [];
+
+    try {
+      const parsed = JSON.parse(data.value);
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter(
+          (item: any) =>
+            typeof item?.id === "string" &&
+            typeof item?.src === "string" &&
+            typeof item?.title === "string"
+        )
+        .map((item: any) => ({
+          id: item.id,
+          src: item.src,
+          title: item.title,
+        }));
+    } catch {
+      return [];
+    }
+  } catch (err) {
+    console.error("Failed to load Pinterest showcase items:", err);
     return [];
   }
 }

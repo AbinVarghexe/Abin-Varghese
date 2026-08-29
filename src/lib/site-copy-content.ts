@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createStaticClient } from "@/utils/supabase/static";
 import { createAdminClient } from "@/utils/supabase/admin";
 import type { HomeContent } from "@/lib/home-content-defaults";
 import { 
@@ -321,7 +321,7 @@ export function normalizeSiteCopyContent(value: unknown): SiteCopyContent {
 
 export async function getSiteCopyContent(): Promise<SiteCopyContent> {
   try {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data, error } = await supabase
       .from("site_content")
       .select("value")

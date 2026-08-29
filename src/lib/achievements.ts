@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createStaticClient } from "@/utils/supabase/static";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 export interface Achievement {
@@ -15,7 +15,7 @@ export interface Achievement {
 
 export async function getAchievements(): Promise<Achievement[]> {
   try {
-    const supabase = await createClient();
+    const supabase = createStaticClient();
     const { data, error } = await supabase
       .from("achievements")
       .select("*")
