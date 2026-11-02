@@ -34,7 +34,7 @@ This directory contains all SEO configuration for the Abin Varghese portfolio si
 ## Environment Variables
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://abinvarghese.me
+NEXT_PUBLIC_SITE_URL=https://abinvarghese.app
 NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=<your-token>
 NEXT_PUBLIC_CONTACT_EMAIL=toabinvarghese@gmail.com
 ```
@@ -42,7 +42,7 @@ NEXT_PUBLIC_CONTACT_EMAIL=toabinvarghese@gmail.com
 ## Checklist before deploy
 
 - [ ] Verify `NEXT_PUBLIC_SITE_URL` matches production domain exactly
-- [ ] Submit `https://abinvarghese.me/sitemap.xml` in Google Search Console
+- [ ] Submit `https://abinvarghese.app/sitemap.xml` in Google Search Console
 - [ ] Add `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` from Google Search Console
 - [ ] Upload an `og-image.jpg` (1200×630 px) to `/public/og-image.jpg`
 - [ ] Test structured data at https://search.google.com/test/rich-results

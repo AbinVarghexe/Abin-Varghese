@@ -81,7 +81,7 @@ Not needed for the website.
 
 - Name: Abin Varghese
 - Location: Idukki, Kerala, India
-- Website: `abinvarghese.me`
+- Website: `abinvarghese.app`
 - Education: B.Tech Computer Science and Engineering with Minor in VLSI, Amal Jyothi College of Engineering, 2023 to Present
 - CGPA: 7.19
 - Current positioning: Pre-final year CSE student; Full-Stack Developer/UI/UX Designer at INCIAL; Freelance Full-Stack Developer
@@ -368,7 +368,7 @@ Tools:
 
 #### Portfolio Website
 
-`abinvarghese.me`
+`abinvarghese.app`
 
 A portfolio site built to reflect both my technical side and my design instincts without separating one from the other.
 
